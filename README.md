@@ -9,7 +9,7 @@
 * $k_p$ is the Dynamixel P gain in [firmware error unit]/rad,
 * $f_s$ is the static friction in Nm,
 * $f_v$ is the viscous friction in Nm/(rad/s),
-* $H$ is a multiplier to obtain volts in volts/[firmware error unit],
+* $H$ is a multiplier to obtain volts in duty/[firmware error unit],
 * $G$ is the gear ratio (multiplying torque), 200 for MX-64 and 225 for MX-106.
   (**Note:** this can be simplified in all the below equations since all measures are made at the joint level).
 
@@ -18,7 +18,9 @@
 |-----------------|-----------------|-----------------|-----------------|
 | $R$             | ?               | ?               | ohms            |
 | $k_t$           | ?               | ?               | Nm/A            |
-| $H$             | 2.39115541      | 2.36318685      | V/[firmware error unit] |
+| $f_s$           | ?               | 0.212           | Nm              |
+| $f_v$           | ?               | ?               | Nm/(rad/s)      |
+| $H$             | 0.15941036      | 0.15754579      | duty/[firmware error unit] |
 
 ## Equations
 
@@ -112,12 +114,12 @@ To measure $H$, we gave targets and measured the output voltage using an oscillo
 
 ### MX-64
  
-* $H = 2.39115541$
+* $H = 0.15941036$
 
 ![MX-64](imgs/mx64_h.png)
 
 ### MX-106
 
-* $H = 2.36318685$
+* $H = 0.15754579$
 
 ![MX-106](imgs/mx106_h.png)

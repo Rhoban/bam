@@ -13,7 +13,6 @@ The JSON file should have the following format:
         {
             "target": 157.24,
             "position": 165.2,
-            "voltage": 15.0,
             "period": 4.5,
             "kp": 5
         },
@@ -29,30 +28,29 @@ pwm_period = data["pwm_period"]
 samples = data["samples"]
 
 angular_errors_kp = []
-volts = []
+duties = []
 
 for sample in samples:
-    voltage = sample["voltage"]
     target = sample["target"]
     position = sample["position"]
     period = sample["period"]
     kp = sample["kp"]
 
-    volt = voltage * period / pwm_period
+    duty = period / pwm_period
     angular_error = np.deg2rad(abs(position - target))
     angular_error_kp = kp * angular_error
 
     angular_errors_kp.append(angular_error_kp)
-    volts.append(volt)
+    duties.append(duty)
 
-w = linear_regression(angular_errors_kp, volts)
+w = linear_regression(angular_errors_kp, duties)
 print(f"H: {w}")
 
 import matplotlib.pyplot as plt
 
-plt.scatter(angular_errors_kp, volts, label="Sampled data")
+plt.scatter(angular_errors_kp, duties, label="Sampled data")
 plt.xlabel("Angular error * kp")
-plt.ylabel("Voltage (V)")
+plt.ylabel("Duty cycle (0-1)")
 
 ts = np.linspace(0, max(angular_errors_kp), 1000)
 vs = w * ts
