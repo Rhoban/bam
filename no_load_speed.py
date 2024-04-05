@@ -2,12 +2,12 @@ import json
 import os
 import numpy as np
 import sys
-from tools import linear_regression, filename_argument
+from tools import filename_argument
 
 """
-Estimating kt constant from a velocity log (obtained with velocity.py)
+Plots the no load speed vs voltage
 
-Usage: python3 estimate_kt.py data/velocity_[motor].json
+Usage: python3 no_load_speed.py data/velocity_[motor].json
 """
 
 filename = filename_argument()
@@ -20,18 +20,11 @@ for key in data:
     volts.append(float(key))
     velocities.append(data[key])
 
-w = linear_regression(velocities, volts)
-print(f"kt: {w}")
-
 import matplotlib.pyplot as plt
 
 plt.scatter(velocities, volts, label="Sampled data")
 
-ts = np.linspace(0, max(velocities), 1000)
-vs = w * ts
-plt.plot(ts, vs, color="red", label=f"y = {w[0]}x")
-
-plt.title(f"{filename} | kt={w}")
+plt.title(f"{filename} | No load speed")
 plt.xlabel("Velocity (rad/s)")
 plt.ylabel("Voltage (V)")
 plt.legend()
