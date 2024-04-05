@@ -96,11 +96,11 @@ Here are multimeter measures, they will be improved in the future.
 
 ### MX-64
 
-$R = 2.4$
+$R = 2.1$ ohms
 
 ### MX-106
 
-$R = 2.5$
+$R = 2.3$ ohms
 
 ## Measuring $k_t$
 
