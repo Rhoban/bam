@@ -7,12 +7,6 @@ import matplotlib.pyplot as plt
 
 ADDR_POSITION = 36
 
-portHandler = PortHandler("/dev/ttyUSB0")
-packetHandler = PacketHandler(1.0)
-
-portHandler.openPort()
-portHandler.setBaudRate(1000000)
-
 filename = str(input("Filename: "))
 read_only = False
 if os.path.exists(f"data/{filename}.json"):
@@ -20,6 +14,13 @@ if os.path.exists(f"data/{filename}.json"):
 
 # Data collection
 if not read_only:
+    # Connection to the motor
+    portHandler = PortHandler("/dev/ttyUSB0")
+    packetHandler = PacketHandler(1.0)
+
+    portHandler.openPort()
+    portHandler.setBaudRate(1000000)
+
     length = float(input("Length: "))
     mass = float(input("Mass: "))
     duration = float(input("Log duration: "))
