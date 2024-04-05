@@ -73,7 +73,8 @@ To use those values in MuJoCo:
 ## Measuring $f_s$
 
 We added a load of mass $m$ on the motor, with a lever arm of length $l$.
-We let the arm fall until it reach an angle $\theta$ (0 being the arm horizontal).
+We found the higher position where the arm is at equilibrium and measured the angle $\theta$ (0 being the arm horizontal).
+To help with this measurement, we short-circuited the motor to brake it while falling.
 We can then estimate $f_s$ with:
 
 $$f_s = m g l \cos(\theta)$$
