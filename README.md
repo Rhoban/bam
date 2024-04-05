@@ -60,13 +60,13 @@ $$\omega = \frac{V}{k_t} - \frac{R}{{k_t}^2} \tau$$
 
 A single P was used
 
-$$V = H k_p (\theta^d - \theta)$$
+$$V = V_{in} H k_p (\theta^d - \theta)$$
 
 ### Values to MuJoCo
 
 To use those values in MuJoCo:
 
-* `kp`: $\frac{k_t H k_p V}{R}$
+* `kp`: $\frac{k_t k_p H V_{in}}{R}$
 * `damping`: $\frac{k_t^2}{R} + f_v$
 * `frictionloss`: $f_s$
 
