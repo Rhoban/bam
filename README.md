@@ -107,7 +107,7 @@ $R = 2.3$ ohms
 To measure $k_t$, a known load was applied to the motor, and the voltage required to maintain the motor static was measured.
 The torque applied by the motor is then:
 
-$\tau^{load} = f_s + \tau \omega$
+$\tau^{load} = f_s + \tau$
 
 Since $\omega = 0$, we have:
 
