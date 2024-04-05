@@ -16,7 +16,7 @@
 
 | Motor           | MX-64           | MX-106          | Unit            |
 |-----------------|-----------------|-----------------|-----------------|
-| $R$             | 2.1             | 2.3             | ohms            |
+| $R$             | ?               | 2.1             | ohms            |
 | $k_t$           | ?               | ?               | Nm/A            |
 | $f_s$           | ?               | 0.212           | Nm              |
 | $f_v$           | ?               | ?               | Nm/(rad/s)      |
@@ -92,15 +92,16 @@ $f_s = 0.212$ Nm
 
 ## Measuring $R$
 
-Here are multimeter measures, they will be improved in the future.
+We blocked the motor and applied known currents on the motor. We measured the voltage. The resistor was then
+estimated using $U=RI$.
 
 ### MX-64
 
-$R = 2.1$ ohms
+$R = ?$ ohms
 
 ### MX-106
 
-$R = 2.3$ ohms
+$R = 2.1$ ohms
 
 ## Measuring $k_t$
 
