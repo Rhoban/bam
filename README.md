@@ -66,7 +66,7 @@ $$V = H k_p (\theta^d - \theta)$$
 
 To use those values in MuJoCo:
 
-* `kp`: $\frac{k_t H k_p}{R}$
+* `kp`: $\frac{k_t H k_p V}{R}$
 * `damping`: $\frac{k_t^2}{R} + f_v$
 * `frictionloss`: $f_s$
 
