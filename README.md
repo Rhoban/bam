@@ -17,7 +17,7 @@
 | Motor           | MX-64           | MX-106          | Unit            |
 |-----------------|-----------------|-----------------|-----------------|
 | $R$             | ?               | ?               | ohms            |
-| $k_t$           | 1.71626206      | 2.42458085      | Nm/A            |
+| $k_t$           | ?               | ?               | Nm/A            |
 | $H$             | 2.39115541      | 2.36318685      | V/[firmware error unit] |
 
 ## Equations
@@ -65,7 +65,28 @@ $$V = H k_p (\theta^d - \theta)$$
 To use those values in MuJoCo:
 
 * `kp`: $\frac{k_t H k_p}{R}$
-* `damping`: $\frac{k_t^2}{R}$
+* `damping`: $\frac{k_t^2}{R} + f_v$
+* `frictionloss`: $f_s$
+
+## Measuring $f_s$
+
+We added a load of mass $m$ on the motor, with a lever arm of length $l$.
+We let the arm fall until it reach an angle $\theta$ (0 being the arm horizontal).
+We can then estimate $f_s$ with:
+
+$$f_s = m g l \cos(\theta)$$
+
+### MX-64
+
+**TODO**
+
+### MX-106
+
+$f_s = 0.212$ Nm
+
+* $m = 0.330$ kg
+* $l = 0.150$ m
+* $\theta \approx 64$ deg
 
 ## Measuring $R$
 
