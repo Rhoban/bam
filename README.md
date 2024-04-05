@@ -102,6 +102,31 @@ $R = 2.4$
 
 $R = 2.5$
 
+## Measuring $k_t$
+
+To measure $k_t$, a known load was applied to the motor, and the voltage required to maintain the motor static was measured.
+The torque applied by the motor is then:
+
+$\tau^{load} = f_s + \tau \omega$
+
+Since $\omega = 0$, we have:
+
+$$\tau = \frac{k_t}{R} V$$
+
+We can then estimate $k_t$ with:
+
+$$
+k_t = (\tau^{load} - f_s) \frac{R}{V}
+$$
+
+## MX-64
+
+**TODO**
+
+## MX-106
+
+**TODO**
+
 ## No-load speed vs voltage$
 
 We measured the no load speed for various velocities. For this, we used `velocity.py`.
