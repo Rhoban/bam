@@ -28,8 +28,8 @@ for log in logs.logs:
     torque_enable = np.array([entry["torque_enable"] for entry in log["entries"]])
     sim_q = np.array(sim_q)
 
-    ax1 = plt.subplot(211)
-    ax2 = plt.subplot(212)
+    # Using 2 x-shared subplots
+    f, (ax1, ax2) = plt.subplots(2, sharex=True)
 
     ax1.plot(ts, q, label="log_q")
     ax1.plot(ts, sim_q, label="sim_q")
