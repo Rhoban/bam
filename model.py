@@ -46,6 +46,18 @@ class BaseModel:
             for name, param in vars(self).items()
             if isinstance(param, Parameter)
         }
+    
+    def get_parameter_values(self) -> dict:
+        """
+        Return a dict containing parameter values
+        """
+        parameters = self.get_parameters()
+        x = {}
+        for name in parameters:
+            parameter = parameters[name]
+            if parameter.optimize:
+                x[name] = parameter.value
+        return x
 
     def load_parameters(self, json_file: str) -> list:
         """
@@ -80,11 +92,11 @@ class Model(BaseModel):
         self.load_friction_stribeck = Parameter(0.05, 0.005, 1.0)
 
         # Stribeck velocity [rad/s] and curvature
-        self.dtheta_stribeck = Parameter(2.0, 0.01, 10.0)
-        self.alpha = Parameter(1.0, 0.5, 2.0)
+        self.dtheta_stribeck = Parameter(0.2, 0.01, 10.0)
+        self.alpha = Parameter(1.35, 0.5, 10.0)
 
         # Viscous friction [Nm/(rad/s)]
-        self.friction_viscous = Parameter(0.1, 0.01, 5.0)
+        self.friction_viscous = Parameter(0.1, 0.0, 2.0)
 
     def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
         # Volts to None means that the motor is disconnected
@@ -108,7 +120,7 @@ class Model(BaseModel):
 
         # Stribeck coeff (1 when stopped to 0 when moving)
         stribeck_coeff = np.exp(
-            -np.abs(dtheta / self.dtheta_stribeck.value) ** self.alpha.value
+            -(np.abs(dtheta / self.dtheta_stribeck.value) ** self.alpha.value)
         )
 
         # Static friction

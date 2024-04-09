@@ -13,4 +13,5 @@ class Logs:
         for json_file in self.json_files:
             with open(json_file) as f:
                 data = json.load(f)
+                data["filename"] = json_file
                 self.logs.append(data)

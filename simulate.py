@@ -42,17 +42,22 @@ class Simulate1R:
         self.q += self.dq * dt
         self.t += dt
 
-    def rollout_log(self, log: dict):
+    def rollout_log(self, log: dict, rereset : float = None):
         """
         Read a given log dict and return the sequential reached positions
         """
         positions = []
 
+        t = 0.0
         dt = log["dt"]
         first_entry = log["entries"][0]
         self.reset(first_entry["position"], first_entry["speed"])
 
         for entry in log["entries"]:
+            t += dt
+            if rereset is not None and t > rereset:
+                t = 0.
+                self.reset(entry["position"], entry["speed"])
             positions.append(self.q)
 
             if entry["torque_enable"]:

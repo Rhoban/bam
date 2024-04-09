@@ -10,7 +10,7 @@ import logs
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--output", type=str, default="params.json")
-arg_parser.add_argument("--trials", type=int, default=10000)
+arg_parser.add_argument("--trials", type=int, default=100_000)
 arg_parser.add_argument("--jobs", type=int, default=1)
 args = arg_parser.parse_args()
 
@@ -47,7 +47,9 @@ def objective(trial):
 
     return compute_scores(model)
 
+
 last_log = time.time()
+
 
 def monitor(study, trial):
     global last_log
@@ -64,7 +66,9 @@ def monitor(study, trial):
             print(f"- {key}: {study.best_params[key]}")
 
 
-sampler = optuna.samplers.CmaEsSampler()
+model = Model()
+# sampler = optuna.samplers.CmaEsSampler(x0=model.get_parameter_values())
+sampler = optuna.samplers.NSGAIISampler()
 study = optuna.create_study(sampler=sampler)
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 study.optimize(objective, n_trials=args.trials, n_jobs=args.jobs, callbacks=[monitor])
