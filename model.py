@@ -81,7 +81,7 @@ class Model(BaseModel):
         self.R = Parameter(2.0, 0.1, 10.0, optimize=False)
 
         # Motor armature [kg m^2]
-        self.armature = Parameter(0.005, 0.001, 0.01)
+        self.armature = Parameter(0.005, 0.001, 0.05)
 
         # Base friction is always here, stribeck friction is added when not moving [Nm]
         self.friction_base = Parameter(0.05, 0.005, 0.5)
@@ -93,7 +93,7 @@ class Model(BaseModel):
 
         # Stribeck velocity [rad/s] and curvature
         self.dtheta_stribeck = Parameter(0.2, 0.01, 10.0)
-        self.alpha = Parameter(1.35, 0.5, 10.0)
+        self.alpha = Parameter(1.35, 0.5, 2.0)
 
         # Viscous friction [Nm/(rad/s)]
         self.friction_viscous = Parameter(0.1, 0.0, 2.0)
@@ -116,7 +116,7 @@ class Model(BaseModel):
     ) -> float:
 
         # Torque applied to the gearbox
-        gearbox_torque = np.abs(external_torque - motor_torque)
+        gearbox_torque = np.abs(external_torque - motor_torque) 
 
         # Stribeck coeff (1 when stopped to 0 when moving)
         stribeck_coeff = np.exp(

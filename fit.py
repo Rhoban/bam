@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+from scipy.optimize import minimize
 import json
 import time
 import optuna
@@ -47,6 +48,17 @@ def objective(trial):
 
     return compute_scores(model)
 
+def objective_x(x: list):
+    model = Model()
+    k = 0
+    parameters = model.get_parameters()
+    for name in parameters:
+        parameter = parameters[name]
+        if parameter.optimize:
+            parameter.value = x[k]
+            k += 1
+
+    return compute_scores(model)
 
 last_log = time.time()
 
@@ -65,8 +77,11 @@ def monitor(study, trial):
         for key in study.best_params:
             print(f"- {key}: {study.best_params[key]}")
 
+def monitor_x(x):
+    print(x)
 
 model = Model()
+
 # sampler = optuna.samplers.CmaEsSampler(x0=model.get_parameter_values())
 sampler = optuna.samplers.NSGAIISampler()
 study = optuna.create_study(sampler=sampler)

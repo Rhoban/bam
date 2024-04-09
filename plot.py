@@ -22,9 +22,10 @@ for log in logs.logs:
     simulator = simulate.Simulate1R(log["mass"], log["length"], model)
     sim_q = simulator.rollout_log(log, rereset=args.rereset)
 
-    ts = np.arange(len(sim_q))*log["dt"]
+    ts = np.arange(len(sim_q)) * log["dt"]
     q = [entry["position"] for entry in log["entries"]]
     volts = [entry["volts"] for entry in log["entries"]]
+    torque_enable = np.array([entry["torque_enable"] for entry in log["entries"]])
     sim_q = np.array(sim_q)
 
     ax1 = plt.subplot(211)
@@ -33,10 +34,22 @@ for log in logs.logs:
     ax1.plot(ts, q, label="log_q")
     ax1.plot(ts, sim_q, label="sim_q")
     ax1.legend()
-    ax1.set_title(log["filename"])
+    ax1.set_title(f'{log["filename"]}, mass={log["mass"]}, length={log["length"]}')
     ax1.grid()
 
+    # Using torque_enable color piecewise
     ax2.plot(ts, volts, label="volts")
+    # Shading the areas where torque is False
+    ax2.fill_between(
+        ts,
+        min(volts) - 0.02,
+        max(volts) + 0.02,
+        where=[not torque for torque in torque_enable],
+        color="red",
+        alpha=0.3,
+        label="torque_enable",
+    )
+
     ax2.legend()
 
     plt.grid()
