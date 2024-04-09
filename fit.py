@@ -47,14 +47,24 @@ def objective(trial):
 
     return compute_scores(model)
 
+last_log = time.time()
+
+def monitor(study, trial):
+    global last_log
+    elapsed = time.time() - last_log
+
+    if elapsed > 0.050:
+        last_log = time.time()
+        json.dump(study.best_params, open(args.output, "w"))
+
+        print()
+        print(f"Trial {trial.number}, Best score: {study.best_value}")
+        print(f"Best params found (saved to {args.output}): ")
+        for key in study.best_params:
+            print(f"- {key}: {study.best_params[key]}")
+
 
 sampler = optuna.samplers.CmaEsSampler()
 study = optuna.create_study(sampler=sampler)
-study.optimize(objective, n_trials=args.trials, n_jobs=args.jobs)
-
-json.dump(study.best_params, open(args.output, "w"))
-
-print()
-print("Done, best params found: ")
-for key in study.best_params:
-    print(f"- {key}: {study.best_params[key]}")
+optuna.logging.set_verbosity(optuna.logging.WARNING)
+study.optimize(objective, n_trials=args.trials, n_jobs=args.jobs, callbacks=[monitor])
