@@ -1,8 +1,14 @@
 import json
 import os
 import numpy as np
+import argparse
 from dynamixel_sdk import *
 import time
+
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument("--mass", type=float, required=True)
+arg_parser.add_argument("--length", type=float, required=True)
+args = arg_parser.parse_args()
 
 portHandler = PortHandler("/dev/ttyUSB0")
 packetHandler = PacketHandler(1.0)
@@ -48,7 +54,12 @@ def read_data():
 ADDR_READ = 36
 start = time.time()
 elapsed = 0
-data = []
+data = {
+    "mass": args.mass,
+    "length": args.length,
+    "dt": 0.01,
+    "entries": []
+}
 
 while elapsed < duration:
     elapsed = time.time() - start
@@ -56,7 +67,10 @@ while elapsed < duration:
     entry = read_data()
     elapsed2 = time.time() - start
     entry["timestamp"] = (elapsed2 - elapsed) /2.0
-    data.append(entry)
+    
+    entry["volts"] = 0.0
+    entry["torque_enable"] = False
+    data["entries"].append(entry)
 
     # Very bad, for test only
     time.sleep(0.01)
