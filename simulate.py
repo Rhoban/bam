@@ -1,7 +1,7 @@
 import numpy as np
 from model import BaseModel, Model
 
-g: float = 9.81
+g: float = -9.81
 
 
 class Simulate1R:
@@ -29,7 +29,7 @@ class Simulate1R:
         """
         Steps the simulation for dt given the applied voltage.
         """
-        gravity_torque = -self.mass * g * self.length * np.cos(self.q)
+        gravity_torque = self.mass * g * self.length * np.cos(self.q)
         motor_torque = self.model.compute_motor_torque(volts, self.dq)
         friction_torque = self.model.compute_friction_torque(
             motor_torque, gravity_torque, self.dq
@@ -77,4 +77,3 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 pygame.quit()
                 break
-
