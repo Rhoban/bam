@@ -42,6 +42,28 @@ class Simulate1R:
         self.q += self.dq * dt
         self.t += dt
 
+    def rollout_log(self, log: dict):
+        """
+        Read a given log dict and return the sequential reached positions
+        """
+        positions = []
+
+        dt = log["dt"]
+        first_entry = log["entries"][0]
+        self.reset(first_entry["position"], first_entry["speed"])
+
+        for entry in log["entries"]:
+            positions.append(self.q)
+
+            if entry["torque_enable"]:
+                volts = entry["volts"]
+            else:
+                volts = None
+
+            self.step(volts, dt)
+
+        return positions
+
     def draw(self):
         """
         Draw using pygame
@@ -69,7 +91,7 @@ if __name__ == "__main__":
     model = Model()
     model.load_parameters("params.json")
     sim = Simulate1R(0.676, 0.105, model)
-    sim.reset(-1.4680196140065587, 0.0)
+    sim.reset(-1.5, 0.0)
     while True:
         sim.step(None, 0.01)
         sim.draw()

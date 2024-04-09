@@ -1,4 +1,5 @@
 import argparse
+import numpy as np
 import json
 import time
 import optuna
@@ -17,24 +18,11 @@ logs = logs.Logs(args.logdir)
 
 
 def compute_score(model: BaseModel, log: dict) -> float:
-    mean_error = 0
-    dt = log["dt"]
     simulator = simulate.Simulate1R(log["mass"], log["length"], model)
-    first_entry = log["entries"][0]
-    simulator.reset(first_entry["position"], first_entry["speed"])
+    positions = simulator.rollout_log(log)
+    log_positions = np.array([entry["position"] for entry in log["entries"]])
 
-    for entry in log["entries"]:
-        error = abs(simulator.q - entry["position"])
-        mean_error += error
-
-        if entry["torque_enable"]:
-            volts = entry["volts"]
-        else:
-            volts = None
-
-        simulator.step(volts, dt)
-
-    return mean_error / len(log["entries"])
+    return np.mean(np.abs(positions - log_positions))
 
 
 def compute_scores(model: BaseModel):

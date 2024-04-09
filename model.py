@@ -69,15 +69,15 @@ class Model(BaseModel):
         self.R = Parameter(2.0, 0.1, 10.0, optimize=False)
 
         # Motor armature [kg m^2]
-        self.armature = Parameter(0.005, 0.001, 0.1)
+        self.armature = Parameter(0.005, 0.001, 0.01)
 
         # Base friction is always here, stribeck friction is added when not moving [Nm]
-        self.friction_base = Parameter(0.05, 0.001, 0.5)
-        self.friction_stribeck = Parameter(0.05, 0.001, 0.5)
+        self.friction_base = Parameter(0.05, 0.005, 0.5)
+        self.friction_stribeck = Parameter(0.05, 0.005, 0.5)
 
         # Load-dependent friction, again base is always here and stribeck is added when not moving [Nm]
-        self.load_friction_base = Parameter(0.05, 0.001, 1.0)
-        self.load_friction_stribeck = Parameter(0.05, 0.001, 1.0)
+        self.load_friction_base = Parameter(0.05, 0.005, 1.0)
+        self.load_friction_stribeck = Parameter(0.05, 0.005, 1.0)
 
         # Stribeck velocity [rad/s] and curvature
         self.dtheta_stribeck = Parameter(2.0, 0.01, 10.0)
