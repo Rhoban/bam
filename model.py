@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 
 class Parameter:
@@ -46,28 +47,40 @@ class BaseModel:
             if isinstance(param, Parameter)
         }
 
+    def load_parameters(self, json_file: str) -> list:
+        """
+        Load parameters from a given filename
+        """
+        with open(json_file) as f:
+            data = json.load(f)
+            parameters = self.get_parameters()
+
+            for name in parameters:
+                if name in data:
+                    parameters[name].value = data[name]
+
 
 class Model(BaseModel):
     def __init__(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.kt = Parameter(1.6, 0.1, 10.0)
+        self.kt = Parameter(1.6, 0.1, 10.0, optimize=False)
 
         # Motor resistance [Ohm]
-        self.R = Parameter(2.0, 0.1, 10.0)
+        self.R = Parameter(2.0, 0.1, 10.0, optimize=False)
 
         # Motor armature [kg m^2]
         self.armature = Parameter(0.005, 0.001, 0.1)
 
         # Base friction is always here, stribeck friction is added when not moving [Nm]
-        self.friction_base = Parameter(0.05, 0.01, 1.0)
-        self.friction_stribeck = Parameter(0.1, 0.01, 1.0)
+        self.friction_base = Parameter(0.05, 0.001, 0.5)
+        self.friction_stribeck = Parameter(0.05, 0.001, 0.5)
 
         # Load-dependent friction, again base is always here and stribeck is added when not moving [Nm]
-        self.load_friction_base = Parameter(0.05, 0.01, 5.0)
-        self.load_friction_stribeck = Parameter(0.1, 0.01, 5.0)
+        self.load_friction_base = Parameter(0.05, 0.001, 1.0)
+        self.load_friction_stribeck = Parameter(0.05, 0.001, 1.0)
 
         # Stribeck velocity [rad/s] and curvature
-        self.dtheta_stribeck = Parameter(2.0, 0.1, 10.0)
+        self.dtheta_stribeck = Parameter(2.0, 0.01, 10.0)
         self.alpha = Parameter(1.0, 0.5, 2.0)
 
         # Viscous friction [Nm/(rad/s)]
@@ -89,6 +102,7 @@ class Model(BaseModel):
     def compute_friction_torque(
         self, motor_torque: float, external_torque: float, dtheta: float
     ) -> float:
+
         # Torque applied to the gearbox
         gearbox_torque = np.abs(external_torque - motor_torque)
 

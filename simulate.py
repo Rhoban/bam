@@ -67,6 +67,7 @@ if __name__ == "__main__":
     import pygame
 
     model = Model()
+    model.load_parameters("params.json")
     sim = Simulate1R(0.676, 0.105, model)
     sim.reset(-1.4680196140065587, 0.0)
     while True:
