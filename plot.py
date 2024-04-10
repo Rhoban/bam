@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--params", type=str, default="params.json")
-arg_parser.add_argument("--rereset", default=None, type=float)
+arg_parser.add_argument("--reset_period", default=None, type=float)
 args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
@@ -20,7 +20,7 @@ model.load_parameters(args.params)
 
 for log in logs.logs:
     simulator = simulate.Simulate1R(log["mass"], log["length"], model)
-    sim_q = simulator.rollout_log(log, rereset=args.rereset)
+    sim_q = simulator.rollout_log(log, reset_period=args.reset_period)
 
     ts = np.arange(len(sim_q)) * log["dt"]
     q = [entry["position"] for entry in log["entries"]]

@@ -13,6 +13,7 @@ arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--output", type=str, default="params.json")
 arg_parser.add_argument("--trials", type=int, default=100_000)
 arg_parser.add_argument("--jobs", type=int, default=1)
+arg_parser.add_argument("--reset_period", default=None, type=float)
 args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
@@ -20,7 +21,7 @@ logs = logs.Logs(args.logdir)
 
 def compute_score(model: BaseModel, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], model)
-    positions = simulator.rollout_log(log)
+    positions = simulator.rollout_log(log, reset_period=args.reset_period)
     log_positions = np.array([entry["position"] for entry in log["entries"]])
 
     return np.mean(np.abs(positions - log_positions))
@@ -82,8 +83,10 @@ def monitor_x(x):
 
 model = Model()
 
-# sampler = optuna.samplers.CmaEsSampler(x0=model.get_parameter_values())
-sampler = optuna.samplers.NSGAIISampler()
+sampler = optuna.samplers.CmaEsSampler(x0=model.get_parameter_values(), restart_strategy="bipop")
+# sampler = optuna.samplers.NSGAIISampler()
+# sampler = optuna.samplers.RandomSampler()
+
 study = optuna.create_study(sampler=sampler)
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 study.optimize(objective, n_trials=args.trials, n_jobs=args.jobs, callbacks=[monitor])
