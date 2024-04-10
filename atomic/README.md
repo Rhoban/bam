@@ -153,4 +153,7 @@ To measure $H$, we gave targets and measured the output voltage using an oscillo
 
 * $H = 0.15754579$
 
+The PWM frequency was measured to 23,419 Hz, the maximum duty cycle measured was 0.9625
+(the electronics seems to cap higher values).
+
 ![MX-106](imgs/mx106_h.png)
