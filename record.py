@@ -56,11 +56,6 @@ while time.time() - start < trajectory.duration:
     entry["timestamp"] = (t0 + t1) / 2.0
     entry["goal_position"] = goal_position
     entry["torque_enable"] = torque_enable
-    position_error = (entry["position"] - entry["goal_position"])
-    entry["volts"] = compute_volts(position_error, args.kp)
-    if not torque_enable:
-        entry["volts"] = 0
-
     data["entries"].append(entry)
 
 #Format YYYY-MM-DD_HH:mm:ss"

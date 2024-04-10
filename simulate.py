@@ -67,7 +67,7 @@ class Simulate1R:
 
             if entry["torque_enable"]:
                 if simulate_control:
-                    position_error = self.q - entry["goal_position"]
+                    position_error = entry["goal_position"] - self.q
                     volts = compute_volts(position_error, log["kp"])
                 else:
                     volts = entry["volts"]

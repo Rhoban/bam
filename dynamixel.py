@@ -19,8 +19,13 @@ ADDR_PRESENT_VOLTAGE = 42
 # Present temperature (1 byte)
 ADDR_PRESENT_TEMPERATURE = 43
 
+
 def compute_volts(position_error: float, kp: int, vin: float = 15.0):
-        return -position_error * kp * vin * 0.158
+    duty_cycle = position_error * kp * 0.158
+    duty_cycle = np.clip(duty_cycle, -0.9625, 0.9625)
+
+    return vin * duty_cycle
+
 
 class DynamixelActuatorV1:
     def __init__(self, port: str, id: int = 1):
