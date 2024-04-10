@@ -29,34 +29,37 @@ class Simulate1R:
         """
         Steps the simulation for dt given the applied voltage.
         """
+
         gravity_torque = self.mass * g * self.length * np.sin(self.q)
         motor_torque = self.model.compute_motor_torque(volts, self.dq)
         friction_torque = self.model.compute_friction_torque(
             motor_torque, gravity_torque, self.dq
         )
+
         inertia = self.inertia + self.model.get_extra_inertia()
         net_torque = motor_torque + friction_torque + gravity_torque
         angular_acceleration = net_torque / inertia
 
         self.dq += angular_acceleration * dt
+        self.dq = np.clip(self.dq, -100.0, 100.0)
         self.q += self.dq * dt
         self.t += dt
 
-    def rollout_log(self, log: dict, rereset : float = None):
+    def rollout_log(self, log: dict, reset_period : float = None):
         """
         Read a given log dict and return the sequential reached positions
         """
         positions = []
 
-        t = 0.0
+        reset_period_t = 0.0
         dt = log["dt"]
         first_entry = log["entries"][0]
         self.reset(first_entry["position"], first_entry["speed"])
 
         for entry in log["entries"]:
-            t += dt
-            if rereset is not None and t > rereset:
-                t = 0.
+            reset_period_t += dt
+            if reset_period is not None and reset_period_t > reset_period:
+                reset_period_t = 0.
                 self.reset(entry["position"], entry["speed"])
             positions.append(self.q)
 
