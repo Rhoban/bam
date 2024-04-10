@@ -8,6 +8,8 @@ import time
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--mass", type=float, required=True)
 arg_parser.add_argument("--length", type=float, required=True)
+arg_parser.add_argument("--duration", type=float, default=3.0)
+arg_parser.add_argument("--dt", type=float, default=0.002)
 args = arg_parser.parse_args()
 
 os.system("setserial /dev/ttyUSB0 low_latency")
@@ -17,9 +19,6 @@ packetHandler = PacketHandler(1.0)
 
 portHandler.openPort()
 portHandler.setBaudRate(1000000)
-
-duration = 3.0
-dt = 0.002
 
 def read_data():
     # Reading position, speed, load, voltage and temperature
@@ -57,10 +56,10 @@ def read_data():
 
 ADDR_READ = 36
 start = time.time()
-data = {"mass": args.mass, "length": args.length, "dt": dt, "entries": []}
+data = {"mass": args.mass, "length": args.length, "dt": args.dt, "entries": []}
 
-for step in range(int(duration / dt)):
-    step_t = dt * step
+for step in range(int(args.duration / args.dt)):
+    step_t = args.dt * step
     while (time.time() - start) < step_t:
         time.sleep(0.001)
 
@@ -72,7 +71,7 @@ for step in range(int(duration / dt)):
     entry["timestamp"] = (t0 + t1) /2.0
 
     entry["volts"] = 0.0
-    entry["torque_enable"] = False
+    entry["torque_enable"] = True
     data["entries"].append(entry)
 
 json.dump(data, open("data.json", "w"))
