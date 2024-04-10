@@ -1,5 +1,6 @@
 import numpy as np
 from model import BaseModel, Model
+from dynamixel import compute_volts
 
 g: float = -9.81
 
@@ -45,11 +46,12 @@ class Simulate1R:
         self.q += self.dq * dt
         self.t += dt
 
-    def rollout_log(self, log: dict, reset_period : float = None):
+    def rollout_log(self, log: dict, reset_period : float = None, simulate_control: bool = False):
         """
         Read a given log dict and return the sequential reached positions
         """
         positions = []
+        all_volts = []
 
         reset_period_t = 0.0
         dt = log["dt"]
@@ -64,13 +66,18 @@ class Simulate1R:
             positions.append(self.q)
 
             if entry["torque_enable"]:
-                volts = entry["volts"]
+                if simulate_control:
+                    position_error = self.q - entry["goal_position"]
+                    volts = compute_volts(position_error, log["kp"])
+                else:
+                    volts = entry["volts"]
             else:
                 volts = None
+            all_volts.append(volts)
 
             self.step(volts, dt)
 
-        return positions
+        return positions, all_volts
 
     def draw(self):
         """

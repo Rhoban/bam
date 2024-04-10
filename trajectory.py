@@ -34,18 +34,30 @@ class Trajectory:
         raise NotImplementedError
 
 class LiftAndDrop(Trajectory):
-    duration = 5.0
+    duration = 6.0
 
     def __call__(self, t: float):
-        keyframes = [[0.0, 0.0, 0.0], [2.0, np.pi / 2, 0.0]]
+        keyframes = [
+            [0.0, 0.0, 0.0],
+            [2.0, -np.pi / 2, 0.0]
+        ]
         angle = cubic_interpolate(keyframes, t)
 
         enable = t < 2.0
 
         return angle, enable
     
+class SinusTimeSquare(Trajectory):
+    duration = 6.0
+
+    def __call__(self, t: float):
+        angle = np.sin(t**2)
+
+        return angle, True
+    
 trajectories = {
-    "lift_and_drop": LiftAndDrop
+    "lift_and_drop": LiftAndDrop(),
+    "sinus_time_square": SinusTimeSquare()
 }
 
 if __name__ == "__main__":

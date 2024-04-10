@@ -14,6 +14,7 @@ arg_parser.add_argument("--output", type=str, default="params.json")
 arg_parser.add_argument("--trials", type=int, default=100_000)
 arg_parser.add_argument("--jobs", type=int, default=1)
 arg_parser.add_argument("--reset_period", default=None, type=float)
+arg_parser.add_argument("--control", action="store_true")
 args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
@@ -21,7 +22,8 @@ logs = logs.Logs(args.logdir)
 
 def compute_score(model: BaseModel, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], model)
-    positions = simulator.rollout_log(log, reset_period=args.reset_period)
+    result = simulator.rollout_log(log, reset_period=args.reset_period, simulate_control=args.control)
+    positions = result[0]
     log_positions = np.array([entry["position"] for entry in log["entries"]])
 
     return np.mean(np.abs(positions - log_positions))

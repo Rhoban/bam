@@ -75,10 +75,10 @@ class BaseModel:
 class Model(BaseModel):
     def __init__(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.kt = Parameter(1.6, 0.1, 10.0)
+        self.kt = Parameter(1.6, 0.5, 5.0)
 
         # Motor resistance [Ohm]
-        self.R = Parameter(2.0, 0.1, 10.0, optimize=False)
+        self.R = Parameter(2.0, 0.5, 5.0)
 
         # Motor armature [kg m^2]
         self.armature = Parameter(0.005, 0.001, 0.05)
