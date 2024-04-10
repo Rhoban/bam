@@ -55,6 +55,19 @@ class SinusTimeSquare(Trajectory):
 
         return angle, True
     
+class UpAndDown(Trajectory):
+    duration = 6.0
+
+    def __call__(self, t: float):
+        keyframes = [
+            [0.0, 0.0, 0.0],
+            [3.0, np.pi / 2, 0.0],
+            [6.0, 0.8 * np.pi / 2, 0.0]
+        ]
+        angle = cubic_interpolate(keyframes, t)
+
+        return angle, True
+    
 class Nothing(Trajectory):
     duration = 6.0
     
@@ -64,6 +77,7 @@ class Nothing(Trajectory):
 trajectories = {
     "lift_and_drop": LiftAndDrop(),
     "sinus_time_square": SinusTimeSquare(),
+    "up_and_down": UpAndDown(),
     "nothing": Nothing()
 }
 

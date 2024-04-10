@@ -1,10 +1,12 @@
 import argparse
 import numpy as np
+import json
+from copy import deepcopy
 from scipy.optimize import minimize
 import json
 import time
 import optuna
-from model import Model, BaseModel
+from model import models, BaseModel
 import simulate
 import logs
 
@@ -12,6 +14,7 @@ arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--output", type=str, default="params.json")
 arg_parser.add_argument("--method", type=str, default="cmaes")
+arg_parser.add_argument("--model", type=str, required=True)
 arg_parser.add_argument("--trials", type=int, default=100_000)
 arg_parser.add_argument("--jobs", type=int, default=1)
 arg_parser.add_argument("--reset_period", default=None, type=float)
@@ -45,7 +48,7 @@ def compute_scores(model: BaseModel):
 
 
 def objective(trial):
-    model = Model()
+    model = models[args.model]()
     parameters = model.get_parameters()
     for name in parameters:
         parameter = parameters[name]
@@ -56,7 +59,7 @@ def objective(trial):
 
 
 def objective_x(x: list):
-    model = Model()
+    model = models[args.model]()
     k = 0
     parameters = model.get_parameters()
     for name in parameters:
@@ -77,7 +80,9 @@ def monitor(study, trial):
 
     if elapsed > 0.050:
         last_log = time.time()
-        json.dump(study.best_params, open(args.output, "w"))
+        data = deepcopy(study.best_params)
+        data["model"] = args.model
+        json.dump(data, open(args.output, "w"))
 
         print()
         print(f"Trial {trial.number}, Best score: {study.best_value}")
@@ -90,7 +95,7 @@ def monitor_x(x):
     print(x)
 
 
-model = Model()
+model = models[args.model]()
 
 if args.method == "cmaes":
     sampler = optuna.samplers.CmaEsSampler(

@@ -3,7 +3,7 @@ import numpy as np
 import json
 import time
 import optuna
-from model import Model, BaseModel
+from model import load_model, BaseModel
 import simulate
 import logs
 import matplotlib.pyplot as plt
@@ -19,8 +19,7 @@ args = arg_parser.parse_args()
 logs = logs.Logs(args.logdir)
 
 if args.sim:
-    model = Model()
-    model.load_parameters(args.params)
+    model = load_model(args.params)
 
 for log in logs.logs:
     if args.sim:
