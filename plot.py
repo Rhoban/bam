@@ -13,6 +13,7 @@ arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--params", type=str, default="params.json")
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
+arg_parser.add_argument("--nosim", action="store_true")
 args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
@@ -25,6 +26,7 @@ for log in logs.logs:
 
     ts = np.arange(len(sim_q)) * log["dt"]
     q = [entry["position"] for entry in log["entries"]]
+    goal_q = [entry["goal_position"] for entry in log["entries"]]
     volts = [entry["volts"] for entry in log["entries"]]
     torque_enable = np.array([entry["torque_enable"] for entry in log["entries"]])
     sim_q = np.array(sim_q)
@@ -33,7 +35,9 @@ for log in logs.logs:
     f, (ax1, ax2) = plt.subplots(2, sharex=True)
 
     ax1.plot(ts, q, label="q")
-    ax1.plot(ts, sim_q, label="sim_q")
+    if not args.nosim:
+        ax1.plot(ts, sim_q, label="sim_q")
+    ax1.plot(ts, goal_q, label="goal_q")
     ax1.legend()
     ax1.set_title(f'{log["filename"]}, mass={log["mass"]}, length={log["length"]}, k={log["kp"]}')
     ax1.grid()
@@ -41,7 +45,8 @@ for log in logs.logs:
     # Using torque_enable color piecewise
     ax2.plot(ts, volts, label="volts")
     if args.control:
-        ax2.plot(ts, sim_volts, label="sim_volts")
+        if not args.nosim:
+            ax2.plot(ts, sim_volts, label="sim_volts")
     # Shading the areas where torque is False
     ax2.fill_between(
         ts,

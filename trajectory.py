@@ -55,9 +55,16 @@ class SinusTimeSquare(Trajectory):
 
         return angle, True
     
+class Nothing(Trajectory):
+    duration = 6.0
+    
+    def __call__(self, t: float):
+        return 0.0, False
+    
 trajectories = {
     "lift_and_drop": LiftAndDrop(),
-    "sinus_time_square": SinusTimeSquare()
+    "sinus_time_square": SinusTimeSquare(),
+    "nothing": Nothing()
 }
 
 if __name__ == "__main__":

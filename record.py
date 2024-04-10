@@ -10,7 +10,7 @@ from trajectory import *
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--mass", type=float, required=True)
 arg_parser.add_argument("--length", type=float, required=True)
-arg_parser.add_argument("--dt", type=float, default=0.002)
+arg_parser.add_argument("--dt", type=float, default=0.005)
 arg_parser.add_argument("--port", type=str, default="/dev/ttyUSB0")
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--trajectory", type=str, default="lift_and_drop")
@@ -26,7 +26,8 @@ trajectory = trajectories[args.trajectory]
 start = time.time()
 while time.time() - start < 1.0:
     goal_position, torque_enable = trajectory(0)
-    dxl.set_goal_position(goal_position)
+    if torque_enable:
+        dxl.set_goal_position(goal_position)
     dxl.set_torque(torque_enable)
     dxl.set_p_gain(args.kp)
 
@@ -39,12 +40,9 @@ data = {
     "entries": []
 }
 
-for step in range(int(trajectory.duration / args.dt)):
-    step_t = args.dt * step
-    while (time.time() - start) < step_t:
-        time.sleep(0.001)
-
-    goal_position, new_torque_enable = trajectory(step_t)
+while time.time() - start < trajectory.duration:
+    t = time.time() - start
+    goal_position, new_torque_enable = trajectory(t)
     if new_torque_enable != torque_enable:
         dxl.set_torque(new_torque_enable)
         torque_enable = new_torque_enable
