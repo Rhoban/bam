@@ -35,6 +35,7 @@ data = {
     "mass": args.mass,
     "length": args.length,
     "kp": args.kp,
+    "trajectory": args.trajectory,
     "entries": []
 }
 
