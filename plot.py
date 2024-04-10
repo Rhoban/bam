@@ -47,7 +47,7 @@ for log in logs.logs:
         where=[not torque for torque in torque_enable],
         color="red",
         alpha=0.3,
-        label="torque_enable",
+        label="torque off",
     )
 
     ax2.legend()
