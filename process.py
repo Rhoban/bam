@@ -16,6 +16,7 @@ for logfile in glob.glob(f"{args.raw}/*.json"):
     data = json.load(open(logfile))
     data_output = deepcopy(data)
     data_output["entries"] = []
+    data_output["dt"] = args.dt
 
     duration = data["entries"][-1]["timestamp"]
     print(f"* Processing {logfile} with duration {duration:.2f}s")

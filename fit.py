@@ -11,6 +11,7 @@ import logs
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--output", type=str, default="params.json")
+arg_parser.add_argument("--method", type=str, default="cmaes")
 arg_parser.add_argument("--trials", type=int, default=100_000)
 arg_parser.add_argument("--jobs", type=int, default=1)
 arg_parser.add_argument("--reset_period", default=None, type=float)
@@ -22,7 +23,9 @@ logs = logs.Logs(args.logdir)
 
 def compute_score(model: BaseModel, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], model)
-    result = simulator.rollout_log(log, reset_period=args.reset_period, simulate_control=args.control)
+    result = simulator.rollout_log(
+        log, reset_period=args.reset_period, simulate_control=args.control
+    )
     positions = result[0]
     log_positions = np.array([entry["position"] for entry in log["entries"]])
 
@@ -51,6 +54,7 @@ def objective(trial):
 
     return compute_scores(model)
 
+
 def objective_x(x: list):
     model = Model()
     k = 0
@@ -62,6 +66,7 @@ def objective_x(x: list):
             k += 1
 
     return compute_scores(model)
+
 
 last_log = time.time()
 
@@ -80,14 +85,23 @@ def monitor(study, trial):
         for key in study.best_params:
             print(f"- {key}: {study.best_params[key]}")
 
+
 def monitor_x(x):
     print(x)
 
+
 model = Model()
 
-sampler = optuna.samplers.CmaEsSampler(x0=model.get_parameter_values(), restart_strategy="bipop")
-# sampler = optuna.samplers.NSGAIISampler()
-# sampler = optuna.samplers.RandomSampler()
+if args.method == "cmaes":
+    sampler = optuna.samplers.CmaEsSampler(
+        x0=model.get_parameter_values(), restart_strategy="bipop"
+    )
+elif args.method == "random":
+    sampler = optuna.samplers.RandomSampler()
+elif args.method == "nsgaii":
+    sampler = optuna.samplers.NSGAIISampler()
+else:
+    raise ValueError(f"Unknown method: {args.method}")
 
 study = optuna.create_study(sampler=sampler)
 optuna.logging.set_verbosity(optuna.logging.WARNING)

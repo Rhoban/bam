@@ -10,7 +10,6 @@ from trajectory import *
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--mass", type=float, required=True)
 arg_parser.add_argument("--length", type=float, required=True)
-arg_parser.add_argument("--dt", type=float, default=0.005)
 arg_parser.add_argument("--port", type=str, default="/dev/ttyUSB0")
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--trajectory", type=str, default="lift_and_drop")
@@ -36,7 +35,6 @@ data = {
     "mass": args.mass,
     "length": args.length,
     "kp": args.kp,
-    "dt": args.dt,
     "entries": []
 }
 
