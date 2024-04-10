@@ -56,6 +56,17 @@ while time.time() - start < trajectory.duration:
     entry["torque_enable"] = torque_enable
     data["entries"].append(entry)
 
+return_dt = 0.01
+max_variation = return_dt * 1.0
+while abs(goal_position) > 0:
+    if goal_position > 0:
+        goal_position = max(0, goal_position - max_variation)
+    else:
+        goal_position = min(0, goal_position + max_variation)
+    dxl.set_goal_position(goal_position)
+    time.sleep(return_dt)
+dxl.set_torque(False)
+
 #Format YYYY-MM-DD_HH:mm:ss"
 date = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%S")
 
