@@ -46,7 +46,7 @@ class BaseModel:
             for name, param in vars(self).items()
             if isinstance(param, Parameter)
         }
-    
+
     def get_parameter_values(self) -> dict:
         """
         Return a dict containing parameter values
@@ -75,7 +75,7 @@ class BaseModel:
 class Model(BaseModel):
     def __init__(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.kt = Parameter(1.6, 0.1, 10.0, optimize=False)
+        self.kt = Parameter(1.6, 0.1, 10.0)
 
         # Motor resistance [Ohm]
         self.R = Parameter(2.0, 0.1, 10.0, optimize=False)
@@ -93,10 +93,11 @@ class Model(BaseModel):
 
         # Stribeck velocity [rad/s] and curvature
         self.dtheta_stribeck = Parameter(0.2, 0.01, 10.0)
-        self.alpha = Parameter(1.35, 0.5, 2.0)
+        self.alpha = Parameter(1.0, 0.5, 4.0)
 
         # Viscous friction [Nm/(rad/s)]
         self.friction_viscous = Parameter(0.1, 0.0, 2.0)
+        self.friction_viscuous_stribeck = Parameter(0.1, 0.0, 2.0)
 
     def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
         # Volts to None means that the motor is disconnected
@@ -116,7 +117,7 @@ class Model(BaseModel):
     ) -> float:
 
         # Torque applied to the gearbox
-        gearbox_torque = np.abs(external_torque - motor_torque) 
+        gearbox_torque = np.abs(external_torque - motor_torque)
 
         # Stribeck coeff (1 when stopped to 0 when moving)
         stribeck_coeff = np.exp(
@@ -140,7 +141,13 @@ class Model(BaseModel):
             static_friction = -max(-static_friction, net_torque)
 
         # Viscous friction
-        damping_friction = -self.friction_viscous.value * dtheta
+        damping_friction = (
+            -(
+                self.friction_viscous.value
+                + self.friction_viscuous_stribeck.value * stribeck_coeff
+            )
+            * dtheta
+        )
 
         return damping_friction + static_friction
 
