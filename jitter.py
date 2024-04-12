@@ -11,8 +11,6 @@ filename = sys.argv[1]
 data = json.load(open(filename))
 
 ts = [entry["timestamp"] for entry in data["entries"]]
-# positions = [entry["position"] for entry in data["entries"]]
-# goal_positions = [entry["goal_position"] for entry in data["entries"]]
 dt = np.diff(ts)
 
 import matplotlib.pyplot as plt
