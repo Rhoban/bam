@@ -111,8 +111,8 @@ def monitor(study, trial):
         trial_number = trial.number
         best_value = study.best_value
         wandb_log = {
-            "best_value": best_value,
-            "trial_number": trial_number,
+            "optim/best_value": best_value,
+            "optim/trial_number": trial_number,
         }
 
         json.dump(data, open(args.output, "w"))
@@ -122,9 +122,10 @@ def monitor(study, trial):
         print(f"Best params found (saved to {args.output}): ")
         for key in data:
             print(f"- {key}: {data[key]}")
+            if type(data[key]) == float:
+                wandb_log[f"params/{key}"] = data[key]
         
         if wandb_run is not None:
-            wandb_log["params"] = data
             wandb.log(wandb_log)
     sys.stdout.flush()
 
