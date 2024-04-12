@@ -21,6 +21,7 @@ arg_parser.add_argument("--output", type=str, default="params.json")
 arg_parser.add_argument("--method", type=str, default="cmaes")
 arg_parser.add_argument("--model", type=str, required=True)
 arg_parser.add_argument("--trials", type=int, default=100_000)
+arg_parser.add_argument("--workers", type=int, default=1)
 arg_parser.add_argument("--load-study", type=str, default=None)
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
@@ -28,6 +29,12 @@ arg_parser.add_argument("--wandb", action="store_true")
 args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
+
+study_name = f"study_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+study_url = f"sqlite:///study.db"
+
+# study_url = f"mysql://root:root@127.0.0.1:6033/optuna"
 
 
 def compute_score(model: BaseModel, log: dict) -> float:
@@ -141,11 +148,19 @@ else:
     raise ValueError(f"Unknown method: {args.method}")
 
 def optuna_run(enable_monitoring = True):
-    study = optuna.create_study(sampler=sampler)
+    study = optuna.load_study(study_name=study_name, storage=study_url)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     callbacks = []
     if enable_monitoring:
         callbacks = [monitor]
     study.optimize(objective, n_trials=args.trials, n_jobs=1, callbacks=callbacks)
+
+os.system(f"rm -f study.db")
+optuna.create_study(study_name=study_name, storage=study_url)
+
+# Running the other workers
+for k in range(args.workers-1):
+    p = Process(target=optuna_run, args=(False,))
+    p.start()
         
 optuna_run(True)
