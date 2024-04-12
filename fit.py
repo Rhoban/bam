@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 import os
+import sys
 from multiprocessing import Process
 import numpy as np
 import json
@@ -101,6 +102,7 @@ def monitor(study, trial):
         print(f"Best params found (saved to {args.output}): ")
         for key in data:
             print(f"- {key}: {data[key]}")
+    sys.stdout.flush()
 
 
 def monitor_x(x):
