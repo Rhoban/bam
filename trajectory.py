@@ -33,20 +33,19 @@ class Trajectory:
         """
         raise NotImplementedError
 
+
 class LiftAndDrop(Trajectory):
     duration = 6.0
 
     def __call__(self, t: float):
-        keyframes = [
-            [0.0, 0.0, 0.0],
-            [2.0, -np.pi / 2, 0.0]
-        ]
+        keyframes = [[0.0, 0.0, 0.0], [2.0, -np.pi / 2, 0.0]]
         angle = cubic_interpolate(keyframes, t)
 
         enable = t < 2.0
 
         return angle, enable
-    
+
+
 class SinusTimeSquare(Trajectory):
     duration = 6.0
 
@@ -54,7 +53,8 @@ class SinusTimeSquare(Trajectory):
         angle = np.sin(t**2)
 
         return angle, True
-    
+
+
 class UpAndDown(Trajectory):
     duration = 6.0
 
@@ -62,23 +62,35 @@ class UpAndDown(Trajectory):
         keyframes = [
             [0.0, 0.0, 0.0],
             [3.0, np.pi / 2, 0.0],
-            [6.0, 0.8 * np.pi / 2, 0.0]
+            [6.0, 0.8 * np.pi / 2, 0.0],
         ]
         angle = cubic_interpolate(keyframes, t)
 
         return angle, True
-    
+
+
+class SinSin(Trajectory):
+    duration = 6.0
+
+    def __call__(self, t: float):
+        angle = np.sin(t) * np.pi / 2 + np.sin(t * 5.0) * 0.5
+
+        return angle, True
+
+
 class Nothing(Trajectory):
     duration = 6.0
-    
+
     def __call__(self, t: float):
         return 0.0, False
-    
+
+
 trajectories = {
     "lift_and_drop": LiftAndDrop(),
     "sinus_time_square": SinusTimeSquare(),
     "up_and_down": UpAndDown(),
-    "nothing": Nothing()
+    "sin_sin": SinSin(),
+    "nothing": Nothing(),
 }
 
 if __name__ == "__main__":
@@ -91,7 +103,9 @@ if __name__ == "__main__":
     en = [trajectory(t)[1] for t in ts]
 
     plt.plot(ts, xs, label="Angle")
-    plt.fill_between(ts, min(xs), max(xs), en, alpha=0.2, color="green", label="Torque enable")
+    plt.fill_between(
+        ts, min(xs), max(xs), en, alpha=0.2, color="green", label="Torque enable"
+    )
     plt.xlabel("Time (s)")
     plt.ylabel("Angle (rad)")
     plt.legend()
