@@ -13,6 +13,7 @@ arg_parser.add_argument("--length", type=float, required=True)
 arg_parser.add_argument("--port", type=str, default="/dev/ttyUSB0")
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--trajectory", type=str, default="lift_and_drop")
+arg_parser.add_argument("--motor", type=str, required=True)
 arg_parser.add_argument("--kp", type=int, default=32)
 args = arg_parser.parse_args()
 
@@ -35,6 +36,7 @@ data = {
     "mass": args.mass,
     "length": args.length,
     "kp": args.kp,
+    "motor": args.motor,
     "trajectory": args.trajectory,
     "entries": []
 }
