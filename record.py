@@ -47,8 +47,10 @@ while time.time() - start < trajectory.duration:
     if new_torque_enable != torque_enable:
         dxl.set_torque(new_torque_enable)
         torque_enable = new_torque_enable
+        time.sleep(0.001)
     if torque_enable:
         dxl.set_goal_position(goal_position)
+        time.sleep(0.001)
 
     t0 = time.time() - start
     entry = dxl.read_data()
@@ -59,6 +61,7 @@ while time.time() - start < trajectory.duration:
     entry["torque_enable"] = torque_enable
     data["entries"].append(entry)
 
+goal_position = data["entries"][-1]["position"]
 return_dt = 0.01
 max_variation = return_dt * 1.0
 while abs(goal_position) > 0:
