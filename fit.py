@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 import os
 from multiprocessing import Process
 import numpy as np
@@ -25,6 +26,12 @@ arg_parser.add_argument("--control", action="store_true")
 args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
+
+study_name = f"study_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+study_url = f"sqlite:///study.db"
+
+# study_url = f"mysql://root:root@127.0.0.1:6033/optuna"
 
 
 def compute_score(model: BaseModel, log: dict) -> float:
@@ -114,7 +121,7 @@ else:
     raise ValueError(f"Unknown method: {args.method}")
 
 def optuna_run(enable_monitoring = True):
-    study = optuna.load_study(study_name=args.load_study, storage=f"sqlite:///study.db")
+    study = optuna.load_study(study_name=study_name, storage=study_url)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     callbacks = []
     if enable_monitoring:
@@ -122,7 +129,7 @@ def optuna_run(enable_monitoring = True):
     study.optimize(objective, n_trials=args.trials, n_jobs=1, callbacks=callbacks)
 
 os.system(f"rm -f study.db")
-optuna.create_study(study_name="study", storage=f"sqlite:///study.db")
+optuna.create_study(study_name=study_name, storage=study_url)
 
 # Running the other workers
 for k in range(args.workers-1):
