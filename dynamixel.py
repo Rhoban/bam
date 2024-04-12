@@ -31,7 +31,9 @@ class DynamixelActuatorV1:
     def __init__(self, port: str, id: int = 1):
         self.id = id
 
-        os.system(f"setserial {port} low_latency")
+        result = os.system(f"setserial {port} low_latency")
+        if result != 0:
+            raise Exception("Failed to set low latency mode (you can try: sudo apt install setserial)")
 
         self.portHandler = PortHandler(port)
         self.packetHandler = PacketHandler(1.0)
