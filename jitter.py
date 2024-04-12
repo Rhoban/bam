@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 if len(sys.argv) != 2:
-    print("Usage: jitter.py <filename>")
+    print("Usage: jitter.py <filename (raw log)>")
     sys.exit(1)
 
 filename = sys.argv[1]
