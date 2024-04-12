@@ -80,7 +80,7 @@ def monitor(study, trial):
     global last_log
     elapsed = time.time() - last_log
 
-    if elapsed > 1.0:
+    if elapsed > 0.2:
         last_log = time.time()
         data = deepcopy(study.best_params)
         data["model"] = args.model
