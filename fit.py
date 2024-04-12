@@ -84,11 +84,13 @@ def monitor(study, trial):
         last_log = time.time()
         data = deepcopy(study.best_params)
         data["model"] = args.model
+        trial_number = trial.number
+        best_value = study.best_value
 
         json.dump(data, open(args.output, "w"))
 
         print()
-        print(f"Trial {trial.number}, Best score: {study.best_value}")
+        print(f"Trial {trial_number}, Best score: {best_value}")
         print(f"Best params found (saved to {args.output}): ")
         for key in data:
             print(f"- {key}: {data[key]}")
