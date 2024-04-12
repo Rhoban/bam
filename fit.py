@@ -12,6 +12,7 @@ import time
 import optuna
 from model import models, BaseModel
 import simulate
+import wandb
 import logs
 
 arg_parser = argparse.ArgumentParser()
@@ -24,6 +25,7 @@ arg_parser.add_argument("--workers", type=int, default=1)
 arg_parser.add_argument("--load-study", type=str, default=None)
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
+arg_parser.add_argument("--wandb", action="store_true")
 args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
@@ -83,10 +85,24 @@ def objective_x(x: list):
 
 
 last_log = time.time()
+wandb_run = None
 
 def monitor(study, trial):
-    global last_log
+    global last_log, wandb_run
     elapsed = time.time() - last_log
+
+    if args.wandb and wandb_run is None:
+        wandb_run = wandb.init(
+            name=f"{args.logdir}_{args.output}",
+            # Set the project where this run will be logged
+            project="dxl_identification",
+            # Track hyperparameters and run metadata
+            config={
+                "logdir": args.logdir,
+                "model": args.model,
+                "control": args.control,
+            },
+        )
 
     if elapsed > 0.2:
         last_log = time.time()
@@ -94,6 +110,10 @@ def monitor(study, trial):
         data["model"] = args.model
         trial_number = trial.number
         best_value = study.best_value
+        wandb_log = {
+            "best_value": best_value,
+            "trial_number": trial_number,
+        }
 
         json.dump(data, open(args.output, "w"))
 
@@ -102,6 +122,10 @@ def monitor(study, trial):
         print(f"Best params found (saved to {args.output}): ")
         for key in data:
             print(f"- {key}: {data[key]}")
+        
+        if wandb_run is not None:
+            wandb_log["params"] = data
+            wandb.log(wandb_log)
     sys.stdout.flush()
 
 
