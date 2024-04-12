@@ -1,4 +1,6 @@
 import argparse
+import os
+from multiprocessing import Process
 import numpy as np
 import json
 from copy import deepcopy
@@ -16,7 +18,8 @@ arg_parser.add_argument("--output", type=str, default="params.json")
 arg_parser.add_argument("--method", type=str, default="cmaes")
 arg_parser.add_argument("--model", type=str, required=True)
 arg_parser.add_argument("--trials", type=int, default=100_000)
-arg_parser.add_argument("--jobs", type=int, default=1)
+arg_parser.add_argument("--workers", type=int, default=1)
+arg_parser.add_argument("--load-study", type=str, default=None)
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
 args = arg_parser.parse_args()
@@ -73,22 +76,22 @@ def objective_x(x: list):
 
 last_log = time.time()
 
-
 def monitor(study, trial):
     global last_log
     elapsed = time.time() - last_log
 
-    if elapsed > 0.050:
+    if elapsed > 1.0:
         last_log = time.time()
         data = deepcopy(study.best_params)
         data["model"] = args.model
+
         json.dump(data, open(args.output, "w"))
 
         print()
         print(f"Trial {trial.number}, Best score: {study.best_value}")
         print(f"Best params found (saved to {args.output}): ")
-        for key in study.best_params:
-            print(f"- {key}: {study.best_params[key]}")
+        for key in data:
+            print(f"- {key}: {data[key]}")
 
 
 def monitor_x(x):
@@ -108,6 +111,20 @@ elif args.method == "nsgaii":
 else:
     raise ValueError(f"Unknown method: {args.method}")
 
-study = optuna.create_study(sampler=sampler)
-optuna.logging.set_verbosity(optuna.logging.WARNING)
-study.optimize(objective, n_trials=args.trials, n_jobs=args.jobs, callbacks=[monitor])
+def optuna_run(enable_monitoring = True):
+    study = optuna.load_study(study_name=args.load_study, storage=f"sqlite:///study.db")
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    callbacks = []
+    if enable_monitoring:
+        callbacks = [monitor]
+    study.optimize(objective, n_trials=args.trials, n_jobs=1, callbacks=callbacks)
+
+os.system(f"rm -f study.db")
+optuna.create_study(study_name="study", storage=f"sqlite:///study.db")
+
+# Running the other workers
+for k in range(args.workers-1):
+    p = Process(target=optuna_run, args=(False,))
+    p.start()
+        
+optuna_run(True)
