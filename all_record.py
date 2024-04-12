@@ -8,10 +8,11 @@ arg_parser.add_argument("--length", type=float, required=True)
 arg_parser.add_argument("--motor", type=str, required=True)
 arg_parser.add_argument("--port", type=str, default="/dev/ttyUSB0")
 arg_parser.add_argument("--logdir", type=str, required=True)
+arg_parser.add_argument("--speak", action="store_true")
 args = arg_parser.parse_args()
 
 kps = [4, 8, 16, 32]
-trajectories = ["lift_and_drop", "sinus_time_square", "up_and_down", "sin_sin"]
+trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
 
 command_base = f"python3 record.py --mass {args.mass} --length {args.length}"
 command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor}"
@@ -19,6 +20,14 @@ command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor
 
 for kp in kps:
     for trajectory in trajectories:
-        print(f"Recording with kp={kp} and trajectory={trajectory}")
+        sentence = f"Kp {kp}, trajectory {trajectory.replace('_', ' ')}"
+        print(sentence)
+
+        if args.speak:
+            from gtts import gTTS 
+            myobj = gTTS(text=sentence, lang='en', slow=False) 
+            myobj.save("/tmp/message.mp3")
+            os.system("mpg321 /tmp/message.mp3")
+
         command = f"{command_base} --kp {kp} --trajectory {trajectory}"
         os.system(command)

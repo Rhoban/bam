@@ -73,7 +73,7 @@ class SinSin(Trajectory):
     duration = 6.0
 
     def __call__(self, t: float):
-        angle = np.sin(t) * np.pi / 2 + np.sin(t * 5.0) * 0.5
+        angle = np.sin(t) * np.pi / 2 + np.sin(5.0 * t) * 0.5 * np.sin(t*2.0)
 
         return angle, True
 
@@ -87,7 +87,7 @@ class Nothing(Trajectory):
 
 trajectories = {
     "lift_and_drop": LiftAndDrop(),
-    "sinus_time_square": SinusTimeSquare(),
+    "sin_time_square": SinusTimeSquare(),
     "up_and_down": UpAndDown(),
     "sin_sin": SinSin(),
     "nothing": Nothing(),
