@@ -138,7 +138,8 @@ model = models[args.model]()
 
 if args.method == "cmaes":
     sampler = optuna.samplers.CmaEsSampler(
-        x0=model.get_parameter_values(), restart_strategy="bipop"
+        # x0=model.get_parameter_values(),
+        restart_strategy="bipop"
     )
 elif args.method == "random":
     sampler = optuna.samplers.RandomSampler()
