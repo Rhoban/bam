@@ -80,33 +80,33 @@ class Model(BaseModel):
         self.stribeck_viscous: bool = stribeck_viscous
 
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.kt = Parameter(1.6, 0.5, 5.0)
+        self.kt = Parameter(1.6, 1.0, 3.0)
 
         # Motor resistance [Ohm]
-        self.R = Parameter(2.0, 0.5, 5.0)
+        self.R = Parameter(2.0, 1.0, 3.5)
 
         # Motor armature [kg m^2]
         self.armature = Parameter(0.005, 0.001, 0.05)
 
         # Base friction is always here, stribeck friction is added when not moving [Nm]
-        self.friction_base = Parameter(0.05, 0.005, 0.5)
+        self.friction_base = Parameter(0.05, 0.005, 0.2)
         if self.stribeck:
-            self.friction_stribeck = Parameter(0.05, 0.005, 0.5)
+            self.friction_stribeck = Parameter(0.05, 0.005, 0.2)
 
         # Load-dependent friction, again base is always here and stribeck is added when not moving [Nm]
         if self.load_dependent:
-            self.load_friction_base = Parameter(0.05, 0.005, 1.0)
+            self.load_friction_base = Parameter(0.05, 0.005, 0.2)
             self.load_friction_stribeck = Parameter(0.05, 0.005, 1.0)
 
         if self.stribeck:
             # Stribeck velocity [rad/s] and curvature
-            self.dtheta_stribeck = Parameter(0.2, 0.01, 10.0)
-            self.alpha = Parameter(1.35, 0.5, 4.0)
+            self.dtheta_stribeck = Parameter(0.2, 0.01, 3.0)
+            self.alpha = Parameter(1.35, 0.5, 2.0)
 
         # Viscous friction [Nm/(rad/s)]
-        self.friction_viscous = Parameter(0.1, 0.0, 2.0)
+        self.friction_viscous = Parameter(0.1, 0.0, 1.0)
         if self.stribeck_viscous:
-            self.friction_viscous_stribeck = Parameter(0.1, 0.0, 2.0)
+            self.friction_viscous_stribeck = Parameter(0.1, 0.0, 1.0)
 
     def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
         # Volts to None means that the motor is disconnected
