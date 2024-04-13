@@ -121,7 +121,7 @@ def monitor(study, trial):
             "optim/trial_number": trial_number,
         }
 
-        json.dump(data, open(args.output, "w"))
+        json.dump(data, open(params_json_filename, "w"))
 
         print()
         print(f"Trial {trial_number}, Best score: {best_value}")
