@@ -97,8 +97,9 @@ def monitor(study, trial):
     elapsed = time.time() - last_log
 
     if args.wandb and wandb_run is None:
+        control = "c1" if args.control else "c0"
         wandb_run = wandb.init(
-            name=f"{args.logdir}_{args.output}",
+            name=f"{args.output}_{args.model}_{control}_{args.logdir}",
             # Set the project where this run will be logged
             project="dxl_identification",
             # Track hyperparameters and run metadata
