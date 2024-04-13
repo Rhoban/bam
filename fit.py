@@ -149,15 +149,18 @@ else:
     raise ValueError(f"Unknown method: {args.method}")
 
 def optuna_run(enable_monitoring = True):
-    study = optuna.load_study(study_name=study_name, storage=study_url)
+    if args.workers > 1:
+        study = optuna.load_study(study_name=study_name, storage=study_url)
+    else:
+        study = optuna.create_study(sampler=sampler)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     callbacks = []
     if enable_monitoring:
         callbacks = [monitor]
     study.optimize(objective, n_trials=args.trials, n_jobs=1, callbacks=callbacks)
 
-os.system(f"rm -f study.db")
-optuna.create_study(study_name=study_name, storage=study_url)
+if args.workers > 1:
+    optuna.create_study(study_name=study_name, storage=study_url)
 
 # Running the other workers
 for k in range(args.workers-1):
