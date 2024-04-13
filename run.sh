@@ -9,7 +9,7 @@ do
 	
 	python fit.py --wandb --logdir $DATA \
 		--control --model $MODEL \
-		--workers 1 --trials 50000 \
+		--workers 1 --trials 10000 \
 		--output $N \
 		> output/fit_$N.log 2>&1
 	echo $k
