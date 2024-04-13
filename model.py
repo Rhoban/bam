@@ -169,10 +169,10 @@ class Model(BaseModel):
 
 
 models = {
-    "base": lambda: Model(),
-    "stribeck": lambda: Model(stribeck=True),
-    "load_dependent": lambda: Model(load_dependent=True, stribeck=True),
-    "stribeck_viscous": lambda: Model(load_dependent=True, stribeck=True, stribeck_viscous=True),
+    "m1": lambda: Model(),
+    "m2": lambda: Model(stribeck=True),
+    "m3": lambda: Model(load_dependent=True, stribeck=True),
+    "m4": lambda: Model(load_dependent=True, stribeck=True, stribeck_viscous=True),
 }
 
 def load_model(json_file: str):
