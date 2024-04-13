@@ -32,10 +32,15 @@ logs = logs.Logs(args.logdir)
 
 study_name = f"study_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+# Study URL (when multiple workers are used)
 study_url = f"sqlite:///study.db"
-
 # study_url = f"mysql://root:root@127.0.0.1:6033/optuna"
 
+# Json params file
+params_json_filename = args.output
+if not params_json_filename.endswith(".json"):
+    params_json_filename = f"output/params_{params_json_filename}.json"
+json.dump({}, open(params_json_filename, "w"))
 
 def compute_score(model: BaseModel, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], model)
