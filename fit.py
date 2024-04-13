@@ -160,7 +160,7 @@ def optuna_run(enable_monitoring = True):
     study.optimize(objective, n_trials=args.trials, n_jobs=1, callbacks=callbacks)
 
 if args.workers > 1:
-    optuna.create_study(study_name=study_name, storage=study_url)
+    optuna.create_study(study_name=study_name, storage=study_url, sampler=sampler)
 
 # Running the other workers
 for k in range(args.workers-1):
