@@ -32,9 +32,8 @@ logs = logs.Logs(args.logdir)
 
 study_name = f"study_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-study_url = f"sqlite:///study.db"
-
-# study_url = f"mysql://root:root@127.0.0.1:6033/optuna"
+# study_url = f"sqlite:///study.db"
+study_url = f"mysql://root:root@127.0.0.1:6033/optuna"
 
 
 def compute_score(model: BaseModel, log: dict) -> float:
@@ -93,7 +92,7 @@ def monitor(study, trial):
 
     if args.wandb and wandb_run is None:
         wandb_run = wandb.init(
-            name=f"{args.logdir}_{args.output}",
+            name=f"{args.model}_{args.logdir}_{args.output}",
             # Set the project where this run will be logged
             project="dxl_identification",
             # Track hyperparameters and run metadata
