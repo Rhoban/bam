@@ -73,7 +73,15 @@ class BaseModel:
 
 
 class Model(BaseModel):
-    def __init__(self, load_dependent: bool = False, stribeck: bool = False, stribeck_viscous: bool = False):
+    def __init__(
+        self,
+        load_dependent: bool = False,
+        stribeck: bool = False,
+        stribeck_viscous: bool = False,
+        name: str = None,
+    ):
+        self.name = name
+
         # Model parameters
         self.load_dependent: bool = load_dependent
         self.stribeck: bool = stribeck
@@ -169,11 +177,16 @@ class Model(BaseModel):
 
 
 models = {
-    "m1": lambda: Model(),
-    "m2": lambda: Model(stribeck=True),
-    "m3": lambda: Model(load_dependent=True, stribeck=True),
-    "m4": lambda: Model(load_dependent=True, stribeck=True, stribeck_viscous=True),
+    "m1": lambda: Model(
+        name="m1",
+    ),
+    "m2": lambda: Model(name="m2", stribeck=True),
+    "m3": lambda: Model(name="m3", load_dependent=True, stribeck=True),
+    "m4": lambda: Model(
+        name="m4", load_dependent=True, stribeck=True, stribeck_viscous=True
+    ),
 }
+
 
 def load_model(json_file: str):
     with open(json_file) as f:
