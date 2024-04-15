@@ -78,9 +78,6 @@ class Model(BaseModel):
         self,
         load_dependent: bool = False,
         stribeck: bool = False,
-        stribeck_viscous: bool = False,
-        load_dependent_viscous: bool = False,
-        external_torque_only: bool = False,
         name: str = None,
     ):
         self.name = name
@@ -88,9 +85,6 @@ class Model(BaseModel):
         # Model parameters
         self.load_dependent: bool = load_dependent
         self.stribeck: bool = stribeck
-        self.stribeck_viscous: bool = stribeck_viscous
-        self.load_dependent_viscous: bool = load_dependent_viscous
-        self.external_torque_only: bool = external_torque_only
 
         # Torque constant [Nm/A] or [V/(rad/s)]
         self.kt = Parameter(1.6, 1.0, 3.0)
@@ -119,12 +113,6 @@ class Model(BaseModel):
 
         # Viscous friction [Nm/(rad/s)]
         self.friction_viscous = Parameter(0.1, 0.0, 1.0)
-        if self.stribeck_viscous:
-            self.friction_viscous_stribeck = Parameter(0.1, 0.0, 1.0)
-
-        if self.load_dependent_viscous:
-            self.load_friction_viscous = Parameter(0.1, 0.0, 1.0)
-        
 
     def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
         # Volts to None means that the motor is disconnected
@@ -143,10 +131,7 @@ class Model(BaseModel):
         self, motor_torque: float, external_torque: float, dtheta: float
     ) -> tuple:
         # Torque applied to the gearbox
-        if self.external_torque_only:
-            gearbox_torque = np.abs(motor_torque)
-        else:
-            gearbox_torque = np.abs(external_torque - motor_torque)
+        gearbox_torque = np.abs(external_torque - motor_torque)
 
         if self.stribeck:
             # Stribeck coeff (1 when stopped to 0 when moving)
@@ -170,12 +155,6 @@ class Model(BaseModel):
         # Viscous friction
         damping = self.friction_viscous.value
 
-        if self.stribeck_viscous:
-            damping += self.friction_viscous_stribeck.value * stribeck_coeff
-
-        if self.load_dependent_viscous:
-            damping += self.load_friction_viscous.value * gearbox_torque
-
         return frictionloss, damping
 
     def get_extra_inertia(self) -> float:
@@ -188,12 +167,7 @@ models = {
     ),
     "m2": lambda: Model(name="m2", stribeck=True),
     "m3": lambda: Model(name="m3", load_dependent=True, stribeck=True),
-    "m4": lambda: Model(
-        name="m4", load_dependent=True, stribeck=True, stribeck_viscous=True
-    ),
     "m5": lambda: Model(name="m5", load_dependent=True),
-    "m6": lambda: Model(name="m6", stribeck=True, load_dependent=True, load_dependent_viscous=True),
-    "m7": lambda: Model(name="m7", stribeck=True, load_dependent=True, external_torque_only=True),
 }
 
 
