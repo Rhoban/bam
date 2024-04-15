@@ -23,11 +23,12 @@ class BaseModel:
         """
         raise NotImplementedError
 
-    def compute_friction_torque(
+    def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
-    ) -> float:
+    ) -> tuple:
         """
         This computes the friction torque applied by the system.
+        Returns a tuple (frictionloss, damping)
         """
         raise NotImplementedError
 
@@ -129,10 +130,9 @@ class Model(BaseModel):
 
         return torque
 
-    def compute_friction_torque(
+    def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
-    ) -> float:
-
+    ) -> tuple:
         # Torque applied to the gearbox
         gearbox_torque = np.abs(external_torque - motor_torque)
 
@@ -156,14 +156,12 @@ class Model(BaseModel):
                 )
 
         # Viscous friction
-        damping_friction = -self.friction_viscous.value * dtheta
+        damping = -self.friction_viscous.value
 
         if self.stribeck_viscous:
-            damping_friction -= (
-                self.friction_viscous_stribeck.value * dtheta * stribeck_coeff
-            )
+            damping -= self.friction_viscous_stribeck.value * stribeck_coeff
 
-        return frictionloss, damping_friction
+        return frictionloss, damping
 
     def get_extra_inertia(self) -> float:
         return self.armature.value
@@ -178,6 +176,7 @@ models = {
     "m4": lambda: Model(
         name="m4", load_dependent=True, stribeck=True, stribeck_viscous=True
     ),
+    "m5": lambda: Model(name="m5", load_dependent=True),
 }
 
 
