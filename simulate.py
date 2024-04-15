@@ -38,11 +38,13 @@ class Simulate1R:
         )
 
         inertia = self.inertia + self.model.get_extra_inertia()
-        net_torque = motor_torque - damping * self.dq + gravity_torque
+        net_torque = motor_torque + gravity_torque
 
         # Tau_stop is the torque required to stop the motor (reach a velocity of 0 after dt)
         tau_stop = (inertia / dt) * self.dq + net_torque
-        static_friction = -np.sign(tau_stop) * np.min([np.abs(tau_stop), frictionloss])
+        static_friction = -np.sign(tau_stop) * np.min(
+            [np.abs(tau_stop), frictionloss + damping * np.abs(self.dq)]
+        )
         net_torque += static_friction
 
         angular_acceleration = net_torque / inertia
