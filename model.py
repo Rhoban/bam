@@ -105,7 +105,8 @@ class Model(BaseModel):
         # Load-dependent friction, again base is always here and stribeck is added when not moving [Nm]
         if self.load_dependent:
             self.load_friction_base = Parameter(0.05, 0.005, 0.2)
-            self.load_friction_stribeck = Parameter(0.05, 0.005, 1.0)
+            if self.stribeck:
+                self.load_friction_stribeck = Parameter(0.05, 0.005, 1.0)
 
         if self.stribeck:
             # Stribeck velocity [rad/s] and curvature
