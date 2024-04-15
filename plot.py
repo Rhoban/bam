@@ -30,7 +30,7 @@ for log in logs.logs:
     ts = np.arange(len(log["entries"])) * log["dt"]
     q = [entry["position"] for entry in log["entries"]]
     goal_q = [entry["goal_position"] for entry in log["entries"]]
-    volts = [entry["volts"] for entry in log["entries"]]
+    volts = [(entry["volts"] if entry["torque_enable"] else None) for entry in log["entries"]]
     torque_enable = np.array([entry["torque_enable"] for entry in log["entries"]])
 
     # Using 2 x-shared subplots
@@ -55,8 +55,8 @@ for log in logs.logs:
     # Shading the areas where torque is False
     ax2.fill_between(
         ts,
-        min(volts) - 0.02,
-        max(volts) + 0.02,
+        min([entry["volts"] for entry in log["entries"]]) - 0.02,
+        max([entry["volts"] for entry in log["entries"]]) + 0.02,
         where=[not torque for torque in torque_enable],
         color="red",
         alpha=0.3,
