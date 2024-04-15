@@ -41,7 +41,10 @@ for log in logs.logs:
         ax1.plot(ts, sim_q, label="sim_q")
     ax1.plot(ts, goal_q, label="goal_q", color="green")
     ax1.legend()
-    ax1.set_title(f'{model.name}, {log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}')
+    title = f'{log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}'
+    if args.sim:
+        title = model.name+", "+title
+    ax1.set_title(f'{log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}')
     ax1.grid()
 
     # Using torque_enable color piecewise
