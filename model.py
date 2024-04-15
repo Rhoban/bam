@@ -78,12 +78,14 @@ class Model(BaseModel):
         self,
         load_dependent: bool = False,
         stribeck: bool = False,
+        biload_dependent: bool = False,
         name: str = None,
     ):
         self.name = name
 
         # Model parameters
         self.load_dependent: bool = load_dependent
+        self.biload_dependent: bool = biload_dependent
         self.stribeck: bool = stribeck
 
         # Torque constant [Nm/A] or [V/(rad/s)]
@@ -102,9 +104,18 @@ class Model(BaseModel):
 
         # Load-dependent friction, again base is always here and stribeck is added when not moving [Nm]
         if self.load_dependent:
-            self.load_friction_base = Parameter(0.05, 0.005, 0.2)
+            if self.biload_dependent:
+                self.load_friction_motor_base = Parameter(0.05, 0.005, 0.2)
+                self.load_friction_external_base = Parameter(0.05, 0.005, 0.2)
+            else:
+                self.load_friction_base = Parameter(0.05, 0.005, 0.2)
+
             if self.stribeck:
-                self.load_friction_stribeck = Parameter(0.05, 0.005, 1.0)
+                if self.biload_dependent:
+                    self.load_friction_motor_stribeck = Parameter(0.05, 0.005, 1.0)
+                    self.load_friction_external_stribeck = Parameter(0.05, 0.005, 1.0)
+                else:
+                    self.load_friction_stribeck = Parameter(0.05, 0.005, 1.0)
 
         if self.stribeck:
             # Stribeck velocity [rad/s] and curvature
@@ -131,7 +142,11 @@ class Model(BaseModel):
         self, motor_torque: float, external_torque: float, dtheta: float
     ) -> tuple:
         # Torque applied to the gearbox
-        gearbox_torque = np.abs(external_torque - motor_torque)
+        if self.biload_dependent:
+            motor_torque = np.abs(motor_torque)
+            external_torque = np.abs(external_torque)
+        else:
+            gearbox_torque = np.abs(external_torque - motor_torque)
 
         if self.stribeck:
             # Stribeck coeff (1 when stopped to 0 when moving)
@@ -142,15 +157,27 @@ class Model(BaseModel):
         # Static friction
         frictionloss = self.friction_base.value
         if self.load_dependent:
-            frictionloss += self.load_friction_base.value * gearbox_torque
+            if self.biload_dependent:
+                frictionloss += self.load_friction_external_base.value * external_torque
+                frictionloss += self.load_friction_motor_base.value * motor_torque
+            else:
+                frictionloss += self.load_friction_base.value * gearbox_torque
 
         if self.stribeck:
             frictionloss += stribeck_coeff * self.friction_stribeck.value
 
             if self.load_dependent:
-                frictionloss += (
-                    self.load_friction_stribeck.value * gearbox_torque * stribeck_coeff
-                )
+                if self.biload_dependent:
+                    frictionloss += stribeck_coeff * (
+                        self.load_friction_external_stribeck.value * external_torque
+                        + self.load_friction_motor_stribeck.value * motor_torque
+                    )
+                else:
+                    frictionloss += (
+                        self.load_friction_stribeck.value
+                        * gearbox_torque
+                        * stribeck_coeff
+                    )
 
         # Viscous friction
         damping = self.friction_viscous.value
@@ -168,6 +195,9 @@ models = {
     "m2": lambda: Model(name="m2", stribeck=True),
     "m3": lambda: Model(name="m3", load_dependent=True, stribeck=True),
     "m5": lambda: Model(name="m5", load_dependent=True),
+    "m8": lambda: Model(
+        name="m8", load_dependent=True, stribeck=True, biload_dependent=True
+    ),
 }
 
 
