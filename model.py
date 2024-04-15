@@ -143,24 +143,17 @@ class Model(BaseModel):
             )
 
         # Static friction
-        static_friction = self.friction_base.value
+        frictionloss = self.friction_base.value
         if self.load_dependent:
-            static_friction += self.load_friction_base.value * gearbox_torque
+            frictionloss += self.load_friction_base.value * gearbox_torque
 
         if self.stribeck:
-            static_friction += stribeck_coeff * self.friction_stribeck.value
+            frictionloss += stribeck_coeff * self.friction_stribeck.value
 
             if self.load_dependent:
-                static_friction += (
+                frictionloss += (
                     self.load_friction_stribeck.value * gearbox_torque * stribeck_coeff
                 )
-        net_torque = motor_torque + external_torque
-
-        # Adjust the static friction to compensate for the net torque
-        if net_torque > 0:
-            static_friction = -min(static_friction, net_torque)
-        else:
-            static_friction = -max(-static_friction, net_torque)
 
         # Viscous friction
         damping_friction = -self.friction_viscous.value * dtheta
@@ -170,7 +163,7 @@ class Model(BaseModel):
                 self.friction_viscous_stribeck.value * dtheta * stribeck_coeff
             )
 
-        return damping_friction + static_friction
+        return frictionloss, damping_friction
 
     def get_extra_inertia(self) -> float:
         return self.armature.value
