@@ -157,10 +157,10 @@ class Model(BaseModel):
                 )
 
         # Viscous friction
-        damping = -self.friction_viscous.value
+        damping = self.friction_viscous.value
 
         if self.stribeck_viscous:
-            damping -= self.friction_viscous_stribeck.value * stribeck_coeff
+            damping += self.friction_viscous_stribeck.value * stribeck_coeff
 
         return frictionloss, damping
 
