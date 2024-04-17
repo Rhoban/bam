@@ -1,5 +1,6 @@
 import argparse
 import os
+import time
 
 
 arg_parser = argparse.ArgumentParser()
@@ -31,3 +32,6 @@ for kp in kps:
 
         command = f"{command_base} --kp {kp} --trajectory {trajectory}"
         os.system(command)
+
+        if trajectory == "sin_time_square":
+            time.sleep(3)
