@@ -23,11 +23,12 @@ class BaseModel:
         """
         raise NotImplementedError
 
-    def compute_friction_torque(
+    def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
-    ) -> float:
+    ) -> tuple:
         """
         This computes the friction torque applied by the system.
+        Returns a tuple (frictionloss, damping)
         """
         raise NotImplementedError
 
@@ -73,40 +74,57 @@ class BaseModel:
 
 
 class Model(BaseModel):
-    def __init__(self, load_dependent: bool = False, stribeck: bool = False, stribeck_viscous: bool = False):
+    def __init__(
+        self,
+        load_dependent: bool = False,
+        stribeck: bool = False,
+        biload_dependent: bool = False,
+        name: str = None,
+    ):
+        self.name = name
+
         # Model parameters
         self.load_dependent: bool = load_dependent
+        self.biload_dependent: bool = biload_dependent
         self.stribeck: bool = stribeck
-        self.stribeck_viscous: bool = stribeck_viscous
 
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.kt = Parameter(1.6, 0.5, 5.0)
+        self.kt = Parameter(1.6, 1.0, 3.0)
 
         # Motor resistance [Ohm]
-        self.R = Parameter(2.0, 0.5, 5.0)
+        self.R = Parameter(2.0, 1.0, 3.5)
 
         # Motor armature [kg m^2]
         self.armature = Parameter(0.005, 0.001, 0.05)
 
         # Base friction is always here, stribeck friction is added when not moving [Nm]
-        self.friction_base = Parameter(0.05, 0.005, 0.5)
+        self.friction_base = Parameter(0.05, 0.0, 0.2)
         if self.stribeck:
-            self.friction_stribeck = Parameter(0.05, 0.005, 0.5)
+            self.friction_stribeck = Parameter(0.05, 0.0, 0.2)
 
         # Load-dependent friction, again base is always here and stribeck is added when not moving [Nm]
         if self.load_dependent:
-            self.load_friction_base = Parameter(0.05, 0.005, 1.0)
-            self.load_friction_stribeck = Parameter(0.05, 0.005, 1.0)
+
+            if self.biload_dependent:
+                self.load_friction_motor_base = Parameter(0.05, 0.0, 0.2)
+                self.load_friction_external_base = Parameter(0.05, 0.0, 0.2)
+            else:
+                self.load_friction_base = Parameter(0.05, 0.0, 0.2)
+
+            if self.stribeck:
+                if self.biload_dependent:
+                    self.load_friction_motor_stribeck = Parameter(0.05, 0.0, 1.0)
+                    self.load_friction_external_stribeck = Parameter(0.05, 0.0, 1.0)
+                else:
+                    self.load_friction_stribeck = Parameter(0.05, 0.0, 1.0)
 
         if self.stribeck:
             # Stribeck velocity [rad/s] and curvature
-            self.dtheta_stribeck = Parameter(0.2, 0.01, 10.0)
-            self.alpha = Parameter(1.35, 0.5, 4.0, optimize=False)
+            self.dtheta_stribeck = Parameter(0.2, 0.01, 3.0)
+            self.alpha = Parameter(1.35, 0.5, 2.0)
 
         # Viscous friction [Nm/(rad/s)]
-        self.friction_viscous = Parameter(0.1, 0.0, 2.0)
-        if self.stribeck_viscous:
-            self.friction_viscous_stribeck = Parameter(0.1, 0.0, 2.0)
+        self.friction_viscous = Parameter(0.1, 0.0, 1.0)
 
     def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
         # Volts to None means that the motor is disconnected
@@ -121,12 +139,28 @@ class Model(BaseModel):
 
         return torque
 
-    def compute_friction_torque(
+    def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
-    ) -> float:
-
+    ) -> tuple:
         # Torque applied to the gearbox
         gearbox_torque = np.abs(external_torque - motor_torque)
+
+        if self.biload_dependent:
+            same_sign = (np.sign(motor_torque) == np.sign(external_torque))
+            motor_torque = np.abs(motor_torque)
+            external_torque = np.abs(external_torque)
+
+            if same_sign:
+                if motor_torque > external_torque:
+                    motor_torque -= external_torque
+                    external_torque = 0.0
+                else:
+                    external_torque -= motor_torque
+                    motor_torque = 0.0
+
+        if self.biload_dependent:
+            motor_torque = np.abs(motor_torque)
+            external_torque = np.abs(external_torque)
 
         if self.stribeck:
             # Stribeck coeff (1 when stopped to 0 when moving)
@@ -135,45 +169,49 @@ class Model(BaseModel):
             )
 
         # Static friction
-        static_friction = self.friction_base.value
+        frictionloss = self.friction_base.value
         if self.load_dependent:
-            static_friction += self.load_friction_base.value * gearbox_torque
+            if self.biload_dependent:
+                frictionloss += self.load_friction_external_base.value * external_torque
+                frictionloss += self.load_friction_motor_base.value * motor_torque
+            else:
+                frictionloss += self.load_friction_base.value * gearbox_torque
 
         if self.stribeck:
-            static_friction += stribeck_coeff * self.friction_stribeck.value
+            frictionloss += stribeck_coeff * self.friction_stribeck.value
 
             if self.load_dependent:
-                static_friction += (
-                    self.load_friction_stribeck.value * gearbox_torque * stribeck_coeff
-                )
-        net_torque = motor_torque + external_torque
-
-        # Adjust the static friction to compensate for the net torque
-        if net_torque > 0:
-            static_friction = -min(static_friction, net_torque)
-        else:
-            static_friction = -max(-static_friction, net_torque)
+                if self.biload_dependent:
+                    frictionloss += stribeck_coeff * (
+                        self.load_friction_external_stribeck.value * external_torque
+                        + self.load_friction_motor_stribeck.value * motor_torque
+                    )
+                else:
+                    frictionloss += (
+                        self.load_friction_stribeck.value * gearbox_torque * stribeck_coeff
+                    )
 
         # Viscous friction
-        damping_friction = -self.friction_viscous.value * dtheta
+        damping = self.friction_viscous.value
 
-        if self.stribeck_viscous:
-            damping_friction -= (
-                self.friction_viscous_stribeck.value * dtheta * stribeck_coeff
-            )
-
-        return damping_friction + static_friction
+        return frictionloss, damping
 
     def get_extra_inertia(self) -> float:
         return self.armature.value
 
 
 models = {
-    "base": lambda: Model(),
-    "stribeck": lambda: Model(stribeck=True),
-    "load_dependent": lambda: Model(load_dependent=True, stribeck=True),
-    "stribeck_viscous": lambda: Model(load_dependent=True, stribeck=True, stribeck_viscous=True),
+    "m1": lambda: Model(
+        name="m1",
+    ),
+    "m2": lambda: Model(name="m2", stribeck=True),
+    "m3": lambda: Model(name="m3", load_dependent=True, stribeck=True),
+    "m5": lambda: Model(name="m5", load_dependent=True),
+    "m8": lambda: Model(
+        name="m8", load_dependent=True, stribeck=True, biload_dependent=True
+    ),
 }
+
 
 def load_model(json_file: str):
     with open(json_file) as f:
