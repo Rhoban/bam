@@ -1,6 +1,6 @@
 import numpy as np
 import json
-
+import dynamixel
 
 class Parameter:
     def __init__(self, value: float, min: float, max: float, optimize: bool = True):
@@ -166,6 +166,32 @@ class Model(BaseModel):
 
     def get_extra_inertia(self) -> float:
         return self.armature.value
+    
+    def to_mujoco(self, volts: float, dynamixel_kp: float) -> None:
+        # Armature
+        print(f" - Armature: {self.armature.value}")
+
+        # Computing forcerange
+        max_force = (self.kt.value / self.R.value) * volts
+        print(f" - Forcerange: {max_force}")
+
+        # Computing kp
+        kp = max_force * dynamixel.ERROR_GAIN * dynamixel_kp
+        print(f" - Kp: {kp}")
+
+        # Computing damping
+        damping = self.friction_viscous.value
+        damping += self.R.value / (self.kt.value ** 2)
+        print(f" - Damping: {damping}")
+
+        # Computing frictionloss
+        frictionloss = self.friction_base.value
+        print(f" - Frictionloss: {frictionloss}")
+
+        if self.stribeck or self.load_dependent:
+            print("!!! Warning: The model can't be translated as-is to MuJoCo, frictionloss")
+            print("might depends on the velocity and/or load.")
+            print()
 
 
 models = {

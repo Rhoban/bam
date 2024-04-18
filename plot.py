@@ -1,8 +1,5 @@
 import argparse
 import numpy as np
-import json
-import time
-import optuna
 from model import load_model, BaseModel
 import simulate
 import logs
@@ -53,6 +50,7 @@ for log in logs.logs:
     title = f'{log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}'
 
     ax1.set_title(f'{log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}')
+    ax1.set_ylabel("angle [rad]")
     ax1.grid()
 
     # Using torque_enable color piecewise
@@ -71,8 +69,9 @@ for log in logs.logs:
         alpha=0.3,
         label="torque off",
     )
-
+    ax2.set_ylabel("volts [V]")
     ax2.legend()
+    plt.xlabel("time [s]")
 
     plt.grid()
     plt.show()
