@@ -204,8 +204,10 @@ class Model(BaseModel):
                     print(f"frictionloss += {self.load_friction_stribeck.value} * gearbox_torque * stribeck_coeff")
 
             print()
-            print("# gearbox_torque is the torque applied to the gearbox")
-            print("# velocity is the angular velocity of the motor")
+            if self.load_dependent:
+                print("# gearbox_torque is the torque applied to the gearbox")
+            if self.stribeck:
+                print("# velocity is the angular velocity of the motor")
                 
 
 
