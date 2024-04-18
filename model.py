@@ -125,7 +125,8 @@ class Model(BaseModel):
 
         # Time constant
         if dwell_time:
-            self.dwell_time_constant = Parameter(0.0001, 0.0001, 0.1)
+            self.stick_constant = Parameter(0.01, 0.0001, 0.1)
+            self.slip_constant = Parameter(0.01, 0.0001, 0.1)
 
     def reset(self) -> None:
         self.frictionloss = None
@@ -172,7 +173,10 @@ class Model(BaseModel):
         damping = self.friction_viscous.value
 
         if self.dwell_time and self.frictionloss is not None:
-            alpha = np.exp(-dt / self.dwell_time_constant.value)
+            if frictionloss > self.frictionloss:
+                alpha = np.exp(-dt / self.stick_constant.value)
+            else:
+                alpha = np.exp(-dt / self.slip_constant.value)
             self.frictionloss = alpha * self.frictionloss + (1 - alpha) * frictionloss
         else:
             self.frictionloss = frictionloss
@@ -200,3 +204,19 @@ def load_model(json_file: str):
         model = models[data["model"]]()
         model.load_parameters(json_file)
         return model
+
+if __name__ == "__main__":
+    model = models["m9"]()
+
+    model.reset()
+    loss, _ = model.compute_frictions(0.0, 0.0, 0.0, 0.01)
+    losses = []
+    for k in range(100):
+        loss, _ = model.compute_frictions(0.0, 1.0 if k < 50 else 0, 0.0, 0.01)
+        losses.append(loss)
+
+
+    import matplotlib.pyplot as plt
+    plt.plot(losses)
+    plt.grid()
+    plt.show()
