@@ -230,8 +230,8 @@ class Model(BaseModel):
 models = {
     "m1": lambda: Model(name="m1"),
     "m2": lambda: Model(name="m2", stribeck=True),
-    "m3": lambda: Model(name="m5", load_dependent=True),
-    "m4": lambda: Model(name="m3", load_dependent=True, stribeck=True),
+    "m3": lambda: Model(name="m3", load_dependent=True),
+    "m4": lambda: Model(name="m4", load_dependent=True, stribeck=True),
 }
 
 
