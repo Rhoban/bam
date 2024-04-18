@@ -170,7 +170,8 @@ class Model(BaseModel):
 
     def to_mujoco(self, volts: float, dynamixel_kp: float) -> None:
         # Armature
-        print(f" - Armature: {self.armature.value}")
+        armature = self.armature.value
+        print(f" - Armature: {armature}")
 
         # Computing forcerange
         max_force = (self.kt.value / self.R.value) * volts
@@ -188,6 +189,11 @@ class Model(BaseModel):
         # Computing frictionloss
         frictionloss = self.friction_base.value
         print(f" - Frictionloss: {frictionloss}")
+
+        xml = f'<position kp="{kp}" forcerange="-{max_force} {max_force}" />\n'
+        xml += f'<joint damping="{damping}" armature="{armature}" frictionloss="{frictionloss}" />'
+        print("\nXML:")
+        print(xml)
 
         if self.stribeck or self.load_dependent:
             print()
@@ -222,12 +228,10 @@ class Model(BaseModel):
 
 
 models = {
-    "m1": lambda: Model(
-        name="m1",
-    ),
+    "m1": lambda: Model(name="m1"),
     "m2": lambda: Model(name="m2", stribeck=True),
-    "m3": lambda: Model(name="m3", load_dependent=True, stribeck=True),
-    "m5": lambda: Model(name="m5", load_dependent=True),
+    "m3": lambda: Model(name="m5", load_dependent=True),
+    "m4": lambda: Model(name="m3", load_dependent=True, stribeck=True),
 }
 
 
