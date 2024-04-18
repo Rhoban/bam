@@ -189,8 +189,7 @@ class Model(BaseModel):
         print(f" - Frictionloss: {frictionloss}")
 
         if self.stribeck or self.load_dependent:
-            print("!!! Warning: The model can't be translated as-is to MuJoCo, frictionloss")
-            print("might depends on the velocity and/or load.")
+            print("!!! Warning: frictionloss should be updated dynamically with this model")
             print()
 
 
