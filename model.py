@@ -2,6 +2,7 @@ import numpy as np
 import json
 import dynamixel
 
+
 class Parameter:
     def __init__(self, value: float, min: float, max: float, optimize: bool = True):
         # Current value of the parameter
@@ -166,7 +167,7 @@ class Model(BaseModel):
 
     def get_extra_inertia(self) -> float:
         return self.armature.value
-    
+
     def to_mujoco(self, volts: float, dynamixel_kp: float) -> None:
         # Armature
         print(f" - Armature: {self.armature.value}")
@@ -181,7 +182,7 @@ class Model(BaseModel):
 
         # Computing damping
         damping = self.friction_viscous.value
-        damping += self.R.value / (self.kt.value ** 2)
+        damping += self.R.value / (self.kt.value**2)
         print(f" - Damping: {damping}")
 
         # Computing frictionloss
@@ -190,25 +191,34 @@ class Model(BaseModel):
 
         if self.stribeck or self.load_dependent:
             print()
-            print("# WARNING: frictionloss should be updated dynamically with this model")
+            print(
+                "# WARNING: frictionloss should be updated dynamically with this model"
+            )
             print("# Please use the following computation: ")
             if self.stribeck:
-                print(f"stribeck_coeff = exp(-(abs(velocity / {self.dtheta_stribeck.value}) ** {self.alpha.value}))")
+                print(
+                    f"stribeck_coeff = exp(-(abs(velocity / {self.dtheta_stribeck.value}) ** {self.alpha.value}))"
+                )
 
             print(f"frictionloss = {self.friction_base.value}")
             if self.load_dependent:
-                print(f"frictionloss += {self.load_friction_base.value} * gearbox_torque")
+                print(
+                    f"frictionloss += {self.load_friction_base.value} * gearbox_torque"
+                )
             if self.stribeck:
-                print(f"frictionloss += stribeck_coeff * {self.friction_stribeck.value}")
+                print(
+                    f"frictionloss += stribeck_coeff * {self.friction_stribeck.value}"
+                )
                 if self.load_dependent:
-                    print(f"frictionloss += {self.load_friction_stribeck.value} * gearbox_torque * stribeck_coeff")
+                    print(
+                        f"frictionloss += {self.load_friction_stribeck.value} * gearbox_torque * stribeck_coeff"
+                    )
 
             print()
             if self.load_dependent:
                 print("# gearbox_torque is the torque applied to the gearbox")
             if self.stribeck:
                 print("# velocity is the angular velocity of the motor")
-                
 
 
 models = {

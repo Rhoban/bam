@@ -1,5 +1,5 @@
 import numpy as np
-from model import BaseModel, Model
+from model import BaseModel, Model, load_model
 from dynamixel import compute_volts
 
 g: float = -9.81
@@ -113,12 +113,11 @@ class Simulate1R:
 if __name__ == "__main__":
     import pygame
 
-    model = Model()
-    model.load_parameters("params.json")
-    sim = Simulate1R(0.676, 0.105, model)
+    model = load_model("params.json")
+    sim = Simulate1R(3.500, 0.105, model)
     sim.reset(-1.5, 0.0)
     while True:
-        sim.step(None, 0.01)
+        sim.step(-2.0, 0.01)
         sim.draw()
         import time
 
