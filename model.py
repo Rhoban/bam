@@ -189,8 +189,24 @@ class Model(BaseModel):
         print(f" - Frictionloss: {frictionloss}")
 
         if self.stribeck or self.load_dependent:
-            print("!!! Warning: frictionloss should be updated dynamically with this model")
             print()
+            print("# WARNING: frictionloss should be updated dynamically with this model")
+            print("# Please use the following computation: ")
+            if self.stribeck:
+                print(f"stribeck_coeff = exp(-(abs(velocity / {self.dtheta_stribeck.value}) ** {self.alpha.value}))")
+
+            print(f"frictionloss = {self.friction_base.value}")
+            if self.load_dependent:
+                print(f"frictionloss += {self.load_friction_base.value} * gearbox_torque")
+            if self.stribeck:
+                print(f"frictionloss += stribeck_coeff * {self.friction_stribeck.value}")
+                if self.load_dependent:
+                    print(f"frictionloss += {self.load_friction_stribeck.value} * gearbox_torque * stribeck_coeff")
+
+            print()
+            print("# gearbox_torque is the torque applied to the gearbox")
+            print("# velocity is the angular velocity of the motor")
+                
 
 
 models = {
