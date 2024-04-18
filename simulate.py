@@ -23,7 +23,6 @@ class Simulate1R:
         self.q = q
         self.dq = dq
         self.t = 0.0
-        self.model.reset()
 
         self.inertia = self.mass * self.length**2
 
@@ -35,7 +34,7 @@ class Simulate1R:
         gravity_torque = self.mass * g * self.length * np.sin(self.q)
         motor_torque = self.model.compute_motor_torque(volts, self.dq)
         frictionloss, damping = self.model.compute_frictions(
-            motor_torque, gravity_torque, self.dq, dt
+            motor_torque, gravity_torque, self.dq
         )
 
         inertia = self.inertia + self.model.get_extra_inertia()

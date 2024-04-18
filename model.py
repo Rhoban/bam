@@ -30,7 +30,7 @@ class BaseModel:
         pass
 
     def compute_frictions(
-        self, motor_torque: float, external_torque: float, dtheta: float, dt: float
+        self, motor_torque: float, external_torque: float, dtheta: float
     ) -> tuple:
         """
         This computes the friction torque applied by the system.
@@ -84,7 +84,6 @@ class Model(BaseModel):
         self,
         load_dependent: bool = False,
         stribeck: bool = False,
-        dwell_time: bool = False,
         name: str = None,
     ):
         self.name = name
@@ -92,7 +91,6 @@ class Model(BaseModel):
         # Model parameters
         self.load_dependent: bool = load_dependent
         self.stribeck: bool = stribeck
-        self.dwell_time: bool = dwell_time
 
         # Torque constant [Nm/A] or [V/(rad/s)]
         self.kt = Parameter(1.6, 1.0, 3.0)
@@ -123,14 +121,6 @@ class Model(BaseModel):
         # Viscous friction [Nm/(rad/s)]
         self.friction_viscous = Parameter(0.1, 0.0, 1.0)
 
-        # Time constant
-        if dwell_time:
-            self.stick_constant = Parameter(0.01, 0.001, 0.1)
-            self.slip_constant = Parameter(0.01, 0.001, 0.1)
-
-    def reset(self) -> None:
-        self.stribeck_coeff = None
-
     def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
         # Volts to None means that the motor is disconnected
         if volts is None:
@@ -145,7 +135,7 @@ class Model(BaseModel):
         return torque
 
     def compute_frictions(
-        self, motor_torque: float, external_torque: float, dtheta: float, dt: float
+        self, motor_torque: float, external_torque: float, dtheta: float
     ) -> tuple:
         # Torque applied to the gearbox
         gearbox_torque = np.abs(external_torque - motor_torque)
@@ -156,27 +146,17 @@ class Model(BaseModel):
                 -(np.abs(dtheta / self.dtheta_stribeck.value) ** self.alpha.value)
             )
 
-        if self.dwell_time and self.stribeck_coeff is not None:
-            if stribeck_coeff > self.stribeck_coeff:
-                alpha = np.exp(-dt / self.stick_constant.value)
-            else:
-                alpha = np.exp(-dt / self.slip_constant.value)
-
-            self.stribeck_coeff = alpha * self.stribeck_coeff + (1 - alpha) * stribeck_coeff
-        else:
-            self.stribeck_coeff = stribeck_coeff
-
         # Static friction
         frictionloss = self.friction_base.value
         if self.load_dependent:
             frictionloss += self.load_friction_base.value * gearbox_torque
 
         if self.stribeck:
-            frictionloss += self.stribeck_coeff * self.friction_stribeck.value
+            frictionloss += stribeck_coeff * self.friction_stribeck.value
 
             if self.load_dependent:
                 frictionloss += (
-                    self.load_friction_stribeck.value * gearbox_torque * self.stribeck_coeff
+                    self.load_friction_stribeck.value * gearbox_torque * stribeck_coeff
                 )
 
         # Viscous friction
@@ -195,7 +175,6 @@ models = {
     "m2": lambda: Model(name="m2", stribeck=True),
     "m3": lambda: Model(name="m3", load_dependent=True, stribeck=True),
     "m5": lambda: Model(name="m5", load_dependent=True),
-    "m9": lambda: Model(name="m9", load_dependent=True, stribeck=True, dwell_time=True),
 }
 
 
@@ -205,20 +184,3 @@ def load_model(json_file: str):
         model = models[data["model"]]()
         model.load_parameters(json_file)
         return model
-
-if __name__ == "__main__":
-    model = models["m9"]()
-
-    model.reset()
-    loss, _ = model.compute_frictions(0.0, 0.0, 0.0, 0.01)
-    losses = []
-    ts = np.arange(0, 3.0, 5e-3)
-    for t in ts:
-        loss, _ = model.compute_frictions(0.0, 0.0, 1.0 if t < 1.5 else 0, 0.01)
-        losses.append(loss)
-
-
-    import matplotlib.pyplot as plt
-    plt.plot(ts, losses)
-    plt.grid()
-    plt.show()
