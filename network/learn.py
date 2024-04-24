@@ -54,9 +54,7 @@ class SquareActivation(th.nn.Module):
     def forward(self, x):
         return x ** 2
     
-if args.last == "None":
-    last_activation = th.nn.Identity()
-elif args.last == "Softplus":
+if args.last == "Softplus":
     last_activation = th.nn.Softplus()
 elif args.last == "Abs":
     last_activation = AbsActivation()

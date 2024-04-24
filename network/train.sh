@@ -1,10 +1,10 @@
 wandb=1
-epochs=250
-losses=("smooth_l1_loss" "mse")
+epochs=150
+losses=("smooth_l1_loss" "mse_loss" "l1_loss")
 nodes=(128)
-windows=(1)
-activations=("LeakyReLU" "Tanh" "Softsign" "ReLU")
-last_activation=("Softplus" "Square" "Custom" "None")
+windows=(1 4 16)
+activations=("LeakyReLU" "Tanh" "ReLU")
+last_activation=("Softplus" "Square" "Custom" "Abs")
 
 for loss in "${losses[@]}"; do
     for a in "${activations[@]}"; do
