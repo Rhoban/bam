@@ -6,15 +6,15 @@ class FrictionDataset(TorchDataset):
     """
     Dataset class compatible with PyTorch DataLoader. 
 
-    Inputs are 1D numpy ndarray of size 1 + 4 * window_size + 2 containing for the n-th entry:
+    Inputs are 1D numpy ndarray of size 4 * window_size containing for the n-th entry:
         - volts_[n-w_s+1,n]
         - dtheta_[n-w_s+1,n]
         - torque_[n-w_s+1,n]
         - tau_l_[n-w_s+1,n]
+
+    Outputs are 1D numpy ndarray of size 2 containing for the n-th entry:
         - ddtheta_n
         - I_l
-
-    Outputs are scalars containing I_l * ddtheta_n - tau_l_n
     """
     def __init__(self, window_size: int):
         self.inputs = []
@@ -56,11 +56,11 @@ class FrictionDataset(TorchDataset):
             input = np.array(volts[i - self.window_size:i] +
                              velocity[i - self.window_size:i] +
                              torque_enable[i - self.window_size:i] +
-                             tau_l[i - self.window_size:i] +
-                             [acceleration[i-1]] +
-                             [mass * length])
+                             tau_l[i - self.window_size:i])
             
-            output = mass * length * acceleration[i-1] - tau_l[i-1]
+            output = np.array([acceleration[i-1]] +
+                              [mass * length**2])
+            
             self.add_entry(input, output)
 
     def shuffle(self) -> None:
