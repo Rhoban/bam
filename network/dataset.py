@@ -58,9 +58,9 @@ class FrictionDataset(TorchDataset):
                              torque_enable[i - self.window_size:i] +
                              tau_l[i - self.window_size:i] +
                              [acceleration[i-1]] +
-                             [mass * length])
+                             [mass * length**2])
             
-            output = mass * length * acceleration[i-1] - tau_l[i-1]
+            output = mass * length**2 * acceleration[i-1] - tau_l[i-1]
             self.add_entry(input, output)
 
     def shuffle(self) -> None:
