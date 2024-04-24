@@ -24,8 +24,8 @@ config = {"window": args.window, "nodes": args.nodes, "activation": args.activat
 
 device = th.device("cuda" if th.cuda.is_available() else "cpu")
 
-train_dataset = FrictionDataset.load("datasets/106/train_dataset_w" + str(args.window) + ".npz")
-test_dataset = FrictionDataset.load("datasets/106/test_dataset_w" + str(args.window) + ".npz")
+train_dataset = FrictionDataset.load("datasets/106/tau_f_m/train_dataset_w" + str(args.window) + ".npz")
+test_dataset = FrictionDataset.load("datasets/106/tau_f_m/test_dataset_w" + str(args.window) + ".npz")
 
 # Data already shuffled in the datasets
 training_loader = DataLoader(train_dataset, batch_size=512, shuffle=False, drop_last=True, pin_memory=True if device == "cuda" else False)
