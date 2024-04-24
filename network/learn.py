@@ -18,7 +18,7 @@ parser.add_option("--wandb", dest="wandb", default=0, type="int", help="using wa
 args = parser.parse_args()[0]
 
 use_wandb = True if args.wandb == 1 else False
-project_name = "friction-net (l1_loss)"
+project_name = "friction-net-max"
 model_name = args.activation + "-" + args.last + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
 config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "last_activation": args.last, "loss": args.loss}
 
