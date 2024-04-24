@@ -11,21 +11,20 @@ parser = optparse.OptionParser()
 parser.add_option("--window", dest="window", default=2, type="int", help="window size")
 parser.add_option("-n", "--nodes", dest="nodes", default=256, type="int", help="number of nodes per layer")
 parser.add_option("-a", "--activation", dest="activation", default="ReLU", type="str", help="activation function")
-parser.add_option("--last", dest="last", default="Softplus", type="str", help="last activation function")
 parser.add_option("-e", "--epochs", dest="epochs", default=300, type="int", help="number of epochs")
 parser.add_option("--loss", dest="loss", default="l1_loss", type="str", help="loss function")
 parser.add_option("--wandb", dest="wandb", default=0, type="int", help="using wandb")
 args = parser.parse_args()[0]
 
 use_wandb = True if args.wandb == 1 else False
-project_name = "friction-net (l1_loss)"
-model_name = args.activation + "-" + args.last + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
+project_name = "friction-net"
+model_name = args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
 config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "last_activation": args.last, "loss": args.loss}
 
 device = th.device("cuda" if th.cuda.is_available() else "cpu")
 
-train_dataset = FrictionDataset.load("datasets/106/train_dataset_w" + str(args.window) + ".npz")
-test_dataset = FrictionDataset.load("datasets/106/test_dataset_w" + str(args.window) + ".npz")
+train_dataset = FrictionDataset.load("datasets/106/tau_f/train_dataset_w" + str(args.window) + ".npz")
+test_dataset = FrictionDataset.load("datasets/106/tau_f/test_dataset_w" + str(args.window) + ".npz")
 
 # Data already shuffled in the datasets
 training_loader = DataLoader(train_dataset, batch_size=512, shuffle=False, drop_last=True, pin_memory=True if device == "cuda" else False)
@@ -41,37 +40,11 @@ elif args.activation == "LeakyReLU":
     activation = th.nn.LeakyReLU()
 else:
     raise ValueError("Activation function not supported")
-
-class CustomActivation(th.nn.Module):
-    def forward(self, x):
-        return th.where(th.abs(x) < 1, 0.5 * x ** 2, th.abs(x) - 0.5)
-
-class AbsActivation(th.nn.Module):
-    def forward(self, x):
-        return th.abs(x)
-
-class SquareActivation(th.nn.Module):
-    def forward(self, x):
-        return x ** 2
     
-if args.last == "None":
-    last_activation = th.nn.Identity()
-elif args.last == "Softplus":
-    last_activation = th.nn.Softplus()
-elif args.last == "Abs":
-    last_activation = AbsActivation()
-elif args.last == "Square":
-    last_activation = SquareActivation()
-elif args.last == "Custom":
-    last_activation = CustomActivation()
-else:
-    raise ValueError(f"Last activation '{args.last}' function not supported")
-
 friction_net = FrictionNet(args.window, 
                            hidden_dimension=args.nodes, 
                            hidden_layers=3, 
-                           activation=activation, 
-                           last_layer_activation=last_activation,
+                           activation=activation,
                            device=device)
 
 optimizer = th.optim.Adam(friction_net.parameters(), lr=1e-3, weight_decay=0)
@@ -93,7 +66,10 @@ def train_epoch(net, loader):
         inputs = batch["input"].to(device)
         outputs = batch["output"].to(device)
 
-        loss = loss_func(net(inputs)[:, 0], outputs)
+        mlp_out = net(inputs)
+        # TODO: Check if the loss is correct
+        loss = 0
+        # loss = loss_func(mlp_out[:, 0], (outputs[:, 1] + mlp_out[:, 1]) * outputs[:,0]
         loss_sum += loss.item()
 
         optimizer.zero_grad()
