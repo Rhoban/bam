@@ -1,6 +1,6 @@
 wandb=1
 epochs=150
-losses=("smooth_l1_loss" "mse_loss" "l1_loss")
+losses=("l1_loss" "mse_loss" "smooth_l1_loss")
 nodes=(128)
 windows=(1 4 16)
 activations=("LeakyReLU" "Tanh" "Softsign" "ReLU")

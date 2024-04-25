@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 # Parse arguments
 parser = optparse.OptionParser()
-parser.add_option("--window", dest="window", default=2, type="int", help="window size")
+parser.add_option("--window", dest="window", default=1, type="int", help="window size")
 parser.add_option("-n", "--nodes", dest="nodes", default=256, type="int", help="number of nodes per layer")
 parser.add_option("-a", "--activation", dest="activation", default="ReLU", type="str", help="activation function")
 parser.add_option("-e", "--epochs", dest="epochs", default=300, type="int", help="number of epochs")
@@ -19,7 +19,7 @@ args = parser.parse_args()[0]
 use_wandb = True if args.wandb == 1 else False
 project_name = "friction-net"
 model_name = args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
-config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "last_activation": args.last, "loss": args.loss}
+config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "loss": args.loss}
 
 device = th.device("cuda" if th.cuda.is_available() else "cpu")
 
@@ -67,9 +67,7 @@ def train_epoch(net, loader):
         outputs = batch["output"].to(device)
 
         mlp_out = net(inputs)
-        # TODO: Check if the loss is correct
-        loss = 0
-        # loss = loss_func(mlp_out[:, 0], (outputs[:, 1] + mlp_out[:, 1]) * outputs[:,0]
+        loss = loss_func(mlp_out[:, 0], outputs[:, 0] * (outputs[:, 1] + mlp_out[:, 1]))
         loss_sum += loss.item()
 
         optimizer.zero_grad()
@@ -83,7 +81,8 @@ def test_epoch(net, loader):
         inputs = batch["input"].to(device)
         outputs = batch["output"].to(device)
 
-        loss = loss_func(net(inputs)[:, 0], outputs)
+        mlp_out = net(inputs)
+        loss = loss_func(mlp_out[:, 0], outputs[:, 0] * (outputs[:, 1] + mlp_out[:, 1]))
         loss_sum += loss.item()
     return loss_sum / len(loader)
 
@@ -118,4 +117,4 @@ for epoch in range(epochs):
 
     # Saving the model
     # if (epoch + 1) % 5 == 0:
-    friction_net.save("models/106/" + model_name + ".pth")
+    friction_net.save("models/106/tau_f/" + model_name + ".pth")
