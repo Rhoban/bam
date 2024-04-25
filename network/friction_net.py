@@ -19,7 +19,7 @@ class FrictionNet(th.nn.Module):
         Take as inputs 1D torch.Tensor of size 4 * window_size + 2 containing for the n-th entry:
         - volts_[n-w_s+1,n]
         - dtheta_[n-w_s+1,n]
-        - torque_[n-w_s+1,n]
+        - torque_enable_[n-w_s+1,n]
         - tau_l_[n-w_s+1,n]
         - ddtheta_n
         - I_l
@@ -47,8 +47,8 @@ class FrictionNet(th.nn.Module):
         self.friction_mlp = th.nn.Sequential(*layers).to(device)
 
         # Parameters to compute the motor torque (including back EMF)
-        self.kt = th.nn.Parameter(th.tensor(2.0))
-        self.R = th.nn.Parameter(th.tensor(2.0))
+        self.kt = th.nn.Parameter(th.tensor(2.5)) #, requires_grad=False)
+        self.R = th.nn.Parameter(th.tensor(2.5)) #, requires_grad=False)
         self.I_a = th.nn.Parameter(th.tensor(0.01))
 
     def forward(self, x: th.Tensor) -> th.Tensor:
@@ -73,16 +73,17 @@ class FrictionNet(th.nn.Module):
 
         # Computing tau_m
         tau_m = torque_enable * ((self.kt / self.R) * volts - (self.kt**2) * velocity / self.R)
-
+        
         # Determining the friction torque
         mlp_input = th.hstack([velocity, tau_m, tau_l])
         tau_f_max = self.friction_mlp(mlp_input)
+        # tau_f_max = th.zeros(x.shape[0], 1).to(self.device)
 
         tau_stop = -((I_l + self.I_a) * velocity[:, -1] / self.dt + tau_m[:, -1] + tau_l[:, -1]).unsqueeze(1)
         tau_f = th.sign(tau_stop) * th.min(th.abs(tau_stop), tau_f_max)
 
         # Returning the output
-        out = th.hstack([(tau_m[:, -1] + tau_f.squeeze(1) - I_l * ddtheta).unsqueeze(1), 
+        out = th.hstack([(tau_m[:, -1] + tau_f.squeeze(1) - self.I_a * ddtheta).unsqueeze(1), 
                          self.I_a.repeat(x.shape[0], 1), 
                          self.R.repeat(x.shape[0], 1), 
                          self.kt.repeat(x.shape[0], 1)])
@@ -116,6 +117,18 @@ if __name__ == "__main__":
     window_size = 1
     friction_net = FrictionNet(window_size)
 
+    x = th.tensor([[10, 2, 1, 0.1, 0.5, 0.01],
+                   [11, 1.5, 1, 0.2, 0.4, 0.01]]).to(friction_net.device)
+    
+    y = friction_net(x)
+
+    print("input :")
+    print(x)
+    print("output :")
+    print(y)
+
+    exit()
+
     x = th.randn((10, 4*window_size + 2)).to(friction_net.device)
     y = friction_net(x)
     print("input shape : ", x.shape)
@@ -125,6 +138,8 @@ if __name__ == "__main__":
     y = friction_net(x)
     print("input shape : ", x.shape)
     print("output shape : ", y.shape)
+    print("input : ", x)
+    print("output : ", y)
 
     filename = "test_friction_net.pth"
     friction_net.save(filename)
