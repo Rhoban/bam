@@ -13,18 +13,29 @@ parser.add_option("-n", "--nodes", dest="nodes", default=256, type="int", help="
 parser.add_option("-a", "--activation", dest="activation", default="ReLU", type="str", help="activation function")
 parser.add_option("-e", "--epochs", dest="epochs", default=300, type="int", help="number of epochs")
 parser.add_option("--loss", dest="loss", default="l1_loss", type="str", help="loss function")
+parser.add_option("--last", dest="last", default="Abs", type="str", help="last layer activation function")
 parser.add_option("--wandb", dest="wandb", default=0, type="int", help="using wandb")
+parser.add_option("-m", "--max", action="store_true", help="use FrictionMaxNet")
 args = parser.parse_args()[0]
 
 use_wandb = True if args.wandb == 1 else False
-project_name = "friction-net"
-model_name = args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
-config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "loss": args.loss}
+
+if args.max:
+    project_name = "friction-net-max"
+    repository = "tau_f_m"
+    model_name = args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
+    config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "last": args.last, "loss": args.loss}
+else:
+    project_name = "friction-net"
+    repository = "tau_f"
+    model_name = args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
+    config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "loss": args.loss}
 
 device = th.device("cuda" if th.cuda.is_available() else "cpu")
 
-train_dataset = FrictionDataset.load("datasets/106/tau_f/train_dataset_w" + str(args.window) + ".npz")
-test_dataset = FrictionDataset.load("datasets/106/tau_f/test_dataset_w" + str(args.window) + ".npz")
+
+train_dataset = FrictionDataset.load("datasets/106/" + repository + "/train_dataset_w" + str(args.window) + ".npz")
+test_dataset = FrictionDataset.load("datasets/106/" + repository + "/test_dataset_w" + str(args.window) + ".npz")
 
 # Data already shuffled in the datasets
 training_loader = DataLoader(train_dataset, batch_size=512, shuffle=False, drop_last=True, pin_memory=True if device == "cuda" else False)
