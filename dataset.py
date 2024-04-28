@@ -119,6 +119,69 @@ class FrictionDataset(TorchDataset):
         return dataset
     
 
+class FrictionMaxDataset(TorchDataset):
+    """
+    Dataset class compatible with PyTorch DataLoader. 
+
+    Inputs are 1D numpy ndarray of size 4 * window_size containing for the n-th entry:
+        - volts_[n-w_s+1,n]
+        - dtheta_[n-w_s+1,n]
+        - torque_[n-w_s+1,n]
+        - tau_l_[n-w_s+1,n]
+
+    Outputs are 1D numpy ndarray of size 2 containing for the n-th entry:
+        - ddtheta_n
+        - I_l
+    """
+    def __init__(self, window_size: int):
+        self.inputs = []
+        self.outputs = []
+        self.window_size = window_size
+        self.size = 0
+    
+    def __len__(self):
+        return self.size
+    
+    def __getitem__(self, index: int):
+        return {"input": self.inputs[index], "output": self.outputs[index]}
+    
+    def __getitems__(self, indices: list):
+        return [{"input": self.inputs[index], "output": self.outputs[index]} for index in indices]
+    
+    def add_entry(self, input: np.ndarray, output: float) -> None:
+        """
+        Add an entry to the dataset.
+        """
+        self.inputs.append(np.float32(input))
+        self.outputs.append(np.float32(output))
+        self.size += 1
+
+    def add_log(self, processed_log, offset=5): 
+        with open(processed_log, 'r') as file:
+            data = json.load(file)
+        
+        velocity = [entry["velocity"] for entry in data["entries"]]
+        acceleration = [entry["acceleration"] for entry in data["entries"]]
+        volts = [entry["volts"] for entry in data["entries"]]
+        torque_enable = [entry["torque_enable"] for entry in data["entries"]]
+        tau_l = [entry["tau_l"] for entry in data["entries"]]
+
+        mass = data["mass"]
+        length = data["length"]
+
+        for i in range(self.window_size + offset, len(volts) - offset):
+            input = np.array(volts[i - self.window_size:i] +
+                             velocity[i - self.window_size:i] +
+                             torque_enable[i - self.window_size:i] +
+                             tau_l[i - self.window_size:i])
+            
+            output = np.array([acceleration[i-1]] +
+                              [mass * length**2])
+            
+            self.add_entry(input, output)
+
+
+
 if __name__ == "__main__":
     import argparse
     import os
