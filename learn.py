@@ -52,11 +52,42 @@ elif args.activation == "LeakyReLU":
 else:
     raise ValueError("Activation function not supported")
     
-friction_net = FrictionNet(args.window, 
-                           hidden_dimension=args.nodes, 
-                           hidden_layers=3, 
-                           activation=activation,
-                           device=device)
+class CustomActivation(th.nn.Module):
+    def forward(self, x):
+        return th.where(th.abs(x) < 1, 0.5 * x ** 2, th.abs(x) - 0.5)
+
+class AbsActivation(th.nn.Module):
+    def forward(self, x):
+        return th.abs(x)
+
+class SquareActivation(th.nn.Module):
+    def forward(self, x):
+        return x ** 2
+    
+if args.last == "Softplus":
+    last_activation = th.nn.Softplus()
+elif args.last == "Abs":
+    last_activation = AbsActivation()
+elif args.last == "Square":
+    last_activation = SquareActivation()
+elif args.last == "Custom":
+    last_activation = CustomActivation()
+else:
+    raise ValueError(f"Last activation '{args.last}' function not supported")
+
+if args.max:
+    friction_net = FrictionNet(args.window, 
+                            hidden_dimension=args.nodes, 
+                            hidden_layers=3, 
+                            activation=activation, 
+                            last_layer_activation=last_activation,
+                            device=device)
+else:
+    friction_net = FrictionNet(args.window, 
+                            hidden_dimension=args.nodes, 
+                            hidden_layers=3, 
+                            activation=activation,
+                            device=device)
 
 optimizer = th.optim.Adam(friction_net.parameters(), lr=1e-3, weight_decay=0)
 scheduler = th.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=15, verbose=True, threshold=1e-3, threshold_mode="rel", cooldown=0, min_lr=1e-5, eps=1e-8)
@@ -77,8 +108,12 @@ def train_epoch(net, loader):
         inputs = batch["input"].to(device)
         outputs = batch["output"].to(device)
 
-        mlp_out = net(inputs)
-        loss = loss_func(mlp_out[:, 0], outputs[:, 0] * (outputs[:, 1] + mlp_out[:, 1]))
+        if args.max:
+            loss = loss_func(net(inputs)[:, 0], outputs)
+        else:
+            mlp_out = net(inputs)
+            loss = loss_func(mlp_out[:, 0], outputs[:, 0] * (outputs[:, 1] + mlp_out[:, 1]))
+
         loss_sum += loss.item()
 
         optimizer.zero_grad()
@@ -92,8 +127,12 @@ def test_epoch(net, loader):
         inputs = batch["input"].to(device)
         outputs = batch["output"].to(device)
 
-        mlp_out = net(inputs)
-        loss = loss_func(mlp_out[:, 0], outputs[:, 0] * (outputs[:, 1] + mlp_out[:, 1]))
+        if args.max:
+            loss = loss_func(net(inputs)[:, 0], outputs)
+        else:
+            mlp_out = net(inputs)
+            loss = loss_func(mlp_out[:, 0], outputs[:, 0] * (outputs[:, 1] + mlp_out[:, 1]))
+
         loss_sum += loss.item()
     return loss_sum / len(loader)
 
@@ -127,9 +166,9 @@ for epoch in range(epochs):
     scheduler.step(avg_vloss)
 
     if optimizer.param_groups[0]["lr"] <= 0.0004:
-        friction_net.save("models/106/tau_f/" + model_name + ".pth")
+        friction_net.save("models/106/" + repository + "/" + model_name + ".pth")
         break
     
     # Saving the model
     if (epoch + 1) % 5 == 0:
-        friction_net.save("models/106/tau_f/" + model_name + ".pth")
+        friction_net.save("models/106/" + repository + "/" + model_name + ".pth")
