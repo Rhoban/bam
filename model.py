@@ -1,5 +1,7 @@
 import numpy as np
 import json
+import torch as th
+from friction_net import FrictionNet
 
 
 class Parameter:
@@ -134,9 +136,7 @@ class Model(BaseModel):
 
         return torque
 
-    def compute_frictions(
-        self, motor_torque: float, external_torque: float, dtheta: float
-    ) -> tuple:
+    def compute_frictions(self, motor_torque: float, external_torque: float, dtheta: float) -> tuple:
         # Torque applied to the gearbox
         gearbox_torque = np.abs(external_torque - motor_torque)
 
@@ -168,10 +168,44 @@ class Model(BaseModel):
         return self.armature.value
 
 
+class NetworkModel(BaseModel):
+    def __init__(self, net_path: str, name: str = None):
+        self.name = name
+
+        # Load the network
+        self.friction_net = FrictionNet.load(net_path)
+        self.friction_net.eval()
+
+        self.I_a = self.friction_net.I_a.item()
+        self.kt = self.friction_net.kt.item()
+        self.R = self.friction_net.R.item()
+
+    def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
+        # Volts to None means that the motor is disconnected
+        if volts is None:
+            return 0.0
+
+        # Torque produced
+        torque = self.kt * volts / self.R
+
+        # Back EMF
+        torque -= (self.kt**2) * dtheta / self.R
+
+        return torque
+
+    def compute_frictions(self, motor_torque: list, external_torque: list, dtheta: list) -> tuple:
+        mlp_input = th.hstack((th.tensor(np.float32(dtheta)), 
+                               th.tensor(np.float32(motor_torque)), 
+                               th.tensor(np.float32(1)),
+                               th.tensor(np.float32(external_torque))))
+        
+        return self.friction_net(mlp_input).tolist()[0], 0.0
+    
+    def get_extra_inertia(self) -> float:
+        return self.I_a
+
 models = {
-    "m1": lambda: Model(
-        name="m1",
-    ),
+    "m1": lambda: Model(name="m1"),
     "m2": lambda: Model(name="m2", stribeck=True),
     "m3": lambda: Model(name="m3", load_dependent=True, stribeck=True),
     "m5": lambda: Model(name="m5", load_dependent=True),
@@ -184,3 +218,7 @@ def load_model(json_file: str):
         model = models[data["model"]]()
         model.load_parameters(json_file)
         return model
+
+def load_network(file: str):
+    model = NetworkModel(file)
+    return model

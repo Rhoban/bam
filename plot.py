@@ -3,7 +3,7 @@ import numpy as np
 import json
 import time
 import optuna
-from model import load_model, BaseModel
+from model import load_model, load_network, BaseModel
 import simulate
 import logs
 import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--params", type=str, default="params.json")
+arg_parser.add_argument("--network", type=str, default=None)
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--sim", action="store_true")
@@ -19,7 +20,11 @@ args = arg_parser.parse_args()
 logs = logs.Logs(args.logdir)
 
 if args.sim:
-    model = load_model(args.params)
+    if args.network is None:
+        model = load_model(args.params)
+    else:
+        model = load_network(args.network)
+        model.name = args.network
 
 for log in logs.logs:
     if args.sim:
