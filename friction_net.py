@@ -106,6 +106,16 @@ class FrictionNet(th.nn.Module):
         return friction_net
     
 
+# Proposed soft limit
+def soft_min(x: th.Tensor, y: th.Tensor, beta: float = 0.9):
+    K = beta * y
+    return th.where(
+        x < y,
+        beta * x,
+        K * (x - K) / (beta * x + y - 2 * K),
+    )
+
+
 class FrictionNetMax(FrictionNet):
     """
     FrictionNetMax is a neural network that computes the maximum friction torque given 
@@ -176,7 +186,7 @@ class FrictionNetMax(FrictionNet):
         tau_f_max = self.friction_mlp(mlp_input)
 
         tau_stop = -((I_l + self.I_a) * velocity[:, -1] / self.dt + tau_m[:, -1] + tau_l[:, -1]).unsqueeze(1)
-        tau_f = th.sign(tau_stop) * th.min(th.abs(tau_stop), tau_f_max)
+        tau_f = th.sign(tau_stop) * soft_min(th.abs(tau_stop), tau_f_max)
 
         # Returning the output
         out = th.hstack([(tau_m[:, -1] + tau_f.squeeze(1) - self.I_a * ddtheta).unsqueeze(1), 
