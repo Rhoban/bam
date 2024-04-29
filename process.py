@@ -41,8 +41,6 @@ for logfile in glob.glob(f"{args.raw}/*.json"):
 
         new_entry["torque_enable"] = True if (new_entry["torque_enable"] > 0.5) else False
 
-        new_entry["tau_l"] = data["mass"] * 9.81 * data["length"] * np.sin(new_entry["position"])
-
         position_error = new_entry["goal_position"] - new_entry["position"]
         new_entry["volts"] = compute_volts(position_error, data["kp"])
         if not new_entry["torque_enable"]:
