@@ -1,15 +1,18 @@
-wandb=1
+wandb=0
 epochs=150
-losses=("mse_loss") #"l1_loss" "smooth_l1_loss")
+losses=("l1_loss") #"smooth_l1_loss")
 nodes=(128)
 windows=(1 4 16)
-activations=("LeakyReLU" "Tanh" "Softsign" "ReLU")
+activations=("LeakyReLU" "Tanh" "ReLU") #"Softsign")
+lasts=("Abs") # "Square" "Custom")
 
 for loss in "${losses[@]}"; do
     for a in "${activations[@]}"; do
         for n in "${nodes[@]}"; do
             for w in "${windows[@]}"; do
-                python learn.py --window $w --wandb $wandb -a $a -e $epochs -n $n --loss $loss
+                for last in "${lasts[@]}"; do
+                    python learn.py --max --window $w --wandb $wandb --activation $a --epochs $epochs --nodes $n --loss $loss --last $last
+                done
             done
         done
     done

@@ -47,10 +47,11 @@ class FrictionDataset(TorchDataset):
         acceleration = [entry["acceleration"] for entry in data["entries"]]
         volts = [entry["volts"] for entry in data["entries"]]
         torque_enable = [entry["torque_enable"] for entry in data["entries"]]
-        tau_l = [entry["tau_l"] for entry in data["entries"]]
-
+        
         mass = data["mass"]
         length = data["length"]
+
+        tau_l = [-9.81 * mass * length * np.sin(entry["position"]) for entry in data["entries"]]
 
         for i in range(self.window_size + offset, len(volts) - offset):
             input = np.array(volts[i - self.window_size:i] +
@@ -119,45 +120,6 @@ class FrictionDataset(TorchDataset):
         return dataset
     
 
-class FrictionMaxDataset(FrictionDataset):
-    """
-    Dataset class compatible with PyTorch DataLoader. 
-
-    Inputs are 1D numpy ndarray of size 1 + 4 * window_size + 2 containing for the n-th entry:
-        - volts_[n-w_s+1,n]
-        - dtheta_[n-w_s+1,n]
-        - torque_[n-w_s+1,n]
-        - tau_l_[n-w_s+1,n]
-        - ddtheta_n
-        - I_l
-
-    Outputs are scalars containing I_l * ddtheta_n - tau_l_n
-    """
-    def add_log(self, processed_log, offset=5): 
-        with open(processed_log, 'r') as file:
-            data = json.load(file)
-        
-        velocity = [entry["velocity"] for entry in data["entries"]]
-        acceleration = [entry["acceleration"] for entry in data["entries"]]
-        volts = [entry["volts"] for entry in data["entries"]]
-        torque_enable = [entry["torque_enable"] for entry in data["entries"]]
-        tau_l = [entry["tau_l"] for entry in data["entries"]]
-
-        mass = data["mass"]
-        length = data["length"]
-
-        for i in range(self.window_size + offset, len(volts) - offset):
-            input = np.array(volts[i - self.window_size:i] +
-                             velocity[i - self.window_size:i] +
-                             torque_enable[i - self.window_size:i] +
-                             tau_l[i - self.window_size:i] +
-                             [acceleration[i-1]] +
-                             [mass * length**2])
-            
-            output = mass * length**2 * acceleration[i-1] - tau_l[i-1]
-            self.add_entry(input, output)
-
-
 if __name__ == "__main__":
     import argparse
     import os
@@ -166,19 +128,14 @@ if __name__ == "__main__":
     arg_parser.add_argument("-l", "--logdir", type=str, required=False, default=None, help="Processed log directory used to build a dataset")
     arg_parser.add_argument("-d", "--datasetdir", type=str, required=False, default=None, help="Dataset directory")
     arg_parser.add_argument("-w", "--window_size", type=int, required=False, default=10, help="Window size for the dataset")
-    arg_parser.add_argument("-m", "--max", action="store_true", help="Use FrictionMaxDataset instead of FrictionDataset")
     args = arg_parser.parse_args()
 
     # Processing data
     if args.logdir != None and args.datasetdir != None:
         print(f"Processing log files from {args.logdir} ...")
         
-        if args.max:
-            train_dataset = FrictionMaxDataset(args.window_size)
-            test_dataset = FrictionMaxDataset(args.window_size)
-        else:
-            train_dataset = FrictionDataset(args.window_size)
-            test_dataset = FrictionDataset(args.window_size)
+        train_dataset = FrictionDataset(args.window_size)
+        test_dataset = FrictionDataset(args.window_size)
 
         for log in os.listdir(args.logdir):
             print(f"Loading {log} ...")
@@ -218,9 +175,13 @@ if __name__ == "__main__":
 
         print("First value (window_size = 3): ", dataset[0])
         volts = [entry["volts"] for entry in data["entries"]]
+        velocity = [entry["velocity"] for entry in data["entries"]]
         acceleration = [entry["acceleration"] for entry in data["entries"]]
         print("Volts : ", volts[:3])
+        print("Velocity : ", velocity[:3])
         print("Acceleration : ", acceleration[:3])
+
+        print("Last velocity : ", dataset[0]["input"][2*3-1])
 
         print("Dataset size : ", len(dataset))
 
@@ -236,24 +197,3 @@ if __name__ == "__main__":
 
         os.remove("datasets/106/test.npz")
 
-        print("---------------------------------------")
-        print("Testing FrictionMaxDataset class :")
-        dataset = FrictionMaxDataset(3)
-
-        for log in os.listdir("data_106_network"):
-            with open("data_106_network/" + log, 'r') as file:
-                data = json.load(file)
-
-            dataset.add_log("data_106_network/" + log, offset=0)
-            print("Loading a log file ...")
-            break
-
-        print("First value (window_size = 3): ", dataset[0])
-        volts = [entry["volts"] for entry in data["entries"]]
-        acceleration = [entry["acceleration"] for entry in data["entries"]]
-        print("Volts : ", volts[:3])
-        print("Acceleration : ", acceleration[:3])
-
-        print("Dataset size : ", len(dataset))
-
-        
