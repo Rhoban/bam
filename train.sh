@@ -1,5 +1,6 @@
 flags="--wandb --max --simplify_tau_m"
 
+# Parameters
 epochs=150
 nodes=(128)
 losses=("l1_loss") #"smooth_l1_loss")
