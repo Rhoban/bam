@@ -31,7 +31,7 @@ class BaseModel:
         """
         return 0.0
 
-    def get_parameters(self) -> list:
+    def get_parameters(self) -> dict:
         """
         This returns the list of parameters that can be optimized.
         """

@@ -11,6 +11,7 @@ import json
 import time
 import optuna
 from model import models, BaseModel
+import message
 import simulate
 import wandb
 import logs
@@ -27,6 +28,7 @@ arg_parser.add_argument("--load-study", type=str, default=None)
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--wandb", action="store_true")
+arg_parser.add_argument("--set", type=str, default="")
 args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
@@ -42,6 +44,7 @@ params_json_filename = args.output
 if not params_json_filename.endswith(".json"):
     params_json_filename = f"output/params_{params_json_filename}.json"
 json.dump({}, open(params_json_filename, "w"))
+
 
 def compute_score(model: BaseModel, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], model)
@@ -66,9 +69,22 @@ def compute_scores(model: BaseModel):
     return scores / len(logs.logs)
 
 
-def objective(trial):
+def make_model() -> BaseModel:
     model = models[args.model]()
     model.set_actuator(actuators[args.actuator]())
+
+    if args.set != "":
+        parameters = model.get_parameters()
+        values = eval(args.set)
+        for key in values:
+            parameters[key].value = values[key]
+            parameters[key].optimize = False
+
+    return model
+
+
+def objective(trial):
+    model = make_model()
 
     parameters = model.get_parameters()
     for name in parameters:
@@ -81,6 +97,7 @@ def objective(trial):
 
 last_log = time.time()
 wandb_run = None
+
 
 def monitor(study, trial):
     global last_log, wandb_run
@@ -103,8 +120,6 @@ def monitor(study, trial):
     if elapsed > 0.2:
         last_log = time.time()
         data = deepcopy(study.best_params)
-        data["model"] = args.model
-        data["actuator"] = args.actuator
         trial_number = trial.number
         best_value = study.best_value
         wandb_log = {
@@ -114,21 +129,35 @@ def monitor(study, trial):
 
         json.dump(data, open(params_json_filename, "w"))
 
+        model = make_model()
+        model_parameters = model.get_parameters()
+        for key in model_parameters:
+            if key not in data:
+                data[key] = model_parameters[key].value
+        data["model"] = args.model
+        data["actuator"] = args.actuator
+
         print()
-        print(f"Trial {trial_number}, Best score: {best_value}")
-        print(f"Best params found (saved to {args.output}): ")
+        message.bright(f"[Trial {trial_number}, Best score: {best_value}]")
+        print(
+            message.emphasis(f"Best params found (saved to {params_json_filename}): ")
+        )
         for key in data:
-            print(f"- {key}: {data[key]}")
+            result = f"- {message.success(key)}: {message.yellow(str(data[key]))}"
+
+            if key in model_parameters:
+                if model_parameters[key].optimize:
+                    result += f" (min: {model_parameters[key].min}, max: {model_parameters[key].max})"
+                else:
+                    result += message.red(" (not optimized)")
+            print(result)
+
             if type(data[key]) == float:
                 wandb_log[f"params/{key}"] = data[key]
-        
+
         if wandb_run is not None:
             wandb.log(wandb_log)
     sys.stdout.flush()
-
-
-def monitor_x(x):
-    print(x)
 
 
 if args.method == "cmaes":
@@ -143,7 +172,8 @@ elif args.method == "nsgaii":
 else:
     raise ValueError(f"Unknown method: {args.method}")
 
-def optuna_run(enable_monitoring = True):
+
+def optuna_run(enable_monitoring=True):
     if args.workers > 1:
         study = optuna.load_study(study_name=study_name, storage=study_url)
     else:
@@ -154,12 +184,13 @@ def optuna_run(enable_monitoring = True):
         callbacks = [monitor]
     study.optimize(objective, n_trials=args.trials, n_jobs=1, callbacks=callbacks)
 
+
 if args.workers > 1:
     optuna.create_study(study_name=study_name, storage=study_url, sampler=sampler)
 
 # Running the other workers
-for k in range(args.workers-1):
+for k in range(args.workers - 1):
     p = Process(target=optuna_run, args=(False,))
     p.start()
-        
+
 optuna_run(True)
