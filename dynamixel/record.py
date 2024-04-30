@@ -15,6 +15,7 @@ arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--trajectory", type=str, default="lift_and_drop")
 arg_parser.add_argument("--motor", type=str, required=True)
 arg_parser.add_argument("--kp", type=int, default=32)
+arg_parser.add_argument("--vin", type=float, default=15.0)
 args = arg_parser.parse_args()
 
 if args.trajectory not in trajectories:
@@ -36,6 +37,7 @@ data = {
     "mass": args.mass,
     "length": args.length,
     "kp": args.kp,
+    "vin": args.vin,
     "motor": args.motor,
     "trajectory": args.trajectory,
     "entries": []

@@ -1,34 +1,20 @@
 import numpy as np
 import json
 import dynamixel
-
-
-class Parameter:
-    def __init__(self, value: float, min: float, max: float, optimize: bool = True):
-        # Current value of the parameter
-        self.value: float = value
-
-        # Minimum and maximum values for the parameter
-        self.min: float = min
-        self.max: float = max
-
-        # Should this parameter be optimized?
-        self.optimize: bool = optimize
+from actuator import Actuator, actuators
+from parameter import Parameter
 
 
 class BaseModel:
-    def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
-        """
-        This computes the torque applied by the motor, the friction torque and returns
-        an expected angular acceleration.
-        """
-        raise NotImplementedError
+    def set_actuator(self, actuator: Actuator) -> None:
+        self.actuator = actuator
+        self.actuator.set_model(self)
 
     def reset(self) -> None:
         """
         Resets the model internal state
         """
-        pass
+        self.actuator.reset()
 
     def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
@@ -80,6 +66,13 @@ class BaseModel:
                     parameters[name].value = data[name]
 
 
+class DummyModel(BaseModel):
+    def compute_frictions(
+        self, motor_torque: float, external_torque: float, dtheta: float
+    ) -> tuple:
+        return 0.0, 0.0
+
+
 class Model(BaseModel):
     def __init__(
         self,
@@ -92,12 +85,6 @@ class Model(BaseModel):
         # Model parameters
         self.load_dependent: bool = load_dependent
         self.stribeck: bool = stribeck
-
-        # Torque constant [Nm/A] or [V/(rad/s)]
-        self.kt = Parameter(1.6, 1.0, 3.0)
-
-        # Motor resistance [Ohm]
-        self.R = Parameter(2.0, 1.0, 3.5)
 
         # Motor armature [kg m^2]
         self.armature = Parameter(0.005, 0.001, 0.05)
@@ -121,19 +108,6 @@ class Model(BaseModel):
 
         # Viscous friction [Nm/(rad/s)]
         self.friction_viscous = Parameter(0.1, 0.0, 1.0)
-
-    def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
-        # Volts to None means that the motor is disconnected
-        if volts is None:
-            return 0.0
-
-        # Torque produced
-        torque = self.kt.value * volts / self.R.value
-
-        # Back EMF
-        torque -= (self.kt.value**2) * dtheta / self.R.value
-
-        return torque
 
     def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
@@ -239,5 +213,6 @@ def load_model(json_file: str):
     with open(json_file) as f:
         data = json.load(f)
         model = models[data["model"]]()
+        model.set_actuator(actuators[data["actuator"]]())
         model.load_parameters(json_file)
         return model

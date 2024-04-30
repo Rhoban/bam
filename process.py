@@ -3,7 +3,6 @@ from copy import deepcopy
 import os
 import json
 import numpy as np
-from dynamixel import compute_volts
 import argparse
 
 arg_parser = argparse.ArgumentParser()
@@ -38,12 +37,6 @@ for logfile in glob.glob(f"{args.raw}/*.json"):
             ) / (entry_2["timestamp"] - entry_1["timestamp"])
 
         new_entry["torque_enable"] = True if (new_entry["torque_enable"] > 0.5) else False
-
-        position_error = new_entry["goal_position"] - new_entry["position"]
-        new_entry["volts"] = compute_volts(position_error, data["kp"])
-        if not new_entry["torque_enable"]:
-            new_entry["volts"] = 0
-
         new_entry["timestamp"] = t
 
         data_output["entries"].append(new_entry)

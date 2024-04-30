@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
-from model import load_model, BaseModel
+from model import load_model, DummyModel
+from actuator import actuators
 import simulate
 import logs
 import matplotlib.pyplot as plt
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--params", type=str, default="params.json")
+arg_parser.add_argument("--actuator", type=str, default="mx")
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--sim", action="store_true")
@@ -20,7 +22,7 @@ if args.sim:
 
 for log in logs.logs:
     all_sim_q = []
-    all_sim_volts = []
+    all_sim_controls = []
     all_names = []
 
     if args.sim:
@@ -28,14 +30,20 @@ for log in logs.logs:
             model = load_model(model_name)
             all_names.append(model.name)
             simulator = simulate.Simulate1R(log["mass"], log["length"], model)
-            sim_q, sim_volts = simulator.rollout_log(log, reset_period=args.reset_period, simulate_control=args.control)
+            sim_q, sim_controls = simulator.rollout_log(
+                log, reset_period=args.reset_period, simulate_control=args.control
+            )
             all_sim_q.append(np.array(sim_q))
-            all_sim_volts.append(np.array(sim_volts))
+            all_sim_controls.append(np.array(sim_controls))
 
     ts = np.arange(len(log["entries"])) * log["dt"]
     q = [entry["position"] for entry in log["entries"]]
     goal_q = [entry["goal_position"] for entry in log["entries"]]
-    volts = [(entry["volts"] if entry["torque_enable"] else None) for entry in log["entries"]]
+
+    dummy = DummyModel()
+    dummy.set_actuator(actuators[args.actuator]())
+    simulator = simulate.Simulate1R(log["mass"], log["length"], dummy)
+    _, controls = simulator.rollout_log(log, simulate_control=False)
     torque_enable = np.array([entry["torque_enable"] for entry in log["entries"]])
 
     # Using 2 x-shared subplots
@@ -49,27 +57,29 @@ for log in logs.logs:
     ax1.legend()
     title = f'{log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}'
 
-    ax1.set_title(f'{log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}')
+    ax1.set_title(
+        f'{log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}'
+    )
     ax1.set_ylabel("angle [rad]")
     ax1.grid()
 
     # Using torque_enable color piecewise
-    ax2.plot(ts, volts, label="volts")
+    ax2.plot(ts, controls, label=model.actuator.control_unit())
     if args.control:
         if args.sim:
-            for model_name, sim_volts in zip(all_names, all_sim_volts):
-                ax2.plot(ts, sim_volts, label=f"{model_name}_volts")
+            for model_name, sim_controls in zip(all_names, all_sim_controls):
+                ax2.plot(ts, sim_controls, label=f"{model_name}_{model.actuator.control_unit()}")
     # Shading the areas where torque is False
     ax2.fill_between(
         ts,
-        min([entry["volts"] for entry in log["entries"]]) - 0.02,
-        max([entry["volts"] for entry in log["entries"]]) + 0.02,
+        min(controls) - 0.02,
+        max(controls) + 0.02,
         where=[not torque for torque in torque_enable],
         color="red",
         alpha=0.3,
         label="torque off",
     )
-    ax2.set_ylabel("volts [V]")
+    ax2.set_ylabel(f"{model.actuator.control_unit()}")
     ax2.legend()
     plt.xlabel("time [s]")
 

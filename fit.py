@@ -6,7 +6,7 @@ from multiprocessing import Process
 import numpy as np
 import json
 from copy import deepcopy
-from scipy.optimize import minimize
+from actuator import actuators
 import json
 import time
 import optuna
@@ -19,6 +19,7 @@ arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--output", type=str, default="params.json")
 arg_parser.add_argument("--method", type=str, default="cmaes")
+arg_parser.add_argument("--actuator", type=str, required=True)
 arg_parser.add_argument("--model", type=str, required=True)
 arg_parser.add_argument("--trials", type=int, default=100_000)
 arg_parser.add_argument("--workers", type=int, default=1)
@@ -67,24 +68,13 @@ def compute_scores(model: BaseModel):
 
 def objective(trial):
     model = models[args.model]()
+    model.set_actuator(actuators[args.actuator]())
+
     parameters = model.get_parameters()
     for name in parameters:
         parameter = parameters[name]
         if parameter.optimize:
             parameter.value = trial.suggest_float(name, parameter.min, parameter.max)
-
-    return compute_scores(model)
-
-
-def objective_x(x: list):
-    model = models[args.model]()
-    k = 0
-    parameters = model.get_parameters()
-    for name in parameters:
-        parameter = parameters[name]
-        if parameter.optimize:
-            parameter.value = x[k]
-            k += 1
 
     return compute_scores(model)
 
@@ -114,6 +104,7 @@ def monitor(study, trial):
         last_log = time.time()
         data = deepcopy(study.best_params)
         data["model"] = args.model
+        data["actuator"] = args.actuator
         trial_number = trial.number
         best_value = study.best_value
         wandb_log = {
@@ -139,8 +130,6 @@ def monitor(study, trial):
 def monitor_x(x):
     print(x)
 
-
-model = models[args.model]()
 
 if args.method == "cmaes":
     sampler = optuna.samplers.CmaEsSampler(

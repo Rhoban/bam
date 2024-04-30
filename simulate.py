@@ -1,6 +1,5 @@
 import numpy as np
 from model import BaseModel, Model, load_model
-from dynamixel import compute_volts
 
 g: float = -9.81
 
@@ -25,14 +24,15 @@ class Simulate1R:
         self.t = 0.0
 
         self.inertia = self.mass * self.length**2
+        self.model.reset()
 
-    def step(self, volts: None | float, dt: float):
+    def step(self, control: None | float, dt: float):
         """
-        Steps the simulation for dt given the applied voltage.
+        Steps the simulation for dt given the applied control
         """
 
         gravity_torque = self.mass * g * self.length * np.sin(self.q)
-        motor_torque = self.model.compute_motor_torque(volts, self.dq)
+        motor_torque = self.model.actuator.compute_torque(control, self.dq)
         frictionloss, damping = self.model.compute_frictions(
             motor_torque, gravity_torque, self.dq
         )
@@ -61,12 +61,13 @@ class Simulate1R:
         Read a given log dict and return the sequential reached positions
         """
         positions = []
-        all_volts = []
+        all_controls = []
 
         reset_period_t = 0.0
         dt = log["dt"]
         first_entry = log["entries"][0]
         self.reset(first_entry["position"], first_entry["speed"])
+        self.model.actuator.load_log(log)
 
         for entry in log["entries"]:
             reset_period_t += dt
@@ -78,16 +79,18 @@ class Simulate1R:
             if entry["torque_enable"]:
                 if simulate_control:
                     position_error = entry["goal_position"] - self.q
-                    volts = compute_volts(position_error, log["kp"])
                 else:
-                    volts = entry["volts"]
+                    position_error = entry["goal_position"] - entry["position"]
+
+                control = self.model.actuator.compute_control(position_error, self.dq, entry)
             else:
-                volts = None
-            all_volts.append(volts)
+                control = None
+                
+            all_controls.append(control)
 
-            self.step(volts, dt)
+            self.step(control, dt)
 
-        return positions, all_volts
+        return positions, all_controls
 
     def draw(self):
         """
