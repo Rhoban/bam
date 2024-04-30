@@ -27,16 +27,11 @@ parser.add_option("--soft_min", action="store_true", default = False, help="use 
 args = parser.parse_args()[0]
 
 # Wandb initialization
-if args.max:
-    project_name = "friction-net-max"
-    repository = "tau_f_m_K" if args.simplify_tau_m else "tau_f_m_soft" if args.soft_min else "tau_f_m"
-    model_name = args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
-    config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "last": args.last, "loss": args.loss, "K": args.simplify_tau_m, "soft_min": args.soft_min}
-else:
+if args.wandb:
     project_name = "friction-net"
-    repository = "tau_f"
-    model_name = args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
-    config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "loss": args.loss}
+    repository = "tau_f" if not args.max else "tau_f_m_K" if args.simplify_tau_m else "tau_f_m_soft" if args.soft_min else "tau_f_m"
+    model_name = repository + args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss + "-" + args.last
+    config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "loss": args.loss, "last": args.last, "K": args.simplify_tau_m, "soft_min": args.soft_min, "max": args.max}
 
 device = th.device("cuda" if th.cuda.is_available() else "cpu")
 
