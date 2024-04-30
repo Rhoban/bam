@@ -1,0 +1,1 @@
+python plot.py --params params/m4.json --logdir data_106_network/ --sim --control --network $1
