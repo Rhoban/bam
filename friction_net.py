@@ -21,19 +21,26 @@ class FrictionNet(th.nn.Module):
                  hidden_layers: int = 3, 
                  activation: th.nn.Module = th.nn.ReLU(),
                  last_layer_activation: th.nn.Module = th.nn.Identity(),
+                 simplify_tau_m: bool = False,
                  device: th.device = th.device("cpu")
                  ):
         super().__init__()
 
         self.device: th.device = device
 
-        # Window size (kept as a parameter to be able to save and load the model)
+        # Kepping parameters as a nn.Parameter to be able to save and load the model
         self.window_size = th.nn.Parameter(th.tensor(window_size), requires_grad=False)
+        self.simplify_tau_m = th.nn.Parameter(th.tensor(simplify_tau_m), requires_grad=False)
 
         # MLP to compute the torque friction
         # The input is [dtheta_[n-w_s+1,n], tau_m_[n-w_s+1,n], tau_l_[n-w_s+1,n]]
         # The output is [tau_f]
-        layers = [th.nn.Linear(3*window_size, hidden_dimension)]
+        # If simplify_tau_m is True, the input include volts_[n-w_s+1,n] and torque_enable_[n-w_s+1,n]
+        if simplify_tau_m:
+            layers = [th.nn.Linear(5*window_size, hidden_dimension)]
+        else:
+            layers = [th.nn.Linear(3*window_size, hidden_dimension)]
+
         layers.append(activation)
         for _ in range(hidden_layers):
             layers.append(th.nn.Linear(hidden_dimension, hidden_dimension))
@@ -44,9 +51,14 @@ class FrictionNet(th.nn.Module):
         self.friction_mlp = th.nn.Sequential(*layers).to(device)
 
         # Parameters to compute the motor torque (including back EMF)
-        self.kt = th.nn.Parameter(th.tensor(2.0))
-        self.R = th.nn.Parameter(th.tensor(2.0))
         self.I_a = th.nn.Parameter(th.tensor(0.01))
+
+        if simplify_tau_m:
+            self.K = th.nn.Parameter(th.tensor(1.0))
+        else:
+            self.kt = th.nn.Parameter(th.tensor(2.0))
+            self.R = th.nn.Parameter(th.tensor(2.0))
+            
 
     def forward(self, x: th.Tensor) -> th.Tensor:
         if type(x) is not th.Tensor:
@@ -66,14 +78,17 @@ class FrictionNet(th.nn.Module):
         torque_enable = x[:, 2*self.window_size.item():3*self.window_size.item()]
         tau_l = x[:, 3*self.window_size.item():]
 
-        # Computing tau_m
-        tau_m = torque_enable * ((self.kt / self.R) * volts - (self.kt**2) * velocity / self.R)
-
         # Determining the friction torque
-        mlp_input = th.hstack([velocity, tau_m, tau_l])
-        tau_f = self.friction_mlp(mlp_input)
+        if self.simplify_tau_m:
+            tau_m = torque_enable * self.K * volts
+            mlp_input = th.hstack([volts, torque_enable, velocity, tau_m, tau_l])
+        else:
+            tau_m = torque_enable * ((self.kt / self.R) * volts - (self.kt**2) * velocity / self.R)
+            mlp_input = th.hstack([velocity, tau_m, tau_l])
 
+        tau_f = self.friction_mlp(mlp_input)
         out = th.hstack([tau_f, tau_m[:, -1].unsqueeze(1)])
+
         if squeezed_input:
             out = out.squeeze(0)
         return out
@@ -126,13 +141,15 @@ if __name__ == "__main__":
     import os
     os.remove(filename)
 
-    friction_net = FrictionNet(window_size=3, hidden_dimension=32, hidden_layers=2, activation=th.nn.Tanh())
+    friction_net = FrictionNet(window_size=3, hidden_dimension=32, simplify_tau_m=True, hidden_layers=2, activation=th.nn.Tanh())
     print("window_size before saving : ", friction_net.window_size.item())
     print("hidden_dimension before saving : ", friction_net.friction_mlp[0].out_features)
+    print("simplify_tau_m before saving : ", friction_net.simplify_tau_m.item())
 
     friction_net.save(filename)
     friction_net_loaded = FrictionNet.load(filename)
     print("window_size after loading : ", friction_net_loaded.window_size.item())
     print("hidden_dimension after loading : ", friction_net_loaded.friction_mlp[0].out_features)
+    print("simplify_tau_m after loading : ", friction_net_loaded.simplify_tau_m.item())
 
     os.remove(filename)

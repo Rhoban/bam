@@ -11,7 +11,7 @@ for loss in "${losses[@]}"; do
         for n in "${nodes[@]}"; do
             for w in "${windows[@]}"; do
                 for last in "${lasts[@]}"; do
-                    python learn.py --max --window $w --wandb $wandb --activation $a --epochs $epochs --nodes $n --loss $loss --last $last
+                    nohup python learn.py --max --window $w --wandb $wandb --activation $a --epochs $epochs --nodes $n --loss $loss --last $last &
                 done
             done
         done

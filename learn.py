@@ -8,6 +8,8 @@ from friction_net import FrictionNet
 from tools import get_activation, get_last_activation, get_loss, soft_min
 from tqdm import tqdm
 
+USE_TQDM = False
+
 # Parse arguments
 parser = optparse.OptionParser()
 parser.add_option("--window", dest="window", default=1, type="int", help="window size")
@@ -20,16 +22,17 @@ parser.add_option("--loss", dest="loss", default="l1_loss", type="str", help="lo
 parser.add_option("--last", dest="last", default="Abs", type="str", help="last layer activation function")
 parser.add_option("--wandb", dest="wandb", default=0, type="int", help="using wandb")
 parser.add_option("--max", action="store_true", help="use FrictionNetMax")
+parser.add_option("--simplify_tau_m", action="store_true", help="use FrictionNet with simplified tau_m")
 args = parser.parse_args()[0]
 
 use_wandb = True if args.wandb == 1 else False
 
 # Wandb initialization
 if args.max:
-    project_name = "friction-net-max"
-    repository = "tau_f_m"
+    project_name = "friction-net-max(no soft_min)"
+    repository = "tau_f_m_K" if args.simplify_tau_m else "tau_f_m"
     model_name = args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
-    config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "last": args.last, "loss": args.loss}
+    config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "last": args.last, "loss": args.loss, "K": args.simplify_tau_m}
 else:
     project_name = "friction-net"
     repository = "tau_f"
@@ -56,6 +59,7 @@ friction_net = FrictionNet(args.window,
                         hidden_layers=3, 
                         activation=get_activation(args.activation),
                         last_layer_activation=get_last_activation(args.last),
+                        simplify_tau_m=args.simplify_tau_m,
                         device=device)
 
 optimizer = th.optim.Adam(friction_net.parameters(), lr=1e-4, weight_decay=0)
@@ -82,7 +86,7 @@ def compute_loss(inputs, outputs, net):
         tau_f_max = mlp_out[:, 0]
         tau_stop = -((I_l + I_a) * dtheta / args.dt + tau_m + tau_l)
 
-        tau_f = th.sign(tau_stop) * soft_min(th.abs(tau_f_max), th.abs(tau_stop))
+        tau_f = th.sign(tau_stop) * th.min(th.abs(tau_f_max), th.abs(tau_stop))
 
     else:
         tau_f = mlp_out[:, 0]
@@ -93,7 +97,7 @@ def compute_loss(inputs, outputs, net):
 # Training and testing functions
 def train_epoch(net, loader):
     loss_sum = 0
-    for batch in tqdm(loader):
+    for batch in tqdm(loader) if USE_TQDM else loader:
         inputs = batch["input"].to(device)
         outputs = batch["output"].to(device)
 
@@ -107,7 +111,7 @@ def train_epoch(net, loader):
 
 def test_epoch(net, loader):
     loss_sum = 0
-    for batch in tqdm(loader):
+    for batch in tqdm(loader) if USE_TQDM else loader:
         inputs = batch["input"].to(device)
         outputs = batch["output"].to(device)
 
@@ -134,13 +138,19 @@ for epoch in range(epochs):
         avg_vloss = test_epoch(friction_net, testing_loader)
 
     if use_wandb:
-        wandb.log({"avg_vloss": avg_vloss, 
-                   "avg_tloss": avg_tloss,                   
-                   "lr": optimizer.param_groups[0]["lr"], 
-                   "epoch": epoch + 1,
-                   "kt": friction_net.kt.item(),
-                   "R": friction_net.R.item(),
-                   "I_a": friction_net.I_a.item()})
+        log = {"avg_vloss": avg_vloss, 
+               "avg_tloss": avg_tloss,                   
+               "lr": optimizer.param_groups[0]["lr"], 
+               "epoch": epoch + 1,
+               "I_a": friction_net.I_a.item()}
+        
+        if args.simplify_tau_m:
+            log["K"] = friction_net.K.item()
+        else:
+            log["kt"] = friction_net.kt.item()
+            log["R"] = friction_net.R.item()
+
+        wandb.log(log)
 
     scheduler.step(avg_vloss)
 
