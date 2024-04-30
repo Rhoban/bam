@@ -19,10 +19,12 @@ class Actuator:
     def control_unit(self) -> str:
         raise NotImplementedError
 
-    def compute_control(self, position_error: float, dq: float, log_entry: dict) -> float|None:
+    def compute_control(
+        self, position_error: float, dq: float, log_entry: dict, simulate_control: bool
+    ) -> float | None:
         raise NotImplementedError
 
-    def compute_torque(self, control: float|None, dq: float) -> float:
+    def compute_torque(self, control: float | None, dq: float) -> float:
         raise NotImplementedError
 
     def to_mujoco(self):
@@ -56,7 +58,9 @@ class MXActuator(Actuator):
     def control_unit(self) -> str:
         return "volts"
 
-    def compute_control(self, position_error: float, dq: float, log_entry: dict) -> float|None:        
+    def compute_control(
+        self, position_error: float, dq: float, log_entry: dict, simulate_control: bool
+    ) -> float | None:
         # Maximum allowable PWM
         max_pwm = 0.9625
         # This gain, if multiplied by a position error and firmware KP, gives duty cycle
@@ -67,7 +71,7 @@ class MXActuator(Actuator):
 
         return self.vin * duty_cycle
 
-    def compute_torque(self, control: float|None, dq: float) -> float:
+    def compute_torque(self, control: float | None, dq: float) -> float:
         # Volts to None means that the motor is disconnected
         if control is None:
             return 0.0

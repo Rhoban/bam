@@ -82,7 +82,7 @@ class Simulate1R:
                 else:
                     position_error = entry["goal_position"] - entry["position"]
 
-                control = self.model.actuator.compute_control(position_error, self.dq, entry)
+                control = self.model.actuator.compute_control(position_error, self.dq, entry, simulate_control)
             else:
                 control = None
                 
