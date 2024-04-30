@@ -23,14 +23,15 @@ parser.add_option("--last", dest="last", default="Abs", type="str", help="last l
 parser.add_option("--wandb", action="store_true", default = False, help="use wandb")
 parser.add_option("--max", action="store_true", default = False, help="use FrictionNetMax")
 parser.add_option("--simplify_tau_m", action="store_true", default = False, help="use FrictionNet with simplified tau_m")
+parser.add_option("--soft_min", action="store_true", default = False, help="use soft_min")
 args = parser.parse_args()[0]
 
 # Wandb initialization
 if args.max:
-    project_name = "friction-net-max(no soft_min)"
-    repository = "tau_f_m_K" if args.simplify_tau_m else "tau_f_m"
+    project_name = "friction-net-max"
+    repository = "tau_f_m_K" if args.simplify_tau_m else "tau_f_m_soft" if args.soft_min else "tau_f_m"
     model_name = args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
-    config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "last": args.last, "loss": args.loss, "K": args.simplify_tau_m}
+    config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "last": args.last, "loss": args.loss, "K": args.simplify_tau_m, "soft_min": args.soft_min}
 else:
     project_name = "friction-net"
     repository = "tau_f"
@@ -84,7 +85,10 @@ def compute_loss(inputs, outputs, net):
         tau_f_max = mlp_out[:, 0]
         tau_stop = -((I_l + I_a) * dtheta / args.dt + tau_m + tau_l)
 
-        tau_f = th.sign(tau_stop) * th.min(th.abs(tau_f_max), th.abs(tau_stop))
+        if args.soft_min:
+            tau_f = th.sign(tau_stop) * soft_min(th.abs(tau_f_max), th.abs(tau_stop))
+        else:
+            tau_f = th.sign(tau_stop) * th.min(th.abs(tau_f_max), th.abs(tau_stop))
 
     else:
         tau_f = mlp_out[:, 0]
