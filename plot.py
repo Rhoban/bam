@@ -72,8 +72,8 @@ for log in logs.logs:
     # Shading the areas where torque is False
     ax2.fill_between(
         ts,
-        min(controls) - 0.02,
-        max(controls) + 0.02,
+        min([0.0 if c is None else c for c in controls]) - 0.02,
+        max([0.0 if c is None else c for c in controls]) + 0.02,
         where=[not torque for torque in torque_enable],
         color="red",
         alpha=0.3,
