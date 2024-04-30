@@ -20,12 +20,10 @@ parser.add_option("--activation", dest="activation", default="ReLU", type="str",
 parser.add_option("--epochs", dest="epochs", default=300, type="int", help="number of epochs")
 parser.add_option("--loss", dest="loss", default="l1_loss", type="str", help="loss function")
 parser.add_option("--last", dest="last", default="Abs", type="str", help="last layer activation function")
-parser.add_option("--wandb", dest="wandb", default=0, type="int", help="using wandb")
-parser.add_option("--max", action="store_true", help="use FrictionNetMax")
-parser.add_option("--simplify_tau_m", action="store_true", help="use FrictionNet with simplified tau_m")
+parser.add_option("--wandb", action="store_true", default = False, help="use wandb")
+parser.add_option("--max", action="store_true", default = False, help="use FrictionNetMax")
+parser.add_option("--simplify_tau_m", action="store_true", default = False, help="use FrictionNet with simplified tau_m")
 args = parser.parse_args()[0]
-
-use_wandb = True if args.wandb == 1 else False
 
 # Wandb initialization
 if args.max:
@@ -119,7 +117,7 @@ def test_epoch(net, loader):
     return loss_sum / len(loader)
 
 
-if use_wandb:
+if args.wandb:
     wandb.init(project=project_name, name=model_name, config=config)
     wandb.watch(friction_net)
 
@@ -137,7 +135,7 @@ for epoch in range(epochs):
     with th.no_grad():
         avg_vloss = test_epoch(friction_net, testing_loader)
 
-    if use_wandb:
+    if args.wandb:
         log = {"avg_vloss": avg_vloss, 
                "avg_tloss": avg_tloss,                   
                "lr": optimizer.param_groups[0]["lr"], 
