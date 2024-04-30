@@ -19,10 +19,15 @@ ADDR_PRESENT_VOLTAGE = 42
 # Present temperature (1 byte)
 ADDR_PRESENT_TEMPERATURE = 43
 
+# Maximum allowable PWM
+MAX_PWM = 0.9625
+# This gain, if multiplied by a position error and firmware KP, gives duty cycle
+ERROR_GAIN = 0.158
+
 
 def compute_volts(position_error: float, kp: int, vin: float = 15.0):
-    duty_cycle = position_error * kp * 0.158
-    duty_cycle = np.clip(duty_cycle, -0.9625, 0.9625)
+    duty_cycle = position_error * kp * ERROR_GAIN
+    duty_cycle = np.clip(duty_cycle, -MAX_PWM, MAX_PWM)
 
     return vin * duty_cycle
 

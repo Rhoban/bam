@@ -1,5 +1,5 @@
 import numpy as np
-from model import BaseModel, Model, NetworkModel
+from model import BaseModel, load_model, load_network
 from dynamixel import compute_volts
 
 g: float = -9.81
@@ -138,16 +138,13 @@ class Simulate1R:
 if __name__ == "__main__":
     import pygame
 
-    # model = Model()
-    # model.load_parameters("params.json")
+    # model = load_network("models/106/tau_f_m/LeakyReLU-w1-n128-l1_loss.pth")
+    model = load_model("params/m4.json")
 
-    model = NetworkModel()
-    model.load("network/models/106/tau_f/...")
-
-    sim = Simulate1R(0.676, 0.105, model)
+    sim = Simulate1R(3.500, 0.105, model)
     sim.reset(-1.5, 0.0)
     while True:
-        sim.step(None, 0.01)
+        sim.step(-2.0, 0.01)
         sim.draw()
         import time
 
