@@ -89,6 +89,7 @@ class Model(BaseModel):
         name: str = None,
     ):
         self.name = name
+        self.network = False
 
         # Model parameters
         self.load_dependent: bool = load_dependent
@@ -171,32 +172,39 @@ class Model(BaseModel):
 class NetworkModel(BaseModel):
     def __init__(self, net_path: str, name: str = None):
         self.name = name
+        self.network = True
 
         # Load the network
         self.friction_net = FrictionNet.load(net_path)
         self.friction_net.eval()
 
         self.I_a = self.friction_net.I_a.item()
-        self.kt = self.friction_net.kt.item()
-        self.R = self.friction_net.R.item()
+        self.simplify_tau_m = self.friction_net.simplify_tau_m.item()
+        self.window_size = self.friction_net.window_size.item()
+
+        if self.simplify_tau_m:
+            self.K = self.friction_net.K.item()
+        else:
+            self.kt = self.friction_net.kt.item()
+            self.R = self.friction_net.R.item()
 
     def compute_motor_torque(self, volts: float | None, dtheta: float) -> float:
         # Volts to None means that the motor is disconnected
         if volts is None:
             return 0.0
 
-        # Torque produced
-        torque = self.kt * volts / self.R
+        if self.simplify_tau_m:
+            return self.K * volts
+        
+        else:
+            return self.kt * volts / self.R - (self.kt**2) * dtheta / self.R
 
-        # Back EMF
-        torque -= (self.kt**2) * dtheta / self.R
-
-        return torque
-
-    def compute_frictions(self, motor_torque: list, external_torque: list, dtheta: list) -> tuple:
+    def compute_frictions(self, volts: list, motor_torque: list, external_torque: list, dtheta: list) -> tuple:
+        torque_enable = [1.0 if v is not None else 0.0 for v in volts]
+        
         mlp_input = th.hstack((th.tensor(np.float32(dtheta)), 
                                th.tensor(np.float32(motor_torque)), 
-                               th.tensor(np.float32(1)),
+                               th.tensor(np.float32(torque_enable)),
                                th.tensor(np.float32(external_torque))))
         
         return self.friction_net(mlp_input).tolist()[0], 0.0
@@ -222,3 +230,13 @@ def load_model(json_file: str):
 def load_network(file: str):
     model = NetworkModel(file)
     return model
+
+
+if __name__ == "__main__":
+
+    network_model = load_network("models/106/tau_f_m/LeakyReLU-w4-n128-l1_loss.pth")
+    volts = [1, 3, None, 2]
+    motor_torque = [0.5, 0.5, 0.5, 0.5]
+    external_torque = [0.5, 0.5, 0.5, 0.5]
+    dtheta = [0.5, 0.5, 0.5, 0.5]
+    print(network_model.compute_frictions(volts, motor_torque, external_torque, dtheta))
