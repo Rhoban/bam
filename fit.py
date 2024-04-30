@@ -127,8 +127,6 @@ def monitor(study, trial):
             "optim/trial_number": trial_number,
         }
 
-        json.dump(data, open(params_json_filename, "w"))
-
         model = make_model()
         model_parameters = model.get_parameters()
         for key in model_parameters:
@@ -136,6 +134,8 @@ def monitor(study, trial):
                 data[key] = model_parameters[key].value
         data["model"] = args.model
         data["actuator"] = args.actuator
+
+        json.dump(data, open(params_json_filename, "w"))
 
         print()
         message.bright(f"[Trial {trial_number}, Best score: {best_value}]")
