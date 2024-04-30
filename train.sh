@@ -1,4 +1,4 @@
-wandb=0
+wandb=1
 epochs=150
 losses=("l1_loss") #"smooth_l1_loss")
 nodes=(128)

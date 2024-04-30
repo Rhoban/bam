@@ -121,79 +121,40 @@ class FrictionDataset(TorchDataset):
     
 
 if __name__ == "__main__":
-    import argparse
     import os
 
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("-l", "--logdir", type=str, required=False, default=None, help="Processed log directory used to build a dataset")
-    arg_parser.add_argument("-d", "--datasetdir", type=str, required=False, default=None, help="Dataset directory")
-    arg_parser.add_argument("-w", "--window_size", type=int, required=False, default=10, help="Window size for the dataset")
-    args = arg_parser.parse_args()
+    print("Testing FrictionDataset class :")
+    dataset = FrictionDataset(3)
 
-    # Processing data
-    if args.logdir != None and args.datasetdir != None:
-        print(f"Processing log files from {args.logdir} ...")
-        
-        train_dataset = FrictionDataset(args.window_size)
-        test_dataset = FrictionDataset(args.window_size)
+    for log in os.listdir("data_106_network"):
+        with open("data_106_network/" + log, 'r') as file:
+            data = json.load(file)
 
-        for log in os.listdir(args.logdir):
-            print(f"Loading {log} ...")
-            with open(args.logdir + "/" + log, 'r') as file:
-                data = json.load(file)
+        dataset.add_log("data_106_network/" + log, offset=0)
+        print("Loading a log file ...")
+        break
 
-            # Selecting logs based on Kp to have drastically different training and testing datasets
-            if data["kp"] == 16: 
-                test_dataset.add_log(args.logdir + "/" + log)
-            else:   
-                train_dataset.add_log(args.logdir + "/" + log)
+    print("First value (window_size = 3): ", dataset[0])
+    volts = [entry["volts"] for entry in data["entries"]]
+    velocity = [entry["velocity"] for entry in data["entries"]]
+    acceleration = [entry["acceleration"] for entry in data["entries"]]
+    print("Volts : ", volts[:3])
+    print("Velocity : ", velocity[:3])
+    print("Acceleration : ", acceleration[:3])
 
-        print("Window size : ", args.window_size)
-        print(f"Training dataset size : {len(train_dataset)}")
-        print(f"Testing dataset size : {len(test_dataset)}")
+    print("Last velocity : ", dataset[0]["input"][2*3-1])
 
-        print(f"Shuffling datasets ...")
-        train_dataset.shuffle()
-        test_dataset.shuffle()
+    print("Dataset size : ", len(dataset))
 
-        train_dataset.save(args.datasetdir + f"/train_dataset_w{args.window_size}.npz")
-        test_dataset.save(args.datasetdir + f"/test_dataset_w{args.window_size}.npz")
-        print(f"Datasets saved in {args.datasetdir}! ")
+    ratio = 0.8
+    train_dataset, test_dataset = dataset.split(ratio)
+    print(f"Splitting with ratio {ratio} : ", len(train_dataset), len(test_dataset))
 
-    # Tests
-    else:
-        print("Testing FrictionDataset class :")
-        dataset = FrictionDataset(3)
+    print("Saving/Loading :")
+    print("First value before saving : ", dataset[0])
+    dataset.save("datasets/106/test.npz")
+    loaded_dataset = FrictionDataset.load("datasets/106/test.npz")
+    print("First value after loading : ", loaded_dataset[0])
 
-        for log in os.listdir("data_106_network"):
-            with open("data_106_network/" + log, 'r') as file:
-                data = json.load(file)
-
-            dataset.add_log("data_106_network/" + log, offset=0)
-            print("Loading a log file ...")
-            break
-
-        print("First value (window_size = 3): ", dataset[0])
-        volts = [entry["volts"] for entry in data["entries"]]
-        velocity = [entry["velocity"] for entry in data["entries"]]
-        acceleration = [entry["acceleration"] for entry in data["entries"]]
-        print("Volts : ", volts[:3])
-        print("Velocity : ", velocity[:3])
-        print("Acceleration : ", acceleration[:3])
-
-        print("Last velocity : ", dataset[0]["input"][2*3-1])
-
-        print("Dataset size : ", len(dataset))
-
-        ratio = 0.8
-        train_dataset, test_dataset = dataset.split(ratio)
-        print(f"Splitting with ratio {ratio} : ", len(train_dataset), len(test_dataset))
-
-        print("Saving/Loading :")
-        print("First value before saving : ", dataset[0])
-        dataset.save("datasets/106/test.npz")
-        loaded_dataset = FrictionDataset.load("datasets/106/test.npz")
-        print("First value after loading : ", loaded_dataset[0])
-
-        os.remove("datasets/106/test.npz")
+    os.remove("datasets/106/test.npz")
 
