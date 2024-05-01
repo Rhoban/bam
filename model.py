@@ -99,6 +99,8 @@ class Model(BaseModel):
         # Load-dependent friction, again base is always here and stribeck is added when not moving [Nm]
         if self.load_dependent:
             if self.directional:
+                self.motor_loss = Parameter(1.0, 0.0, 1.0)
+                self.external_loss = Parameter(1.0, 0.0, 1.0)
                 self.load_friction_motor = Parameter(0.05, 0.0, 0.2)
                 self.load_friction_external = Parameter(0.05, 0.0, 0.2)
             else:
@@ -133,6 +135,10 @@ class Model(BaseModel):
                     external_torque * self.load_friction_external_stribeck.value
                     - motor_torque * self.load_friction_motor_stribeck.value
                 )
+
+            motor_torque *= self.motor_loss.value
+            external_torque *= self.external_loss.value
+
         else:
             gearbox_torque = np.abs(external_torque - motor_torque)
 
@@ -166,7 +172,7 @@ class Model(BaseModel):
         # Viscous friction
         damping = self.friction_viscous.value
 
-        return frictionloss, damping
+        return frictionloss, damping, motor_torque, external_torque
 
     def get_extra_inertia(self) -> float:
         return self.armature.value
