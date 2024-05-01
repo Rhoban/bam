@@ -24,6 +24,10 @@ class Actuator:
 
     def compute_torque(self, control: float | None, dq: float) -> float:
         raise NotImplementedError
+    
+    def compute_gravity_torque(self, q: float, mass: float, length: float) -> float:
+        g = -9.80665
+        return mass * g * length * np.sin(q)
 
     def to_mujoco(self):
         raise NotImplementedError
