@@ -143,14 +143,15 @@ def monitor(study, trial):
             message.emphasis(f"Best params found (saved to {params_json_filename}): ")
         )
         for key in data:
-            result = f"- {message.success(key)}: {message.yellow(str(data[key]))}"
+            infos, warning = None, None
 
             if key in model_parameters:
                 if model_parameters[key].optimize:
-                    result += f" (min: {model_parameters[key].min}, max: {model_parameters[key].max})"
+                    infos = f"min: {model_parameters[key].min}, max: {model_parameters[key].max}"
                 else:
-                    result += message.red(" (not optimized)")
-            print(result)
+                    warning = "not optimized"
+            
+            message.print_parameter(key, data[key], infos, warning)
 
             if type(data[key]) == float:
                 wandb_log[f"params/{key}"] = data[key]

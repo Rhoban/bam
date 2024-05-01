@@ -142,64 +142,6 @@ class Model(BaseModel):
     def get_extra_inertia(self) -> float:
         return self.armature.value
 
-    def to_mujoco(self, volts: float, dynamixel_kp: float) -> None:
-        # Armature
-        armature = self.armature.value
-        print(f" - Armature: {armature}")
-
-        # Computing forcerange
-        max_force = (self.kt.value / self.R.value) * volts
-        print(f" - Forcerange: {max_force}")
-
-        # Computing kp
-        kp = max_force * dynamixel.ERROR_GAIN * dynamixel_kp
-        print(f" - Kp: {kp}")
-
-        # Computing damping
-        damping = self.friction_viscous.value
-        damping += self.R.value / (self.kt.value**2)
-        print(f" - Damping: {damping}")
-
-        # Computing frictionloss
-        frictionloss = self.friction_base.value
-        print(f" - Frictionloss: {frictionloss}")
-
-        xml = f'<position kp="{kp}" forcerange="-{max_force} {max_force}" />\n'
-        xml += f'<joint damping="{damping}" armature="{armature}" frictionloss="{frictionloss}" />'
-        print("\nXML:")
-        print(xml)
-
-        if self.stribeck or self.load_dependent:
-            print()
-            print(
-                "# WARNING: frictionloss should be updated dynamically with this model"
-            )
-            print("# Please use the following computation: ")
-            if self.stribeck:
-                print(
-                    f"stribeck_coeff = exp(-(abs(velocity / {self.dtheta_stribeck.value}) ** {self.alpha.value}))"
-                )
-
-            print(f"frictionloss = {self.friction_base.value}")
-            if self.load_dependent:
-                print(
-                    f"frictionloss += {self.load_friction_base.value} * gearbox_torque"
-                )
-            if self.stribeck:
-                print(
-                    f"frictionloss += stribeck_coeff * {self.friction_stribeck.value}"
-                )
-                if self.load_dependent:
-                    print(
-                        f"frictionloss += {self.load_friction_stribeck.value} * gearbox_torque * stribeck_coeff"
-                    )
-
-            print()
-            if self.load_dependent:
-                print("# gearbox_torque is the torque applied to the gearbox")
-            if self.stribeck:
-                print("# velocity is the angular velocity of the motor")
-
 
 models = {
     "m1": lambda: Model(name="m1"),

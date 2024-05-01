@@ -30,7 +30,6 @@ class Simulate1R:
         """
         Steps the simulation for dt given the applied control
         """
-
         gravity_torque = self.model.actuator.compute_gravity_torque(self.q, self.mass, self.length)
         motor_torque = self.model.actuator.compute_torque(control, self.dq)
         frictionloss, damping = self.model.compute_frictions(

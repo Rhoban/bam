@@ -35,3 +35,14 @@ def success(text):
 def die(message):
     print(error(message))
     exit()
+
+def print_parameter(name, value, infos = None, warning=None):
+    result = f"- {success(name)}: {yellow(str(value))}"
+
+    if infos is not None:
+        result += f" ({infos})"
+    if warning is not None:
+        result += red(f" ({warning})") 
+    
+    print(result)
+
