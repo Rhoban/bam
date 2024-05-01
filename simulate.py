@@ -78,11 +78,14 @@ class Simulate1R:
 
             if entry["torque_enable"]:
                 if simulate_control:
-                    position_error = entry["goal_position"] - self.q
+                    if "control" in entry:
+                        control = entry["control"]
+                    else:
+                        position_error = entry["goal_position"] - self.q
+                        control = self.model.actuator.compute_control(position_error, self.dq)
                 else:
                     position_error = entry["goal_position"] - entry["position"]
-
-                control = self.model.actuator.compute_control(position_error, self.dq, entry, simulate_control)
+                    control = self.model.actuator.compute_control(position_error, self.dq)
             else:
                 control = None
                 

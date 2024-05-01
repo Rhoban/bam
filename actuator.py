@@ -19,9 +19,7 @@ class Actuator:
     def control_unit(self) -> str:
         raise NotImplementedError
 
-    def compute_control(
-        self, position_error: float, dq: float, log_entry: dict, simulate_control: bool
-    ) -> float | None:
+    def compute_control(self, position_error: float, dq: float) -> float | None:
         raise NotImplementedError
 
     def compute_torque(self, control: float | None, dq: float) -> float:
@@ -58,9 +56,7 @@ class MXActuator(Actuator):
     def control_unit(self) -> str:
         return "volts"
 
-    def compute_control(
-        self, position_error: float, dq: float, log_entry: dict, simulate_control: bool
-    ) -> float | None:
+    def compute_control(self, position_error: float, dq: float) -> float | None:
         # Maximum allowable PWM
         max_pwm = 0.9625
         # This gain, if multiplied by a position error and firmware KP, gives duty cycle
