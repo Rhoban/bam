@@ -144,8 +144,9 @@ class Model(BaseModel):
                     - motor_torque * self.load_friction_motor_stribeck.value
                 )
                 if self.load_curvature:
-                    gearbox_torque = (
-                        gearbox_torque**self.load_friction_curvature_stribeck.value
+                    gearbox_torque_stribeck = (
+                        gearbox_torque_stribeck
+                        ** self.load_friction_curvature_stribeck.value
                     )
 
         else:
@@ -198,7 +199,11 @@ models = {
         name="m5", load_dependent=True, directional=True, stribeck=True
     ),
     "m6": lambda: Model(
-        name="m6", load_dependent=True, directional=True, stribeck=True, load_curvature=True
+        name="m6",
+        load_dependent=True,
+        directional=True,
+        stribeck=True,
+        load_curvature=True,
     ),
 }
 
