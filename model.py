@@ -78,6 +78,7 @@ class Model(BaseModel):
         self,
         load_dependent: bool = False,
         directional: bool = False,
+        load_curvature: bool = False,
         stribeck: bool = False,
         name: str = None,
     ):
@@ -86,6 +87,7 @@ class Model(BaseModel):
         # Model parameters
         self.load_dependent: bool = load_dependent
         self.directional: bool = directional
+        self.load_curvature: bool = load_curvature
         self.stribeck: bool = stribeck
 
         # Motor armature [kg m^2]
@@ -111,6 +113,12 @@ class Model(BaseModel):
                 else:
                     self.load_friction_stribeck = Parameter(0.05, 0.0, 1.0)
 
+            if self.load_curvature:
+                self.load_friction_curvature = Parameter(1.0, 0.5, 3.0)
+
+                if self.stribeck and self.directional:
+                    self.load_friction_curvature_stribeck = Parameter(1.0, 0.5, 3.0)
+
         if self.stribeck:
             # Stribeck velocity [rad/s] and curvature
             self.dtheta_stribeck = Parameter(0.2, 0.01, 3.0)
@@ -128,14 +136,22 @@ class Model(BaseModel):
                 external_torque * self.load_friction_external.value
                 - motor_torque * self.load_friction_motor.value
             )
+            if self.load_curvature:
+                gearbox_torque = gearbox_torque**self.load_friction_curvature.value
             if self.stribeck:
                 gearbox_torque_stribeck = np.abs(
                     external_torque * self.load_friction_external_stribeck.value
                     - motor_torque * self.load_friction_motor_stribeck.value
                 )
+                if self.load_curvature:
+                    gearbox_torque = (
+                        gearbox_torque**self.load_friction_curvature_stribeck.value
+                    )
 
         else:
             gearbox_torque = np.abs(external_torque - motor_torque)
+            if self.load_curvature:
+                gearbox_torque = gearbox_torque**self.load_friction_curvature.value
 
         if self.stribeck:
             # Stribeck coeff (1 when stopped to 0 when moving)
@@ -180,6 +196,9 @@ models = {
     "m4": lambda: Model(name="m4", load_dependent=True, stribeck=True),
     "m5": lambda: Model(
         name="m5", load_dependent=True, directional=True, stribeck=True
+    ),
+    "m6": lambda: Model(
+        name="m6", load_dependent=True, directional=True, stribeck=True, load_curvature=True
     ),
 }
 
