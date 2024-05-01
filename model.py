@@ -85,7 +85,7 @@ class Model(BaseModel):
 
         # Model parameters
         self.load_dependent: bool = load_dependent
-        self.directional: bool = (directional,)
+        self.directional: bool = directional
         self.stribeck: bool = stribeck
 
         # Motor armature [kg m^2]
