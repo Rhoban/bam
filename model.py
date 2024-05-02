@@ -79,7 +79,6 @@ class Model(BaseModel):
         load_dependent: bool = False,
         directional: bool = False,
         stribeck: bool = False,
-        torque_loss: bool = False,
         name: str = None,
     ):
         self.name = name
@@ -88,7 +87,6 @@ class Model(BaseModel):
         self.load_dependent: bool = load_dependent
         self.directional: bool = directional
         self.stribeck: bool = stribeck
-        self.torque_loss: bool = torque_loss
 
         # Motor armature [kg m^2]
         self.armature = Parameter(0.005, 0.001, 0.05)
@@ -183,8 +181,7 @@ models = {
         name="m5",
         load_dependent=True,
         directional=True,
-        stribeck=True,
-        torque_loss=True,
+        stribeck=True
     ),
 }
 
