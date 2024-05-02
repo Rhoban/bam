@@ -33,7 +33,7 @@ class Simulate1R:
 
         self.inertia = self.mass * self.length**2
 
-    def update_history(self, volts: float, tau_m: float, tau_l: float, dq: float):
+    def update_histories(self, volts: float, tau_m: float, tau_l: float, dq: float):
         self.volts_history.pop(0)
         self.volts_history.append(volts)
         self.tau_m_history.pop(0)
@@ -52,7 +52,7 @@ class Simulate1R:
         motor_torque = self.model.compute_motor_torque(volts, self.dq)
         
         if self.model.network:
-            self.update_history(volts, motor_torque, gravity_torque, self.dq)
+            self.update_histories(volts, motor_torque, gravity_torque, self.dq)
             frictionloss, damping = self.model.compute_frictions(self.volts_history, 
                                                                  self.tau_m_history, 
                                                                  self.tau_l_history,

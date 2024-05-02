@@ -73,7 +73,7 @@ class FrictionDataset(TorchDataset):
         self.inputs = [self.inputs[index] for index in indices]
         self.outputs = [self.outputs[index] for index in indices]
 
-    def split(self, ratio: float) -> ("Dataset", "Dataset"):
+    def split(self, ratio: float) -> ("FrictionDataset", "FrictionDataset"):
         """
         Split the dataset into two datasets of sizes ratio and 1 - ratio.
         Do not shuffle the dataset before splitting.
@@ -118,7 +118,60 @@ class FrictionDataset(TorchDataset):
         dataset.size = len(dataset.inputs)
         
         return dataset
+
+class IntegrateDataset():
+    """
+    To be implemented.
+    """
+    def __init__(self):
+        self.logs = []
+        self.size = 0
     
+    def __len__(self):
+        return self.size
+    
+    def __getitem__(self, index: int):
+        return {"log": self.logs[index]}
+    
+    def __getitems__(self, indices: list):
+        return [{"log": self.logs[index]} for index in indices]
+    
+    def add_log(self, processed_log, offset=5): 
+        with open(processed_log, 'r') as file:
+            data = json.load(file)
+
+        self.logs.append(data)
+        self.size +=1
+
+    def shuffle(self) -> None:
+        """
+        Shuffle the dataset entries.
+        """
+        indices = np.arange(self.size)
+        np.random.shuffle(indices)
+        self.logs = [self.logs[index] for index in indices]
+
+    def split(self, ratio: float) -> ("IntegrateDataset", "IntegrateDataset"):
+        """
+        Split the dataset into two datasets of sizes ratio and 1 - ratio.
+        Do not shuffle the dataset before splitting.
+        """
+        if ratio < 0 or ratio > 1:
+            raise ValueError(f"Ratio should be between 0 and 1 but is {ratio}")
+        
+        dataset_1 = IntegrateDataset()
+        dataset_2 = IntegrateDataset()
+
+        index = int(ratio * self.size)
+
+        dataset_1.logs = self.logs[:index]
+        dataset_1.size = index
+
+        dataset_2.logs = self.logs[index:]
+        dataset_2.size = self.size - index
+
+        return dataset_1, dataset_2
+
 
 if __name__ == "__main__":
     import os

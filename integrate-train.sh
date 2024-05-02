@@ -1,4 +1,4 @@
-flags="--wandb --save" # --max" # Better without --simplify_tau_m, NaNs with --soft_min
+flags="--wandb --save"
 
 # Parameters
 epochs=150
@@ -16,7 +16,7 @@ for loss in "${losses[@]}"; do
         for a in "${activations[@]}"; do
             for w in "${windows[@]}"; do
                 for last in "${lasts[@]}"; do
-                    nohup python learn.py $flags --window $w --activation $a --epochs $epochs --nodes $n --loss $loss --last $last &
+                    nohup python integrate-learn.py $flags --window $w --activation $a --epochs $epochs --nodes $n --loss $loss --last $last &
                 done
             done
         done
