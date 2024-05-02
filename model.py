@@ -70,7 +70,7 @@ class DummyModel(BaseModel):
     def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
     ) -> tuple:
-        return 0.0, 0.0, 0.0
+        return 0.0, 0.0
 
 
 class Model(BaseModel):
@@ -118,22 +118,12 @@ class Model(BaseModel):
             self.dtheta_stribeck = Parameter(0.2, 0.01, 3.0)
             self.alpha = Parameter(1.35, 0.5, 2.0)
 
-        if self.torque_loss:
-            self.motor_torque_loss = Parameter(0.0, 0.0, 1.0)
-            self.external_torque_loss = Parameter(0.0, 0.0, 1.0)
-
         # Viscous friction [Nm/(rad/s)]
         self.friction_viscous = Parameter(0.1, 0.0, 1.0)
 
     def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
     ) -> tuple:
-        # Torque loss due to normal reaction forces
-        friction_torque = 0.0
-        if self.torque_loss:
-            friction_torque = -motor_torque * self.motor_torque_loss.value
-            friction_torque -= external_torque * self.external_torque_loss.value
-
         # Torque applied to the gearbox
         if self.directional:
             gearbox_torque = np.abs(
@@ -178,7 +168,7 @@ class Model(BaseModel):
         # Viscous friction
         damping = self.friction_viscous.value
 
-        return frictionloss, damping, friction_torque
+        return frictionloss, damping
 
     def get_extra_inertia(self) -> float:
         return self.armature.value

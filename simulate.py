@@ -32,12 +32,12 @@ class Simulate1R:
         """
         gravity_torque = self.model.actuator.compute_gravity_torque(self.q, self.mass, self.length)
         motor_torque = self.model.actuator.compute_torque(control, self.dq)
-        frictionloss, damping, friction_torque = self.model.compute_frictions(
+        frictionloss, damping = self.model.compute_frictions(
             motor_torque, gravity_torque, self.dq
         )
 
         inertia = self.inertia + self.model.get_extra_inertia()
-        net_torque = motor_torque + gravity_torque + friction_torque
+        net_torque = motor_torque + gravity_torque
 
         # Tau_stop is the torque required to stop the motor (reach a velocity of 0 after dt)
         tau_stop = (inertia / dt) * self.dq + net_torque
