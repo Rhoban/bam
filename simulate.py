@@ -90,10 +90,26 @@ class Simulate1R:
 
         reset_period_t = 0.0
         dt = log["dt"]
-        first_entry = log["entries"][0]
+        id_first_entry = 0
+
+        if self.model.network:
+            positions = [entry["position"] for entry in log["entries"][:self.model.window_size-1]]
+            all_volts = [entry["volts"] for entry in log["entries"][:self.model.window_size-1]]
+
+            self.volts_history = [0.] + all_volts.copy()
+            self.dq_history = [0.] + [entry["speed"] for entry in log["entries"][:self.model.window_size-1]]
+            self.tau_m_history = [self.model.compute_motor_torque(volts, dq) for volts, dq in zip(self.volts_history, self.dq_history)]
+            self.tau_l_history = [0.] + [self.mass * g * self.length * pos for pos in positions]
+            
+            id_first_entry = self.model.window_size - 1
+        
+        first_entry = log["entries"][id_first_entry]
         self.reset(first_entry["position"], first_entry["speed"])
 
-        for entry in log["entries"]:
+        for i, entry in enumerate(log["entries"]):
+            if i < id_first_entry:
+                continue
+            
             reset_period_t += dt
             if reset_period is not None and reset_period_t > reset_period:
                 reset_period_t = 0.0
