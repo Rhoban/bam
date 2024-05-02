@@ -70,7 +70,7 @@ class DummyModel(BaseModel):
     def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
     ) -> tuple:
-        return 0.0, 0.0
+        return 0.0, 0.0, 0.0
 
 
 class Model(BaseModel):
@@ -78,8 +78,8 @@ class Model(BaseModel):
         self,
         load_dependent: bool = False,
         directional: bool = False,
-        load_curvature: bool = False,
         stribeck: bool = False,
+        torque_loss: bool = False,
         name: str = None,
     ):
         self.name = name
@@ -87,8 +87,8 @@ class Model(BaseModel):
         # Model parameters
         self.load_dependent: bool = load_dependent
         self.directional: bool = directional
-        self.load_curvature: bool = load_curvature
         self.stribeck: bool = stribeck
+        self.torque_loss: bool = torque_loss
 
         # Motor armature [kg m^2]
         self.armature = Parameter(0.005, 0.001, 0.05)
@@ -113,16 +113,14 @@ class Model(BaseModel):
                 else:
                     self.load_friction_stribeck = Parameter(0.05, 0.0, 1.0)
 
-            if self.load_curvature:
-                self.load_friction_curvature = Parameter(1.0, 0.5, 3.0)
-
-                if self.stribeck and self.directional:
-                    self.load_friction_curvature_stribeck = Parameter(1.0, 0.5, 3.0)
-
         if self.stribeck:
             # Stribeck velocity [rad/s] and curvature
             self.dtheta_stribeck = Parameter(0.2, 0.01, 3.0)
             self.alpha = Parameter(1.35, 0.5, 2.0)
+
+        if self.torque_loss:
+            self.motor_torque_loss = Parameter(0.0, 0.0, 1.0)
+            self.external_torque_loss = Parameter(0.0, 0.0, 1.0)
 
         # Viscous friction [Nm/(rad/s)]
         self.friction_viscous = Parameter(0.1, 0.0, 1.0)
@@ -130,28 +128,25 @@ class Model(BaseModel):
     def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
     ) -> tuple:
+        # Torque loss due to normal reaction forces
+        friction_torque = 0.0
+        if self.torque_loss:
+            friction_torque = -motor_torque * self.motor_torque_loss.value
+            friction_torque -= external_torque * self.external_torque_loss.value
+
         # Torque applied to the gearbox
         if self.directional:
             gearbox_torque = np.abs(
                 external_torque * self.load_friction_external.value
                 - motor_torque * self.load_friction_motor.value
             )
-            if self.load_curvature:
-                gearbox_torque = gearbox_torque**self.load_friction_curvature.value
             if self.stribeck:
                 gearbox_torque_stribeck = np.abs(
                     external_torque * self.load_friction_external_stribeck.value
                     - motor_torque * self.load_friction_motor_stribeck.value
                 )
-                if self.load_curvature:
-                    gearbox_torque = (
-                        gearbox_torque**self.load_friction_curvature_stribeck.value
-                    )
-
         else:
             gearbox_torque = np.abs(external_torque - motor_torque)
-            if self.load_curvature:
-                gearbox_torque = gearbox_torque**self.load_friction_curvature.value
 
         if self.stribeck:
             # Stribeck coeff (1 when stopped to 0 when moving)
@@ -183,7 +178,7 @@ class Model(BaseModel):
         # Viscous friction
         damping = self.friction_viscous.value
 
-        return frictionloss, damping
+        return frictionloss, damping, friction_torque
 
     def get_extra_inertia(self) -> float:
         return self.armature.value
@@ -195,10 +190,11 @@ models = {
     "m3": lambda: Model(name="m3", load_dependent=True),
     "m4": lambda: Model(name="m4", load_dependent=True, stribeck=True),
     "m5": lambda: Model(
-        name="m5", load_dependent=True, directional=True, stribeck=True
-    ),
-    "m6": lambda: Model(
-        name="m6", load_dependent=True, directional=True, stribeck=True, load_curvature=True
+        name="m5",
+        load_dependent=True,
+        directional=True,
+        stribeck=True,
+        torque_loss=True,
     ),
 }
 
