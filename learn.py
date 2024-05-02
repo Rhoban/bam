@@ -29,8 +29,12 @@ args = parser.parse_args()[0]
 # Wandb initialization
 if args.wandb:
     project_name = "friction-net"
+    
     repository = "tau_f" if not args.max else "tau_f_m_K" if args.simplify_tau_m else "tau_f_m_soft" if args.soft_min else "tau_f_m"
-    model_name = repository + args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss + "-" + args.last
+    model_name = repository + "-" + args.activation + "-w" + str(args.window) + "-n" + str(args.nodes) + "-" + args.loss
+    if args.max:
+        model_name += "-" + args.last
+
     config = {"window": args.window, "nodes": args.nodes, "activation": args.activation, "loss": args.loss, "last": args.last, "K": args.simplify_tau_m, "soft_min": args.soft_min, "max": args.max}
 
 device = th.device("cuda" if th.cuda.is_available() else "cpu")
@@ -52,7 +56,7 @@ friction_net = FrictionNet(args.window,
                         hidden_dimension=args.nodes, 
                         hidden_layers=3, 
                         activation=get_activation(args.activation),
-                        last_layer_activation=get_last_activation(args.last),
+                        last_layer_activation=get_last_activation(args.last) if args.max else th.nn.Identity(),
                         simplify_tau_m=args.simplify_tau_m,
                         device=device)
 
