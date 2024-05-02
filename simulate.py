@@ -16,13 +16,6 @@ class Simulate1R:
         self.model = model
         self.reset()
 
-        if model.network:
-            self.volts_history = [0.0 for _ in range(model.window_size)]
-            self.tau_m_history = [0.0 for _ in range(model.window_size)]
-            self.tau_l_history = [0.0 for _ in range(model.window_size)]
-            self.dq_history = [0.0 for _ in range(model.window_size)]
-
-
     def reset(self, q: float = 0.0, dq: float = 0.0):
         """
         Resets the simulation to a given state
