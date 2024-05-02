@@ -24,6 +24,7 @@ parser.add_option("--wandb", action="store_true", default = False, help="use wan
 parser.add_option("--max", action="store_true", default = False, help="use FrictionNetMax")
 parser.add_option("--simplify_tau_m", action="store_true", default = False, help="use FrictionNet with simplified tau_m")
 parser.add_option("--soft_min", action="store_true", default = False, help="use soft_min")
+parser.add_option("--save", action="store_true", default = False, help="save the model")
 args = parser.parse_args()[0]
 
 # Wandb initialization
@@ -160,5 +161,5 @@ for epoch in range(epochs):
     #     break
     
     # Saving the model
-    if (epoch + 1) % 5 == 0:
+    if args.save and (epoch + 1) % 5 == 0:
         friction_net.save("models/106/" + repository + "/" + model_name + ".pth")
