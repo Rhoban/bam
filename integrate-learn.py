@@ -9,7 +9,7 @@ from dataset import IntegrateDataset
 from tools import get_activation, get_last_activation, get_loss, soft_min
 from tqdm import tqdm
 
-USE_TQDM = False
+USE_TQDM = True
 
 # Parse arguments
 parser = optparse.OptionParser()
@@ -177,5 +177,5 @@ for epoch in range(epochs):
     #     break
     
     # Saving the model
-    if args.save and (epoch + 1) % 5 == 0:
+    if args.save:
         friction_net.save("models/106/" + repository + "/" + model_name + ".pth")
