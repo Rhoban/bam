@@ -1,7 +1,8 @@
 flags="--wandb --save --max"
 
 # Output file
-name=$(hostname -f)
+host=$(hostname -f)
+name=$(cut -d. -f1 <<< $host)
 out="nohup-$name.out"
 rm $out
 
@@ -11,7 +12,7 @@ lasts=("Abs") # "Square" "Custom" # (No significant difference)
 losses=("l1_loss") #"mse" "smooth_l1_loss"
 activations=("LeakyReLU") # "ReLU" "Softsign" "Tanh"
 nodes=(128)
-windows=(1)
+windows=(16)
 
 for loss in "${losses[@]}"; do
     for n in "${nodes[@]}"; do
