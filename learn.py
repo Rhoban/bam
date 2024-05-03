@@ -161,5 +161,5 @@ for epoch in range(epochs):
     #     break
     
     # Saving the model
-    if args.save and (epoch + 1) % 5 == 0:
+    if args.save:
         friction_net.save("models/106/" + repository + "/" + model_name + ".pth")

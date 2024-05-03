@@ -95,7 +95,7 @@ def compute_loss(log, net):
     torque_enable_history = th.tensor([np.float32(entry["torque_enable"]) for entry in log["entries"][:args.window]]).to(device)
     tau_l_history = np.float32(-9.81 * log["mass"] * log["length"]) * first_pos
 
-    loss_sum = 0
+    loss = 0
     predicted_position = th.tensor([np.float32(log["entries"][args.window]["position"])]).to(device)
     for i, entry in enumerate(log["entries"]):
         if i < args.window:
@@ -118,28 +118,28 @@ def compute_loss(log, net):
         tau_l_history = update_history(tau_l_history, tau_l)
 
         predicted_position = predicted_position + dtheta_history[-1] * dt
-        
-        loss = loss_func(th.tensor([np.float32(entry["position"])]).to(device), predicted_position)
-        loss_sum += loss
+        loss += loss_func(th.tensor([np.float32(entry["position"])]).to(device), predicted_position)
 
-    return loss_sum
+    return loss
 
 
 # Training and testing functions
 def train_epoch(net, dataset):
     loss_sum = 0
     for log in tqdm(dataset.logs) if USE_TQDM else dataset.logs:
-        loss_sum = compute_loss(log, net)
+        loss = compute_loss(log, net)
 
         optimizer.zero_grad()
-        loss_sum.backward()
+        loss.backward()
         optimizer.step()
+
+        loss_sum += loss.item()
     return loss_sum / (len(log["entries"]) - args.window)
 
 def test_epoch(net, dataset):
     loss_sum = 0
     for log in tqdm(dataset.logs) if USE_TQDM else dataset.logs:
-        loss_sum = compute_loss(log, net)
+        loss_sum += compute_loss(log, net)
     return loss_sum / (len(log["entries"]) - args.window)
 
 
