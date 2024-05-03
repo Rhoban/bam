@@ -67,7 +67,7 @@ def compute_tau_m(volts, dtheta):
 
 def update_history(history: th.tensor, entry):
     history = history[1:]
-    history = th.cat((history, entry.unsqueeze(0)))
+    history = th.cat((history, th.tensor([entry])))
     return history
 
 def compute_loss(log, net):
@@ -82,10 +82,10 @@ def compute_loss(log, net):
     dt = np.float32(log["dt"])
     first_volts = [compute_volts(target_position[i] - predicted_position[i], Kp) for i in range(args.window)]
     
-    dtheta_history = th.tensor([np.float32(entry["speed"]) for entry in log["entries"][:args.window]]).to(device)
-    tau_m_history = th.tensor([compute_tau_m(volts, dtheta) for volts, dtheta in zip(first_volts, dtheta_history)]).to(device)
-    torque_enable_history = th.tensor([np.float32(entry["torque_enable"]) for entry in log["entries"][:args.window]]).to(device)
-    tau_l_history = th.tensor([np.float32(-9.81 * log["mass"] * log["length"]) * pos for pos in predicted_position]).to(device)
+    dtheta_history = th.tensor([np.float32(entry["speed"]) for entry in log["entries"][:args.window]])
+    tau_m_history = th.tensor([compute_tau_m(volts, dtheta) for volts, dtheta in zip(first_volts, dtheta_history)])
+    torque_enable_history = th.tensor([np.float32(entry["torque_enable"]) for entry in log["entries"][:args.window]])
+    tau_l_history = th.tensor([np.float32(-9.81 * log["mass"] * log["length"]) * pos for pos in predicted_position])
 
     for i, entry in enumerate(log["entries"]):
         if i < args.window:
@@ -96,7 +96,7 @@ def compute_loss(log, net):
         tau_m = torque_enable_history[-1] * compute_tau_m(volts, dtheta_history[-1])
         tau_l = np.float32(-9.81 * log["mass"] * log["length"]) * predicted_position[-1]
         
-        mlp_input = th.hstack(dtheta_history, tau_m_history, torque_enable_history, tau_l_history)
+        mlp_input = th.hstack((dtheta_history, tau_m_history, torque_enable_history, tau_l_history)).to(device)
         tau_f_max = net(mlp_input)[0]
 
         tau_stop = (I_l + friction_net.I_a) * dtheta_history[-1] / dt + tau_m + tau_l
@@ -107,9 +107,10 @@ def compute_loss(log, net):
         torque_enable_history = update_history(torque_enable_history, entry["torque_enable"])
         tau_l_history = update_history(tau_l_history, tau_l)
 
-        predicted_position.append(predicted_position[-1] + dtheta_history[-1] * dt)
+        predicted_position.append(np.float32(predicted_position[-1] + dtheta_history[-1] * dt))
         
-    return loss_func(th.tensor(predicted_position[args.window:]).to(device), th.tensor(target_position[args.window:]).to(device))
+    return loss_func(th.tensor(predicted_position[args.window:], requires_grad=True).to(device), 
+                     th.tensor(target_position[args.window:], requires_grad=True).to(device))
 
 
 # Training and testing functions
@@ -140,11 +141,11 @@ epochs = args.epochs
 for epoch in range(epochs):
     print(f"Epoch {epoch + 1}/{epochs} ...")
 
-    print("Train :")
+    print("Training...")
     friction_net.train()
     avg_tloss = train_epoch(friction_net, train_dataset)
     
-    print("Testing :")
+    print("Testing...")
     friction_net.eval()
     with th.no_grad():
         avg_vloss = test_epoch(friction_net, test_dataset)

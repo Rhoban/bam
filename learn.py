@@ -130,11 +130,11 @@ epochs = args.epochs
 for epoch in range(epochs):
     print(f"Epoch {epoch + 1}/{epochs} ...")
 
-    print("Train :")
+    print("Training...")
     friction_net.train()
     avg_tloss = train_epoch(friction_net, training_loader)
     
-    print("Testing :")
+    print("Testing...")
     friction_net.eval()
     with th.no_grad():
         avg_vloss = test_epoch(friction_net, testing_loader)

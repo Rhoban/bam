@@ -1,4 +1,4 @@
-flags="--wandb --save" # --max" # Better without --simplify_tau_m, NaNs with --soft_min
+flags="" #--wandb --save" # --max" # Better without --simplify_tau_m, NaNs with --soft_min
 
 # Parameters
 epochs=150

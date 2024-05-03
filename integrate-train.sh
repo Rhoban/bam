@@ -4,7 +4,7 @@ flags="--wandb --save"
 epochs=150
 lasts=("Abs" "Square" "Custom") # (No significant difference) 
 losses=("l1_loss") #"mse" "smooth_l1_loss"
-activations=("LeakyReLU") #"Tanh" "ReLU" "Softsign" 
+activations=("LeakyReLU") # "ReLU" "Softsign" "Tanh"
 nodes=(128)
 windows=(1 4 16)
 
