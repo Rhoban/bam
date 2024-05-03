@@ -2,7 +2,7 @@ flags="--wandb --save"
 
 # Parameters
 epochs=150
-lasts=("Abs" "Square" "Custom") # (No significant difference) 
+lasts=("Abs") # "Square" "Custom") # (No significant difference) 
 losses=("l1_loss") #"mse" "smooth_l1_loss"
 activations=("LeakyReLU") # "ReLU" "Softsign" "Tanh"
 nodes=(128)
