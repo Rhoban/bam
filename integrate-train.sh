@@ -1,4 +1,4 @@
-flags="--wandb --save --max"
+flags="" #--wandb --save --max"
 
 # Output file
 host=$(hostname -f)

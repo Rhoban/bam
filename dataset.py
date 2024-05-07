@@ -1,6 +1,7 @@
 import numpy as np
 from torch.utils.data import Dataset as TorchDataset
 import json
+from dynamixel import compute_volts
 
 class FrictionDataset(TorchDataset):
     """
@@ -45,7 +46,7 @@ class FrictionDataset(TorchDataset):
         
         velocity = [entry["velocity"] for entry in data["entries"]]
         acceleration = [entry["acceleration"] for entry in data["entries"]]
-        volts = [entry["volts"] for entry in data["entries"]]
+        volts = [(compute_volts(entry["goal_position"] - entry["position"], data["kp"]) if entry["torque_enable"] else 0) for entry in data["entries"]]
         torque_enable = [entry["torque_enable"] for entry in data["entries"]]
         
         mass = data["mass"]

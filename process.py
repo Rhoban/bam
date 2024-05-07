@@ -11,6 +11,7 @@ arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--raw", type=str, required=True)
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--dt", type=float, default=0.002)
+arg_parser.add_argument("--derivative", action="store_true", default=False)
 args = arg_parser.parse_args()
 
 for logfile in glob.glob(f"{args.raw}/*.json"):
@@ -41,36 +42,33 @@ for logfile in glob.glob(f"{args.raw}/*.json"):
 
         new_entry["torque_enable"] = True if (new_entry["torque_enable"] > 0.5) else False
 
-        position_error = new_entry["goal_position"] - new_entry["position"]
-        new_entry["volts"] = compute_volts(position_error, data["kp"])
-        if not new_entry["torque_enable"]:
-            new_entry["volts"] = 0
-
         new_entry["timestamp"] = t
 
         data_output["entries"].append(new_entry)
 
     # Using Savitzky-Golay filter to smooth the position and interpolate velocity and acceleration
     # https://fr.wikipedia.org/wiki/Algorithme_de_Savitzky-Golay
-    position = [entry["position"] for entry in data_output["entries"]]
-    if data["trajectory"] == "up_and_down":
-        window = 351
-    elif data["trajectory"] == "lift_and_drop":
-        window = 251
-    elif data["trajectory"] == "sin_sin":
-        window = 81
-    elif data["trajectory"] == "sin_time_square":
-        window = 101
-    degree = 3
+    if args.derivative:
+        print("Computing derivatives")
+        position = [entry["position"] for entry in data_output["entries"]]
+        if data["trajectory"] == "up_and_down":
+            window = 351
+        elif data["trajectory"] == "lift_and_drop":
+            window = 251
+        elif data["trajectory"] == "sin_sin":
+            window = 81
+        elif data["trajectory"] == "sin_time_square":
+            window = 101
+        degree = 3
 
-    filtered_position = savgol_filter(position, window_length=window, polyorder=degree)
-    velocity = savgol_filter(position, window_length=window, polyorder=degree, deriv=1, delta=args.dt, mode="nearest")
-    acceleration = savgol_filter(position, window_length=window, polyorder=degree, deriv=2, delta=args.dt, mode="nearest")
+        filtered_position = savgol_filter(position, window_length=window, polyorder=degree)
+        velocity = savgol_filter(position, window_length=window, polyorder=degree, deriv=1, delta=args.dt, mode="nearest")
+        acceleration = savgol_filter(position, window_length=window, polyorder=degree, deriv=2, delta=args.dt, mode="nearest")
 
-    for i, entry in enumerate(data_output["entries"]):
-        entry["position"] = filtered_position[i]
-        entry["velocity"] = velocity[i]
-        entry["acceleration"] = acceleration[i]
+        for i, entry in enumerate(data_output["entries"]):
+            entry["position"] = filtered_position[i]
+            entry["velocity"] = velocity[i]
+            entry["acceleration"] = acceleration[i]
 
     filename = os.path.basename(logfile)
     output_filename = f"{args.logdir}/{filename}"

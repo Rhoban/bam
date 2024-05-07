@@ -112,7 +112,10 @@ def compute_loss(log, net):
         tau_stop = (I_l + friction_net.I_a) * dtheta_history[-1] / dt + tau_m + tau_l
         tau_f = -th.sign(tau_stop) * th.min(th.abs(tau_stop), th.abs(tau_f_max))
 
-        dtheta_history = update_history(dtheta_history, dt * (tau_f + tau_m + tau_l) / (I_l + friction_net.I_a))
+        dtheta = dtheta_history[-1] + (tau_f + tau_m + tau_l) / (I_l + friction_net.I_a) * dt
+        dtheta = th.clip(dtheta, -100.0, 100.0)
+
+        dtheta_history = update_history(dtheta_history, dtheta)
         tau_m_history = update_history(tau_m_history, tau_m)
         torque_enable_history = update_history(torque_enable_history, th.tensor([np.float32(entry["torque_enable"])]).to(device))
         tau_l_history = update_history(tau_l_history, tau_l)
