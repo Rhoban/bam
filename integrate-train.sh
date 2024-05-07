@@ -1,4 +1,4 @@
-flags="--wandb --save --max"
+flags="--wandb --save"
 
 # Output file
 host=$(hostname -f)
@@ -12,7 +12,7 @@ lasts=("Abs") # "Square" "Custom" # (No significant difference)
 losses=("l1_loss") #"mse" "smooth_l1_loss"
 activations=("LeakyReLU") # "ReLU" "Softsign" "Tanh"
 nodes=(128)
-windows=(16)
+windows=(4)
 
 for loss in "${losses[@]}"; do
     for n in "${nodes[@]}"; do

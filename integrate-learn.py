@@ -24,6 +24,7 @@ parser.add_option("--last", dest="last", default="Abs", type="str", help="last l
 parser.add_option("--wandb", action="store_true", default = False, help="use wandb")
 parser.add_option("--max", action="store_true", default = False, help="use FrictionNetMax")
 parser.add_option("--save", action="store_true", default = False, help="save the model")
+parser.add_option("--cpu", action="store_true", default = False, help="force the use of the CPU")
 args = parser.parse_args()[0]
 
 # Wandb initialization
