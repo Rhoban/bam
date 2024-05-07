@@ -13,7 +13,7 @@ USE_TQDM = False
 # Parse arguments
 parser = optparse.OptionParser()
 parser.add_option("--window", dest="window", default=1, type="int", help="window size")
-parser.add_option("--data", dest="data", default="data_106_network", type="str", help="data directory")
+parser.add_option("--data", dest="data", default="data/106/derivative", type="str", help="data directory")
 parser.add_option("--dt", dest="dt", default=0.002, type="float", help="log time step")
 parser.add_option("--nodes", dest="nodes", default=256, type="int", help="number of nodes per layer")
 parser.add_option("--activation", dest="activation", default="ReLU", type="str", help="activation function")
@@ -161,5 +161,5 @@ for epoch in range(epochs):
     #     break
     
     # Saving the model
-    if args.save:
+    if args.save and (epoch + 1) % 5 == 0:
         friction_net.save("models/106/" + repository + "/" + model_name + ".pth")
