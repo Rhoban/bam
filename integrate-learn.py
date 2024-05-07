@@ -14,7 +14,7 @@ USE_TQDM = True
 # Parse arguments
 parser = optparse.OptionParser()
 parser.add_option("--window", dest="window", default=1, type="int", help="window size")
-parser.add_option("--data", dest="data", default="data_106_network", type="str", help="data directory")
+parser.add_option("--data", dest="data", default="data/106/processed", type="str", help="data directory")
 parser.add_option("--dt", dest="dt", default=0.002, type="float", help="log time step")
 parser.add_option("--nodes", dest="nodes", default=256, type="int", help="number of nodes per layer")
 parser.add_option("--activation", dest="activation", default="ReLU", type="str", help="activation function")
@@ -91,7 +91,9 @@ def compute_loss(log, net):
     first_goal_pos = th.tensor([np.float32(entry["goal_position"]) for entry in log["entries"][:args.window]]).to(device)
     first_volts = compute_volts(first_goal_pos - first_pos, log["kp"])
     
-    dtheta_history = th.tensor([np.float32(entry["speed"]) for entry in log["entries"][:args.window]]).to(device)
+    dtheta_history = th.tensor([np.float32((e2["position"] - e1["position"]) / dt)
+                                for e1, e2 in zip(log["entries"][:args.window], log["entries"][1:args.window+1])]).to(device)
+    
     tau_m_history = compute_tau_m(first_volts, dtheta_history, net)
     torque_enable_history = th.tensor([np.float32(entry["torque_enable"]) for entry in log["entries"][:args.window]]).to(device)
     tau_l_history = np.float32(-9.81 * log["mass"] * log["length"]) * first_pos
