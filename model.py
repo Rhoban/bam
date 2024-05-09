@@ -79,6 +79,7 @@ class Model(BaseModel):
         load_dependent: bool = False,
         directional: bool = False,
         stribeck: bool = False,
+        quadratic: bool = False,
         name: str = None,
     ):
         self.name = name
@@ -87,6 +88,7 @@ class Model(BaseModel):
         self.load_dependent: bool = load_dependent
         self.directional: bool = directional
         self.stribeck: bool = stribeck
+        self.quadratic: bool = quadratic
 
         # Motor armature [kg m^2]
         self.armature = Parameter(0.005, 0.001, 0.05)
@@ -104,12 +106,18 @@ class Model(BaseModel):
             else:
                 self.load_friction_base = Parameter(0.05, 0.0, 0.2)
 
+            if self.quadratic:
+                self.load_friction_quad = Parameter(0.05, 0.0, 0.2)
+
             if self.stribeck:
                 if self.directional:
                     self.load_friction_motor_stribeck = Parameter(0.05, 0.0, 1.0)
                     self.load_friction_external_stribeck = Parameter(0.05, 0.0, 1.0)
                 else:
                     self.load_friction_stribeck = Parameter(0.05, 0.0, 1.0)
+
+                if self.quadratic:
+                    self.load_friction_quad_stribeck = Parameter(0.05, 0.0, 0.2)
 
         if self.stribeck:
             # Stribeck velocity [rad/s] and curvature
@@ -136,6 +144,9 @@ class Model(BaseModel):
         else:
             gearbox_torque = np.abs(external_torque - motor_torque)
 
+        if self.quadratic:
+            gearbox_torque2 = min(abs(external_torque), abs(motor_torque)) ** 2
+
         if self.stribeck:
             # Stribeck coeff (1 when stopped to 0 when moving)
             stribeck_coeff = np.exp(
@@ -150,6 +161,9 @@ class Model(BaseModel):
             else:
                 frictionloss += self.load_friction_base.value * gearbox_torque
 
+            if self.quadratic:
+                frictionloss += self.load_friction_quad.value * gearbox_torque2
+
         if self.stribeck:
             frictionloss += stribeck_coeff * self.friction_stribeck.value
 
@@ -160,6 +174,13 @@ class Model(BaseModel):
                     frictionloss += (
                         self.load_friction_stribeck.value
                         * gearbox_torque
+                        * stribeck_coeff
+                    )
+
+                if self.quadratic:
+                    frictionloss += (
+                        self.load_friction_quad_stribeck.value
+                        * gearbox_torque2
                         * stribeck_coeff
                     )
 
@@ -178,10 +199,10 @@ models = {
     "m3": lambda: Model(name="m3", load_dependent=True),
     "m4": lambda: Model(name="m4", load_dependent=True, stribeck=True),
     "m5": lambda: Model(
-        name="m5",
-        load_dependent=True,
-        directional=True,
-        stribeck=True
+        name="m5", load_dependent=True, directional=True, stribeck=True
+    ),
+    "m6": lambda: Model(
+        name="m6", load_dependent=True, directional=True, stribeck=True, quadratic=True
     ),
 }
 
