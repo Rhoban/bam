@@ -64,11 +64,11 @@ for log in logs.logs:
     ax1.grid()
 
     # Using torque_enable color piecewise
-    ax2.plot(ts, controls, label=model.actuator.control_unit())
+    ax2.plot(ts, controls, label=dummy.actuator.control_unit())
     if args.control:
         if args.sim:
             for model_name, sim_controls in zip(all_names, all_sim_controls):
-                ax2.plot(ts, sim_controls, label=f"{model_name}_{model.actuator.control_unit()}")
+                ax2.plot(ts, sim_controls, label=f"{model_name}_{dummy.actuator.control_unit()}")
     # Shading the areas where torque is False
     ax2.fill_between(
         ts,
@@ -79,7 +79,7 @@ for log in logs.logs:
         alpha=0.3,
         label="torque off",
     )
-    ax2.set_ylabel(f"{model.actuator.control_unit()}")
+    ax2.set_ylabel(f"{dummy.actuator.control_unit()}")
     ax2.legend()
     plt.xlabel("time [s]")
 
