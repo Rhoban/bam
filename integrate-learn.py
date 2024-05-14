@@ -126,7 +126,7 @@ def compute_loss(log, net):
         predicted_position = predicted_position + dtheta_history[-1] * dt
         loss += loss_func(th.tensor([np.float32(entry["position"])]).to(device), predicted_position)
 
-    return loss
+    return loss / (len(log["entries"]) - args.window)
 
 
 # Training and testing functions
