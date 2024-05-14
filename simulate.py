@@ -87,7 +87,7 @@ class Simulate1R:
 
         if self.model.network:
             positions = [entry["position"] for entry in log["entries"][:self.model.window_size-1]]
-            all_volts = [entry["volts"] for entry in log["entries"][:self.model.window_size-1]]
+            all_volts = [compute_volts(entry["goal_position"] - entry["position"], log["kp"]) for entry in log["entries"][:self.model.window_size-1]]
 
             self.volts_history = [0.] + all_volts.copy()
             self.dq_history = [0.] + [entry["speed"] for entry in log["entries"][:self.model.window_size-1]]
@@ -112,9 +112,10 @@ class Simulate1R:
             if entry["torque_enable"]:
                 if simulate_control:
                     position_error = entry["goal_position"] - self.q
-                    volts = compute_volts(position_error, log["kp"])
                 else:
-                    volts = entry["volts"]
+                    position_error = entry["goal_position"] - entry["position"]
+                volts = compute_volts(position_error, log["kp"])
+
             else:
                 volts = None
             all_volts.append(volts)
