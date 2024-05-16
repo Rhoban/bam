@@ -199,10 +199,10 @@ models = {
     "m3": lambda: Model(name="m3", load_dependent=True),
     "m4": lambda: Model(name="m4", load_dependent=True, stribeck=True),
     "m5": lambda: Model(
-        name="m5", load_dependent=True, directional=True, stribeck=True
+        name="m5", load_dependent=True, stribeck=True, directional=True
     ),
     "m6": lambda: Model(
-        name="m6", load_dependent=True, directional=True, stribeck=True, quadratic=True
+        name="m6", load_dependent=True, stribeck=True, directional=True, quadratic=True
     ),
 }
 
