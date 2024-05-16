@@ -26,10 +26,10 @@ class Actuator:
         """
         raise NotImplementedError
 
-    def compute_control(self, position_error: float, dq: float) -> float | None:
+    def compute_control(self, position_error: float, q: float, dq: float) -> float | None:
         raise NotImplementedError
 
-    def compute_torque(self, control: float | None, dq: float) -> float:
+    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
         raise NotImplementedError
 
     def compute_gravity_torque(self, q: float, mass: float, length: float) -> float:
@@ -71,13 +71,13 @@ class MXActuator(Actuator):
     def control_unit(self) -> str:
         return "volts"
 
-    def compute_control(self, position_error: float, dq: float) -> float | None:
+    def compute_control(self, position_error: float, q: float, dq: float) -> float | None:
         duty_cycle = position_error * self.kp * self.error_gain
         duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
 
         return self.vin * duty_cycle
 
-    def compute_torque(self, control: float | None, dq: float) -> float:
+    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
         # Volts to None means that the motor is disconnected
         if control is None:
             return 0.0

@@ -31,7 +31,7 @@ class Simulate1R:
         Steps the simulation for dt given the applied control
         """
         gravity_torque = self.model.actuator.compute_gravity_torque(self.q, self.mass, self.length)
-        motor_torque = self.model.actuator.compute_torque(control, self.dq)
+        motor_torque = self.model.actuator.compute_torque(control, self.q, self.dq)
         frictionloss, damping = self.model.compute_frictions(
             motor_torque, gravity_torque, self.dq
         )
@@ -78,13 +78,13 @@ class Simulate1R:
             if entry["torque_enable"]:
                 if simulate_control:
                     position_error = entry["goal_position"] - self.q
-                    control = self.model.actuator.compute_control(position_error, self.dq)
+                    control = self.model.actuator.compute_control(position_error, self.q, self.dq)
                 else:
                     if "control" in entry:
                         control = entry["control"]
                     else:
                         position_error = entry["goal_position"] - entry["position"]
-                        control = self.model.actuator.compute_control(position_error, self.dq)
+                        control = self.model.actuator.compute_control(position_error, self.q, self.dq)
             else:
                 control = None
                 
