@@ -35,6 +35,9 @@ class Actuator:
     def compute_gravity_torque(self, q: float, mass: float, length: float) -> float:
         g = -9.80665
         return mass * g * length * np.sin(q)
+    
+    def get_extra_inertia(self) -> float:
+        return 0.0
 
     def to_mujoco(self):
         raise NotImplementedError
@@ -49,8 +52,10 @@ class MXActuator(Actuator):
         # Input voltage
         self.vin: float = 15.0
         self.kp: float = 32.0
+
         # Maximum allowable PWM
         self.max_pwm = 0.9625
+
         # This gain, if multiplied by a position error and firmware KP, gives duty cycle
         self.error_gain = 0.158
 
@@ -67,6 +72,12 @@ class MXActuator(Actuator):
 
         # Motor resistance [Ohm]
         self.model.R = Parameter(2.0, 1.0, 3.5)
+
+        # Motor armature [kg m^2]
+        self.model.armature = Parameter(0.005, 0.001, 0.05)
+
+    def get_extra_inertia(self) -> float:
+        return self.model.armature.value
 
     def control_unit(self) -> str:
         return "volts"
