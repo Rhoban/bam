@@ -182,9 +182,6 @@ class Model(BaseModel):
 
         return frictionloss, damping
 
-    def get_extra_inertia(self) -> float:
-        return self.armature.value
-
 
 models = {
     "m1": lambda: Model(name="m1"),

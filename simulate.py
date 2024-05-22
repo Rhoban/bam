@@ -36,7 +36,7 @@ class Simulate1R:
             motor_torque, gravity_torque, self.dq
         )
 
-        inertia = self.inertia + self.model.get_extra_inertia()
+        inertia = self.inertia + self.model.actuator.get_extra_inertia()
         net_torque = motor_torque + gravity_torque
 
         # Tau_stop is the torque required to stop the motor (reach a velocity of 0 after dt)
