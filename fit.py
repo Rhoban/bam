@@ -10,7 +10,7 @@ from actuator import actuators
 import json
 import time
 import optuna
-from model import models, BaseModel
+from model import models, BaseModel, load_model
 import message
 import simulate
 import wandb
@@ -29,22 +29,10 @@ arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--wandb", action="store_true")
 arg_parser.add_argument("--set", type=str, default="")
+arg_parser.add_argument("--eval", action="store_true")
 args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
-
-study_name = f"study_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-
-# Study URL (when multiple workers are used)
-study_url = f"sqlite:///study.db"
-# study_url = f"mysql://root:root@127.0.0.1:6033/optuna"
-
-# Json params file
-params_json_filename = args.output
-if not params_json_filename.endswith(".json"):
-    params_json_filename = f"output/params_{params_json_filename}.json"
-json.dump({}, open(params_json_filename, "w"))
-
 
 def compute_score(model: BaseModel, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], model)
@@ -161,37 +149,53 @@ def monitor(study, trial):
     sys.stdout.flush()
 
 
-if args.method == "cmaes":
-    sampler = optuna.samplers.CmaEsSampler(
-        # x0=model.get_parameter_values(),
-        restart_strategy="bipop"
-    )
-elif args.method == "random":
-    sampler = optuna.samplers.RandomSampler()
-elif args.method == "nsgaii":
-    sampler = optuna.samplers.NSGAIISampler()
+if args.eval:
+    model = load_model("params.json")
+    print(f"Score: {compute_scores(model)}")
 else:
-    raise ValueError(f"Unknown method: {args.method}")
+    study_name = f"study_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+    # Study URL (when multiple workers are used)
+    study_url = f"sqlite:///study.db"
+    # study_url = f"mysql://root:root@127.0.0.1:6033/optuna"
 
-def optuna_run(enable_monitoring=True):
-    if args.workers > 1:
-        study = optuna.load_study(study_name=study_name, storage=study_url)
+    # Json params file
+    params_json_filename = args.output
+    if not params_json_filename.endswith(".json"):
+        params_json_filename = f"output/params_{params_json_filename}.json"
+    json.dump({}, open(params_json_filename, "w"))
+
+    if args.method == "cmaes":
+        sampler = optuna.samplers.CmaEsSampler(
+            # x0=model.get_parameter_values(),
+            restart_strategy="bipop"
+        )
+    elif args.method == "random":
+        sampler = optuna.samplers.RandomSampler()
+    elif args.method == "nsgaii":
+        sampler = optuna.samplers.NSGAIISampler()
     else:
-        study = optuna.create_study(sampler=sampler)
-    optuna.logging.set_verbosity(optuna.logging.WARNING)
-    callbacks = []
-    if enable_monitoring:
-        callbacks = [monitor]
-    study.optimize(objective, n_trials=args.trials, n_jobs=1, callbacks=callbacks)
+        raise ValueError(f"Unknown method: {args.method}")
 
 
-if args.workers > 1:
-    optuna.create_study(study_name=study_name, storage=study_url, sampler=sampler)
+    def optuna_run(enable_monitoring=True):
+        if args.workers > 1:
+            study = optuna.load_study(study_name=study_name, storage=study_url)
+        else:
+            study = optuna.create_study(sampler=sampler)
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        callbacks = []
+        if enable_monitoring:
+            callbacks = [monitor]
+        study.optimize(objective, n_trials=args.trials, n_jobs=1, callbacks=callbacks)
 
-# Running the other workers
-for k in range(args.workers - 1):
-    p = Process(target=optuna_run, args=(False,))
-    p.start()
 
-optuna_run(True)
+    if args.workers > 1:
+        optuna.create_study(study_name=study_name, storage=study_url, sampler=sampler)
+
+    # Running the other workers
+    for k in range(args.workers - 1):
+        p = Process(target=optuna_run, args=(False,))
+        p.start()
+
+    optuna_run(True)
