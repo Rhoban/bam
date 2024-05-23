@@ -10,7 +10,7 @@ args = arg_parser.parse_args()
 
 model = load_model(args.params)
 
-torques = np.linspace(0, args.max_torque, 500)
+torques = np.linspace(0, args.max_torque, 250)
 lows = []
 highs = []
 for motor_torque in torques:
@@ -29,7 +29,11 @@ for motor_torque in torques:
     lows.append(external_torque_low)
     highs.append(external_torque_high)
         
-plt.plot(torques, lows, color="blue", label="low")
-plt.plot(torques, highs, color="red", label="high")
+plt.plot(torques, lows, color="blue", label="drive")
+plt.plot(torques, highs, color="red", label="back-drive")
+plt.plot([0, args.max_torque], [0, args.max_torque], color="black", linestyle="--")
+plt.xlabel("Motor Torque [Nm]")
+plt.ylabel("External Torque [Nm]")
+plt.legend()
 plt.grid()
 plt.show()
