@@ -169,7 +169,7 @@ class Model(BaseModel):
                         * stribeck_coeff
                     )
 
-                if self.quadratic:
+                if self.quadratic and np.sign(external_torque) != np.sign(motor_torque):
                     if abs(external_torque) < abs(motor_torque):
                         gearbox_torque2 = self.load_friction_external_quad.value * abs(external_torque)**2
                     else:
