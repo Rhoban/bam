@@ -29,6 +29,7 @@ eth = Client(args.host)
 eth.run_background()
 
 goal_position, torque_enable = trajectory(0)
+eth.wait_stability(0)
 eth.goto_safe(0, args.offset + goal_position)
 
 start = time.time()

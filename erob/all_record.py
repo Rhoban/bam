@@ -15,7 +15,7 @@ arg_parser.add_argument("--speak", action="store_true")
 args = arg_parser.parse_args()
 
 # kps = [10, 25, 50, 100]
-kps = [10]
+kps = [100]
 trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
 
 command_base = f"python3 erob/record.py --offset {args.offset} --mass {args.mass} --arm_mass {args.mass} --length {args.length}"

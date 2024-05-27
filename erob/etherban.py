@@ -113,6 +113,16 @@ class Client:
         self.wait_lock.wait()
         self.wait_lock.release()
 
+    def wait_stability(self, index: int):
+        positions = []
+        while True:
+            status = self.statuses[index]
+            positions.append(status["position"])
+            positions = positions[-100:]
+            if len(positions) == 100 and np.std(positions) < 1e-5:
+                break
+            self.sync()
+
     def goto_safe(self, index: int, target: float, duration: float = 3.0):
         status = self.statuses[index]
         start_pos = status["position"]
