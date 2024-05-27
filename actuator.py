@@ -55,13 +55,13 @@ class Erob(Actuator):
 
     def initialize(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.model.kt = Parameter(1.6, 0.1, 3.0)
+        self.model.kt = Parameter(1.6, 1.0, 15.0)
 
         # Motor resistance [Ohm]
-        self.model.R = Parameter(2.0, 0.1, 3.5)
+        # self.model.R = Parameter(2.0, 0.1, 3.5)
 
         # Motor armature / apparent inertia [kg m^2]
-        self.model.armature = Parameter(0.005, 0.001, 0.05)
+        self.model.armature = Parameter(0.005, 0.001, 2.0)
 
     def load_log(self, log: dict):
         self.kp = log["kp"]
@@ -85,16 +85,19 @@ class Erob(Actuator):
         torque = self.model.kt.value * amps
 
         # Computing the torque boundaries given the maximum voltage and the back EMF
-        volts_bounded_torque = (
-            self.model.kt.value / self.model.R.value
-        ) * self.max_volts
-        emf = (self.model.kt.value**2) * dq / self.model.R.value
+        # volts_bounded_torque = (
+        #     self.model.kt.value / self.model.R.value
+        # ) * self.max_volts
+        # emf = (self.model.kt.value**2) * dq / self.model.R.value
 
-        min_torque = -volts_bounded_torque - emf
-        max_torque = volts_bounded_torque - emf
-        torque = np.clip(torque, min_torque, max_torque)
+        # min_torque = -volts_bounded_torque - emf
+        # max_torque = volts_bounded_torque - emf
+        # torque = np.clip(torque, min_torque, max_torque)
 
         return torque
+
+    def get_extra_inertia(self) -> float:
+        return self.model.armature.value
 
 
 class MXActuator(Actuator):
