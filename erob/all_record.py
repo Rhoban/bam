@@ -4,19 +4,22 @@ import time
 
 
 arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument("--host", type=str, default="127.0.0.1")
+arg_parser.add_argument("--offset", type=float, required=True)
 arg_parser.add_argument("--mass", type=float, required=True)
+arg_parser.add_argument("--arm_mass", type=float, required=True)
 arg_parser.add_argument("--length", type=float, required=True)
 arg_parser.add_argument("--motor", type=str, required=True)
-arg_parser.add_argument("--port", type=str, default="/dev/ttyUSB0")
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--speak", action="store_true")
 args = arg_parser.parse_args()
 
-kps = [4, 8, 16, 32]
+# kps = [10, 25, 50, 100]
+kps = [10]
 trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
 
-command_base = f"python3 dynamixel/record.py --mass {args.mass} --length {args.length}"
-command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor}"
+command_base = f"python3 erob/record.py --offset {args.offset} --mass {args.mass} --arm_mass {args.mass} --length {args.length}"
+command_base += f" --host {args.host} --logdir {args.logdir} --motor {args.motor}"
 
 
 for kp in kps:
