@@ -49,15 +49,16 @@ class MXActuator(Actuator):
     """
 
     def __init__(self):
-        # Input voltage
+        # Input voltage and (firmware) gain
         self.vin: float = 15.0
         self.kp: float = 32.0
 
-        # Maximum allowable PWM
-        self.max_pwm = 0.9625
-
         # This gain, if multiplied by a position error and firmware KP, gives duty cycle
+        # It was determined using an oscilloscope and MX actuators
         self.error_gain = 0.158
+
+        # Maximum allowable duty cycle, also determined with oscilloscope
+        self.max_pwm = 0.9625
 
     def load_log(self, log: dict):
         self.kp = log["kp"]
@@ -66,14 +67,13 @@ class MXActuator(Actuator):
             self.vin = log["vin"]
 
     def initialize(self):
-
         # Torque constant [Nm/A] or [V/(rad/s)]
         self.model.kt = Parameter(1.6, 1.0, 3.0)
 
         # Motor resistance [Ohm]
         self.model.R = Parameter(2.0, 1.0, 3.5)
 
-        # Motor armature [kg m^2]
+        # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.001, 0.05)
 
     def get_extra_inertia(self) -> float:
@@ -104,6 +104,9 @@ class MXActuator(Actuator):
         return torque
 
     def to_mujoco(self) -> None:
+        # TODO: This should be moved elsewhere, extra models (M5, M6) should be also handled
+        raise NotImplementedError
+        
         message.bright("MX Actuator")
         message.print_parameter("Input voltage", self.vin)
         message.print_parameter("Firmware KP", self.kp)
