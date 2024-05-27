@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--params", type=str, default="params.json")
-arg_parser.add_argument("--actuator", type=str, default="mx")
+arg_parser.add_argument("--actuator", type=str, required=True)
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--sim", action="store_true")

@@ -5,15 +5,17 @@ import threading
 import os
 import time
 import etherban_pb2 as messages
+from trajectory import cubic_interpolate
 
 
 class Client:
     def __init__(self, host: str):
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REQ)
-        self.socket.connect(f"tcp://{host}")
+        self.socket.connect(f"tcp://{host}:7332")
         self.running = True
         self.lock = threading.Lock()
+        self.wait_lock = threading.Condition()
 
         self.orders = {}
         self.statuses = {}
@@ -35,12 +37,19 @@ class Client:
         order.target = target
         self.lock.release()
 
-    def position_control(self, index: int, target_position: float, target_velocity: float = 0.0, kp: float = 10.0):
+    def position_control(
+        self,
+        index: int,
+        target_position: float,
+        target_velocity: float = 0.0,
+        kp: float = 10.0,
+        max_amps: float = 12.0,
+    ):
         status = self.statuses[index]
         position_error = target_position - status["position"]
         velocity_error = target_velocity - status["velocity"]
         amps = position_error * kp + 2 * np.sqrt(kp) * velocity_error
-        amps = max(-10, min(10, amps))
+        amps = max(-max_amps, min(max_amps, amps))
         self.set_order(index, "torque", amps)
 
     def stop(self, index: int):
@@ -95,16 +104,41 @@ class Client:
 
             self.send()
 
+            self.wait_lock.acquire()
+            self.wait_lock.notify_all()
+            self.wait_lock.release()
+
+    def sync(self):
+        self.wait_lock.acquire()
+        self.wait_lock.wait()
+        self.wait_lock.release()
+
+    def goto_safe(self, index: int, target: float, duration: float = 3.0):
+        status = self.statuses[index]
+        start_pos = status["position"]
+        t0 = time.time()
+        t = 0
+
+        while t < duration:
+            t = time.time() - t0
+            current_target = cubic_interpolate(
+                [[0.0, start_pos, 0], [duration, target, 0]], t
+            )
+            self.set_order(0, "position", current_target)
+            self.sync()
+
     def run_background(self):
         thread = threading.Thread(target=self.run)
         thread.start()
+
+        self.sync()
 
     def stop(self):
         self.running = False
 
 
 if __name__ == "__main__":
-    client = Client("localhost:7332")
+    client = Client("localhost")
     start = time.time()
     client.run_background()
 
