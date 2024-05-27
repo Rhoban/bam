@@ -18,7 +18,7 @@ class Actuator:
         pass
 
     def initialize(self):
-        raise NotImplementedError
+        pass
 
     def control_unit(self) -> str:
         """
@@ -26,7 +26,9 @@ class Actuator:
         """
         raise NotImplementedError
 
-    def compute_control(self, position_error: float, q: float, dq: float) -> float | None:
+    def compute_control(
+        self, position_error: float, q: float, dq: float
+    ) -> float | None:
         raise NotImplementedError
 
     def compute_torque(self, control: float | None, q: float, dq: float) -> float:
@@ -35,12 +37,28 @@ class Actuator:
     def compute_gravity_torque(self, q: float, mass: float, length: float) -> float:
         g = -9.80665
         return mass * g * length * np.sin(q)
-    
+
     def get_extra_inertia(self) -> float:
         return 0.0
 
     def to_mujoco(self):
         raise NotImplementedError
+
+
+class Erob(Actuator):
+    def __init__(self):
+        pass
+
+    def control_unit(self) -> str:
+        return "amps"
+
+    def compute_control(
+        self, position_error: float, q: float, dq: float
+    ) -> float | None:
+        return 0.0
+
+    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+        return 0.0
 
 
 class MXActuator(Actuator):
@@ -82,7 +100,9 @@ class MXActuator(Actuator):
     def control_unit(self) -> str:
         return "volts"
 
-    def compute_control(self, position_error: float, q: float, dq: float) -> float | None:
+    def compute_control(
+        self, position_error: float, q: float, dq: float
+    ) -> float | None:
         duty_cycle = position_error * self.kp * self.error_gain
         duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
 
@@ -106,7 +126,7 @@ class MXActuator(Actuator):
     def to_mujoco(self) -> None:
         # TODO: This should be moved elsewhere, extra models (M5, M6) should be also handled
         raise NotImplementedError
-        
+
         message.bright("MX Actuator")
         message.print_parameter("Input voltage", self.vin)
         message.print_parameter("Firmware KP", self.kp)
@@ -141,7 +161,9 @@ class MXActuator(Actuator):
         if self.model.stribeck or self.model.load_dependent:
             message.bright("Runtime updates required:")
             print(
-                message.yellow("# WARNING: frictionloss should be updated dynamically with this model")
+                message.yellow(
+                    "# WARNING: frictionloss should be updated dynamically with this model"
+                )
             )
             print(message.yellow("# Please use the following computation: "))
             if self.model.stribeck:
@@ -165,9 +187,13 @@ class MXActuator(Actuator):
 
             print()
             if self.model.load_dependent:
-                print(message.yellow("# gearbox_torque is the torque applied to the gearbox"))
+                print(
+                    message.yellow(
+                        "# gearbox_torque is the torque applied to the gearbox"
+                    )
+                )
             if self.model.stribeck:
                 print(message.yellow("# velocity is the angular velocity of the motor"))
 
 
-actuators = {"mx": lambda: MXActuator()}
+actuators = {"mx": lambda: MXActuator(), "erob": lambda: Erob()}
