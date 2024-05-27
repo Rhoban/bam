@@ -4,7 +4,7 @@ import os
 import numpy as np
 import argparse
 import time
-from dynamixel import DynamixelActuatorV1, compute_volts
+from dynamixel import DynamixelActuatorV1
 from trajectory import *
 
 arg_parser = argparse.ArgumentParser()
