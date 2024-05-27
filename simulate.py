@@ -1,11 +1,11 @@
 import numpy as np
-from model import BaseModel, Model, load_model
+from model import Model, load_model
 
 g: float = -9.81
 
 
 class Simulate1R:
-    def __init__(self, mass: float, length: float, arm_mass: float, model: BaseModel):
+    def __init__(self, mass: float, length: float, arm_mass: float, model: Model):
         # Mass [kg]
         self.mass: float = mass
         # Length [m]
