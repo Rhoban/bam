@@ -66,6 +66,7 @@ class Simulate1R:
         Read a given log dict and return the sequential reached positions
         """
         positions = []
+        velocities = []
         all_controls = []
 
         reset_period_t = 0.0
@@ -80,6 +81,7 @@ class Simulate1R:
                 reset_period_t = 0.0
                 self.reset(entry["position"], entry["speed"])
             positions.append(self.q)
+            velocities.append(self.dq)
 
             if entry["torque_enable"]:
                 if simulate_control:
@@ -102,7 +104,7 @@ class Simulate1R:
 
             self.step(control, dt)
 
-        return positions, all_controls
+        return positions, velocities, all_controls
 
     def draw(self):
         """
