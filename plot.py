@@ -29,7 +29,7 @@ for log in logs.logs:
         for model_name in model_names:
             model = load_model(model_name)
             all_names.append(model.name)
-            simulator = simulate.Simulate1R(log["mass"], log["length"], model)
+            simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], model)
             sim_q, sim_controls = simulator.rollout_log(
                 log, reset_period=args.reset_period, simulate_control=args.control
             )
@@ -42,7 +42,7 @@ for log in logs.logs:
 
     dummy = DummyModel()
     dummy.set_actuator(actuators[args.actuator]())
-    simulator = simulate.Simulate1R(log["mass"], log["length"], dummy)
+    simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], dummy)
     _, controls = simulator.rollout_log(log, simulate_control=False)
     torque_enable = np.array([entry["torque_enable"] for entry in log["entries"]])
 

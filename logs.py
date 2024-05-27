@@ -14,4 +14,6 @@ class Logs:
             with open(json_file) as f:
                 data = json.load(f)
                 data["filename"] = json_file
+                if "arm_mass" not in data:
+                    data["arm_mass"] = 0.0
                 self.logs.append(data)

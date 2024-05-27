@@ -35,7 +35,7 @@ args = arg_parser.parse_args()
 logs = logs.Logs(args.logdir)
 
 def compute_score(model: BaseModel, log: dict) -> float:
-    simulator = simulate.Simulate1R(log["mass"], log["length"], model)
+    simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], model)
     result = simulator.rollout_log(
         log, reset_period=args.reset_period, simulate_control=args.control
     )

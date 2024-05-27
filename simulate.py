@@ -5,11 +5,14 @@ g: float = -9.81
 
 
 class Simulate1R:
-    def __init__(self, mass: float, length: float, model: BaseModel):
+    def __init__(self, mass: float, length: float, arm_mass: float, model: BaseModel):
         # Mass [kg]
         self.mass: float = mass
         # Length [m]
         self.length: float = length
+        # Arm mass [kg]
+        # This is considered apart, since it has a different effect on gravity (1/2) than on inertia (1/3)
+        self.arm_mass: float = arm_mass
 
         self.screen = None
         self.model = model
@@ -24,13 +27,16 @@ class Simulate1R:
         self.t = 0.0
 
         self.inertia = self.mass * self.length**2
+        self.inertia += (1 / 3) * self.arm_mass * self.length**2
         self.model.reset()
 
     def step(self, control: None | float, dt: float):
         """
         Steps the simulation for dt given the applied control
         """
-        gravity_torque = self.model.actuator.compute_gravity_torque(self.q, self.mass, self.length)
+        gravity_torque = self.model.actuator.compute_gravity_torque(
+            self.q, self.mass + (1 / 2) * self.arm_mass, self.length
+        )
         motor_torque = self.model.actuator.compute_torque(control, self.q, self.dq)
         frictionloss, damping = self.model.compute_frictions(
             motor_torque, gravity_torque, self.dq
@@ -50,7 +56,7 @@ class Simulate1R:
 
         self.dq += angular_acceleration * dt
         self.dq = np.clip(self.dq, -100.0, 100.0)
-        self.q += self.dq * dt + 0.5 * angular_acceleration * dt ** 2
+        self.q += self.dq * dt + 0.5 * angular_acceleration * dt**2
         self.t += dt
 
     def rollout_log(
@@ -78,16 +84,20 @@ class Simulate1R:
             if entry["torque_enable"]:
                 if simulate_control:
                     position_error = entry["goal_position"] - self.q
-                    control = self.model.actuator.compute_control(position_error, self.q, self.dq)
+                    control = self.model.actuator.compute_control(
+                        position_error, self.q, self.dq
+                    )
                 else:
                     if "control" in entry:
                         control = entry["control"]
                     else:
                         position_error = entry["goal_position"] - entry["position"]
-                        control = self.model.actuator.compute_control(position_error, self.q, self.dq)
+                        control = self.model.actuator.compute_control(
+                            position_error, self.q, self.dq
+                        )
             else:
                 control = None
-                
+
             all_controls.append(control)
 
             self.step(control, dt)
@@ -119,7 +129,7 @@ if __name__ == "__main__":
     import pygame
 
     model = load_model("params.json")
-    sim = Simulate1R(3.500, 0.105, model)
+    sim = Simulate1R(3.500, 0.105, 0.0, model)
     sim.reset(-1.5, 0.0)
     while True:
         sim.step(-2.0, 0.01)
