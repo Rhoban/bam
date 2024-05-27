@@ -1,0 +1,36 @@
+syntax = "proto2";
+package etherban_server;
+
+enum OperationMode {
+  POSITION = 0;
+  VELOCITY = 1;
+  TORQUE = 2;
+}
+
+// Status of a given device
+message Status {
+  required int32 device = 1;
+
+  required double target_position = 2;
+  required double velocity_demand = 3;
+  required double torque_demand = 4;
+
+  required double present_position = 5;
+  required double present_velocity = 6;
+  required double present_current = 7;
+}
+
+message Order {
+  required int32 device = 1;
+  required OperationMode operation_mode = 2;
+  required double target = 3;
+}
+
+message Request {
+  repeated Order orders = 1;
+}
+
+message Response {
+  repeated Status statuses = 1;
+  required bool has_fault = 2;
+}
