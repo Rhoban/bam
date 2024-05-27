@@ -47,7 +47,24 @@ class Actuator:
 
 class Erob(Actuator):
     def __init__(self):
-        pass
+        # Maximum current [A]
+        self.max_amps = 12.0
+
+        # Maximum input voltage [V]
+        self.max_volts = 48.0
+
+    def initialize(self):
+        # Torque constant [Nm/A] or [V/(rad/s)]
+        self.model.kt = Parameter(1.6, 0.1, 3.0)
+
+        # Motor resistance [Ohm]
+        self.model.R = Parameter(2.0, 0.1, 3.5)
+
+        # Motor armature / apparent inertia [kg m^2]
+        self.model.armature = Parameter(0.005, 0.001, 0.05)
+
+    def load_log(self, log: dict):
+        self.kp = log["kp"]
 
     def control_unit(self) -> str:
         return "amps"
@@ -55,10 +72,29 @@ class Erob(Actuator):
     def compute_control(
         self, position_error: float, q: float, dq: float
     ) -> float | None:
-        return 0.0
+        # Target velocity is assumed to be 0
+        amps = position_error * self.kp + 2 * np.sqrt(self.kp) * (0.0 - dq)
+        amps = np.clip(amps, -self.max_amps, self.max_amps)
+
+        return amps
 
     def compute_torque(self, control: float | None, q: float, dq: float) -> float:
-        return 0.0
+        # Computing the torque given the control signal
+        # With eRob, control=None actually meany amps=0, and not a disconnection of the motor
+        amps = control if control is not None else 0.0
+        torque = self.model.kt.value * amps
+
+        # Computing the torque boundaries given the maximum voltage and the back EMF
+        volts_bounded_torque = (
+            self.model.kt.value / self.model.R.value
+        ) * self.max_volts
+        emf = (self.model.kt.value**2) * dq / self.model.R.value
+
+        min_torque = -volts_bounded_torque - emf
+        max_torque = volts_bounded_torque - emf
+        torque = np.clip(torque, min_torque, max_torque)
+
+        return torque
 
 
 class MXActuator(Actuator):
