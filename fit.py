@@ -10,7 +10,7 @@ from actuator import actuators
 import json
 import time
 import optuna
-from model import models, BaseModel, load_model
+from model import models, Model, load_model
 import message
 import simulate
 import wandb
@@ -34,7 +34,7 @@ args = arg_parser.parse_args()
 
 logs = logs.Logs(args.logdir)
 
-def compute_score(model: BaseModel, log: dict) -> float:
+def compute_score(model: Model, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], model)
     result = simulator.rollout_log(
         log, reset_period=args.reset_period, simulate_control=args.control
@@ -45,7 +45,7 @@ def compute_score(model: BaseModel, log: dict) -> float:
     return np.mean(np.abs(positions - log_positions))
 
 
-def compute_scores(model: BaseModel):
+def compute_scores(model: Model):
     scores = 0
     for log in logs.logs:
         # t0 = time.time()
@@ -57,7 +57,7 @@ def compute_scores(model: BaseModel):
     return scores / len(logs.logs)
 
 
-def make_model() -> BaseModel:
+def make_model() -> Model:
     model = models[args.model]()
     model.set_actuator(actuators[args.actuator]())
 
