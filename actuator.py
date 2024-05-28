@@ -66,7 +66,7 @@ class Erob(Actuator):
         # Adjusting upper bounds for identification
         self.model.max_friction_base = 5.0
         self.model.max_load_friction = 1.0
-        self.max_viscous_friction = 30.0
+        self.model.max_viscous_friction = 30.0
 
     def load_log(self, log: dict):
         self.kp = log["kp"]
