@@ -96,7 +96,7 @@ def monitor(study, trial):
         wandb_run = wandb.init(
             name=f"{args.output}_{args.model}_{control}_{args.logdir}",
             # Set the project where this run will be logged
-            project="dxl_identification",
+            project=f"{args.actuator}_identification",
             # Track hyperparameters and run metadata
             config={
                 "logdir": args.logdir,
