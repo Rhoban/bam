@@ -18,7 +18,7 @@ class Actuator:
         pass
 
     def initialize(self):
-        pass
+        raise NotImplementedError
 
     def control_unit(self) -> str:
         """
@@ -62,6 +62,11 @@ class Erob(Actuator):
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.001, 2.0)
+
+        # Adjusting upper bounds for identification
+        self.model.max_friction_base = 5.0
+        self.model.max_load_friction = 1.0
+        self.max_viscous_friction = 30.0
 
     def load_log(self, log: dict):
         self.kp = log["kp"]

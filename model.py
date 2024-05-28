@@ -20,21 +20,32 @@ class Model():
         self.stribeck: bool = stribeck
         self.quadratic: bool = quadratic
 
-        # Motor armature [kg m^2]
-        self.armature = Parameter(0.005, 0.001, 0.05)
+        self.max_friction_base = 0.2
+        self.max_load_friction = 0.5
+        self.max_viscous_friction = 1.0
+
+    def reset(self) -> None:
+        """
+        Resets the model internal state
+        """
+        self.actuator.reset()
+
+    def set_actuator(self, actuator: Actuator) -> None:
+        self.actuator = actuator
+        self.actuator.set_model(self)
 
         # Base friction is always here, stribeck friction is added when not moving [Nm]
-        self.friction_base = Parameter(0.05, 0.0, 0.2)
+        self.friction_base = Parameter(0.05, 0.0, self.max_friction_base)
         if self.stribeck:
-            self.friction_stribeck = Parameter(0.05, 0.0, 0.2)
+            self.friction_stribeck = Parameter(0.05, 0.0, self.max_friction_base)
 
         # Load-dependent friction, again base is always here and stribeck is added when not moving [Nm]
         if self.load_dependent:
             if self.directional:
-                self.load_friction_motor = Parameter(0.05, 0.0, 0.5)
-                self.load_friction_external = Parameter(0.05, 0.0, 0.5)
+                self.load_friction_motor = Parameter(0.05, 0.0, self.max_load_friction)
+                self.load_friction_external = Parameter(0.05, 0.0, self.max_load_friction)
             else:
-                self.load_friction_base = Parameter(0.05, 0.0, 0.2)
+                self.load_friction_base = Parameter(0.05, 0.0, self.max_load_friction)
 
             if self.stribeck:
                 if self.directional:
@@ -53,17 +64,7 @@ class Model():
             self.alpha = Parameter(1.35, 0.5, 2.0)
 
         # Viscous friction [Nm/(rad/s)]
-        self.friction_viscous = Parameter(0.1, 0.0, 1.0)
-
-    def reset(self) -> None:
-        """
-        Resets the model internal state
-        """
-        self.actuator.reset()
-
-    def set_actuator(self, actuator: Actuator) -> None:
-        self.actuator = actuator
-        self.actuator.set_model(self)
+        self.friction_viscous = Parameter(0.1, 0.0, self.max_viscous_friction)
 
     def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
