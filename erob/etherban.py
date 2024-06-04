@@ -4,7 +4,7 @@ import numpy as np
 import threading
 import os
 import time
-import etherban_pb2 as messages
+import erob.etherban_pb2 as messages
 from trajectory import cubic_interpolate
 
 
