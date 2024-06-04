@@ -24,7 +24,7 @@ data["mass"] = args.mass
 data["length"] = args.length
 amps = read_float("Amps: ")
 
-client = etherban.Client("localhost:7332")
+client = etherban.Client("localhost")
 client.set_order(0, "torque", amps)
 client.run_background()
 
