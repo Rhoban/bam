@@ -2,7 +2,7 @@ import json
 import datetime
 import argparse
 import time
-from etherban import Client
+from erob.etherban import Client
 from trajectory import *
 
 arg_parser = argparse.ArgumentParser()

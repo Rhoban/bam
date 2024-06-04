@@ -3,7 +3,7 @@ import time
 import datetime
 import os
 import argparse
-import etherban
+import erob.etherban as etherban
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--mass", type=float, required=True)
