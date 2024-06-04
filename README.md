@@ -13,7 +13,7 @@ When $\alpha = 0$, the pendulum is downward.
 You can use `record.py` to execute a trajectory and record it, here is an example of usage:
 
 ```
-python dynamixel/record.py \
+python -m dynamixel.record \
     --port /dev/ttyUSB0 \
     --offset 1.23 \
     --mass 0.567 \
@@ -52,7 +52,7 @@ to use for the zero position.
 You can then use the `record.py` script as following:
 
 ```
-python erob/record.py \
+python -m erob.record \
     --host 127.0.0.1 \
     --mass 2.0 \
     --arm_mass 1.0 \
