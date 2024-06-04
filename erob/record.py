@@ -57,7 +57,7 @@ while time.time() - start < trajectory.duration:
     entry = {
         "position": angle_wrap(status["position"] - args.offset),
         "speed": status["velocity"],
-        "torque_demaned": status["torque_demand"],
+        "torque_demand": status["torque_demand"],
         "control": status["current"],
         "timestamp": time.time() - start,
         "goal_position": goal_position,
