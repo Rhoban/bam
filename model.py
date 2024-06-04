@@ -55,8 +55,8 @@ class Model():
                     self.load_friction_stribeck = Parameter(0.05, 0.0, 1.0)
             
                 if self.quadratic:
-                    self.load_friction_motor_quad = Parameter(0.05, 0.0, 1.0)
-                    self.load_friction_external_quad = Parameter(0.05, 0.0, 1.0)
+                    self.load_friction_motor_quad = Parameter(0.0, 0.0, 0.05)
+                    self.load_friction_external_quad = Parameter(0.0, 0.0, 0.05)
 
         if self.stribeck:
             # Stribeck velocity [rad/s] and curvature
