@@ -5,7 +5,6 @@ def compute_dynamic(m, l1, l2, l3, beta, g=9.81):
     g = 9.81
 
     t = symbols("t")
-
     l = Function("l")(t)
 
     alpha = acos((l1**2 + l3**2 - l**2) / (2 * l1 * l3))
@@ -41,6 +40,9 @@ def compute_dynamic(m, l1, l2, l3, beta, g=9.81):
     M = (M.simplify() / diff(l, (t, 2))).simplify()
     B = B.simplify()
 
+    M = nsimplify(M, tolerance=1e-8, rational=True)
+    B = nsimplify(B, tolerance=1e-8, rational=True)
+
     l_, dl_ = symbols("l_ dl_")
     M = M.subs(diff(l, t), dl_).subs(l, l_)
     B = B.subs(diff(l, t), dl_).subs(l, l_)
@@ -68,7 +70,7 @@ if __name__ == "__main__":
     l1 = 0.2
     l2 = 1.0
     l3 = np.sqrt(A[0] ** 2 + A[1] ** 2)
-    m = 10.0
+    m = 1.0
 
     print(f"l1: {l1}, l2: {l2}, l3: {l3}, beta: {beta}")
 
@@ -85,7 +87,7 @@ if __name__ == "__main__":
     def draw_line(xy1, xy2, color):
         pygame.draw.line(screen, color, xy_to_screen(xy1), xy_to_screen(xy2), 2)
 
-    l = 0.5
+    l = 0.4
     Mf, Bf = compute_dynamic(m, l1, l2, l3, beta)
     dl = 0.0
     t = 0
@@ -105,7 +107,7 @@ if __name__ == "__main__":
         else:
             force = 0
 
-        ddl = (force - 50.0 * dl - B) / M
+        ddl = (force - 0.0 * dl - B) / M
         dl += ddl * 0.01
         l += dl * 0.01
 
