@@ -29,13 +29,13 @@ arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--wandb", action="store_true")
 arg_parser.add_argument("--set", type=str, default="")
-arg_parser.add_argument("--validation", type=float, default=0.)
+arg_parser.add_argument("--validation_kp", type=int, default=0)
 arg_parser.add_argument("--eval", action="store_true")
 args = arg_parser.parse_args()
 
 logs = Logs(args.logdir)
-if not args.eval:
-    validation_logs = logs.split(args.validation)
+if not args.eval and args.validation_kp > 0:
+    validation_logs = logs.split(args.validation_kp)
 
 def compute_score(model: Model, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], model)
@@ -128,7 +128,7 @@ def monitor(study, trial):
 
         json.dump(data, open(params_json_filename, "w"))
 
-        if args.validation > 0:
+        if args.validation_kp > 0:
             val_model = load_model(params_json_filename)
             val_best_value = compute_scores(val_model, validation_logs)
             wandb_log["optim/val_best_value"] = val_best_value
