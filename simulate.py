@@ -1,7 +1,5 @@
 import numpy as np
-from model import Model, load_model
-
-g: float = -9.81
+from model import Model
 
 
 class Simulate1R:
@@ -24,17 +22,17 @@ class Simulate1R:
         """
         Steps the simulation for dt given the applied control
         """
-        gravity_torque = self.model.actuator.testbench.compute_bias(self.q, self.dq)
+        bias_torque = self.model.actuator.testbench.compute_bias(self.q, self.dq)
         motor_torque = self.model.actuator.compute_torque(control, self.q, self.dq)
         frictionloss, damping = self.model.compute_frictions(
-            motor_torque, gravity_torque, self.dq
+            motor_torque, bias_torque, self.dq
         )
 
         inertia = (
             self.model.actuator.testbench.compute_mass(self.q, self.dq)
             + self.model.actuator.get_extra_inertia()
         )
-        net_torque = motor_torque + gravity_torque
+        net_torque = motor_torque + bias_torque
 
         # Tau_stop is the torque required to stop the motor (reach a velocity of 0 after dt)
         tau_stop = (inertia / dt) * self.dq + net_torque
