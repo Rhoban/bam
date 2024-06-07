@@ -29,17 +29,36 @@ class Actuator:
     def compute_control(
         self, position_error: float, q: float, dq: float
     ) -> float | None:
+        """
+        The control (e.g volts or amps) produced by the actuator, given the position error and current configruation
+        """
         raise NotImplementedError
 
     def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+        """
+        The torque [Nm] produced by the actuator, given the control signal and current configuration
+        """
         raise NotImplementedError
 
-    def compute_gravity_torque(self, q: float, mass: float, length: float) -> float:
+    def compute_gravity_torque(
+        self, q: float, mass: float, arm_mass: float, length: float
+    ) -> float:
+        """
+        Computes the gravity force given the current configuration
+        The defaults assume a pendulum where the configuration is an angle pointing downwards
+        """
         g = -9.80665
-        return mass * g * length * np.sin(q)
+        return (mass + arm_mass / 2) * g * length * np.sin(q)
 
-    def get_extra_inertia(self) -> float:
-        return 0.0
+    def get_inertia(self, mass: float, arm_mass: float, length: float) -> float:
+        """
+        Computes the inertia of the actuator given the mass, arm_mass and length
+        The defaults assume a pendulum where the configuration is an angle pointing downwards
+        """
+        inertia = mass * length**2
+        inertia += (arm_mass / 3) * length**2
+
+        return inertia
 
     def to_mujoco(self):
         raise NotImplementedError
@@ -101,8 +120,8 @@ class Erob(Actuator):
 
         return torque
 
-    def get_extra_inertia(self) -> float:
-        return self.model.armature.value
+    def get_inertia(self, mass: float, arm_mass: float, length: float) -> float:
+        return self.model.armature.value + super().get_inertia(mass, arm_mass, length)
 
 
 class MXActuator(Actuator):
@@ -138,8 +157,8 @@ class MXActuator(Actuator):
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.001, 0.05)
 
-    def get_extra_inertia(self) -> float:
-        return self.model.armature.value
+    def get_inertia(self, mass: float, arm_mass: float, length: float) -> float:
+        return self.model.armature.value + super().get_inertia(mass, arm_mass, length)
 
     def control_unit(self) -> str:
         return "volts"

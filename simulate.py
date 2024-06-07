@@ -26,8 +26,6 @@ class Simulate1R:
         self.dq = dq
         self.t = 0.0
 
-        self.inertia = self.mass * self.length**2
-        self.inertia += (1 / 3) * self.arm_mass * self.length**2
         self.model.reset()
 
     def step(self, control: None | float, dt: float):
@@ -35,14 +33,14 @@ class Simulate1R:
         Steps the simulation for dt given the applied control
         """
         gravity_torque = self.model.actuator.compute_gravity_torque(
-            self.q, self.mass + (1 / 2) * self.arm_mass, self.length
+            self.q, self.mass, self.arm_mass, self.length
         )
         motor_torque = self.model.actuator.compute_torque(control, self.q, self.dq)
         frictionloss, damping = self.model.compute_frictions(
             motor_torque, gravity_torque, self.dq
         )
 
-        inertia = self.inertia + self.model.actuator.get_extra_inertia()
+        inertia = self.model.actuator.get_inertia(self.mass, self.arm_mass, self.length)
         net_torque = motor_torque + gravity_torque
 
         # Tau_stop is the torque required to stop the motor (reach a velocity of 0 after dt)
