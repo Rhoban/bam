@@ -13,7 +13,7 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-N=`ls output/*.json|wc -w`
+N=`ls output/fit_*.log|wc -w`
 N=$[$N + 1]
 
 python fit.py --wandb --logdir $DATA \
