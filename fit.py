@@ -14,7 +14,7 @@ from model import models, Model, load_model
 import message
 import simulate
 import wandb
-import logs
+from logs import Logs
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
@@ -29,10 +29,13 @@ arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--wandb", action="store_true")
 arg_parser.add_argument("--set", type=str, default="")
+arg_parser.add_argument("--validation", type=float, default=0.2)
 arg_parser.add_argument("--eval", action="store_true")
 args = arg_parser.parse_args()
 
-logs = logs.Logs(args.logdir)
+logs = Logs(args.logdir)
+if not args.eval:
+    validation_logs = logs.split(args.validation)
 
 def compute_score(model: Model, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], model)
@@ -45,9 +48,9 @@ def compute_score(model: Model, log: dict) -> float:
     return np.mean(np.abs(positions - log_positions))
 
 
-def compute_scores(model: Model):
+def compute_scores(model: Model, compute_logs = None):
     scores = 0
-    for log in logs.logs:
+    for log in compute_logs.logs:
         # t0 = time.time()
         scores += compute_score(model, log)
         # t1 = time.time()
@@ -80,7 +83,7 @@ def objective(trial):
         if parameter.optimize:
             parameter.value = trial.suggest_float(name, parameter.min, parameter.max)
 
-    return compute_scores(model)
+    return compute_scores(model, logs)
 
 
 last_log = time.time()
@@ -125,6 +128,11 @@ def monitor(study, trial):
 
         json.dump(data, open(params_json_filename, "w"))
 
+        if args.validation > 0:
+            val_model = load_model(params_json_filename)
+            val_best_value = compute_scores(val_model, validation_logs)
+            wandb_log["optim/val_best_value"] = val_best_value
+
         print()
         message.bright(f"[Trial {trial_number}, Best score: {best_value}]")
         print(
@@ -151,7 +159,7 @@ def monitor(study, trial):
 
 if args.eval:
     model = load_model("params.json")
-    print(f"Score: {compute_scores(model)}")
+    print(f"Score: {compute_scores(model, logs)}")
 else:
     study_name = f"study_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
