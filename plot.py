@@ -31,7 +31,7 @@ for log in logs.logs:
         for model_name in model_names:
             model = load_model(model_name)
             all_names.append(model.name)
-            simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], model)
+            simulator = simulate.Simulate1R(model)
             sim_q, sim_speed, sim_controls = simulator.rollout_log(
                 log, reset_period=args.reset_period, simulate_control=args.control
             )
@@ -46,7 +46,7 @@ for log in logs.logs:
 
     dummy = DummyModel()
     dummy.set_actuator(actuators[args.actuator]())
-    simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], dummy)
+    simulator = simulate.Simulate1R(dummy)
     _, __, controls = simulator.rollout_log(log, simulate_control=False)
     torque_enable = np.array([entry["torque_enable"] for entry in log["entries"]])
 
@@ -80,7 +80,11 @@ for log in logs.logs:
     if args.control:
         if args.sim:
             for model_name, sim_controls in zip(all_names, all_sim_controls):
-                ax3.plot(ts, sim_controls, label=f"{model_name}_{dummy.actuator.control_unit()}")
+                ax3.plot(
+                    ts,
+                    sim_controls,
+                    label=f"{model_name}_{dummy.actuator.control_unit()}",
+                )
     # Shading the areas where torque is False
     ax3.fill_between(
         ts,

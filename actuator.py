@@ -1,9 +1,14 @@
 from parameter import Parameter
 import numpy as np
+from testbench import Testbench, Pendulum
 import message
 
 
 class Actuator:
+    def __init__(self, testbench_class: Testbench):
+        self.testbench_class = testbench_class
+        self.testbench: Testbench | None = None
+
     def set_model(self, model):
         self.model = model
         self.initialize()
@@ -15,7 +20,7 @@ class Actuator:
         """
         Called when a log is loaded, can be used to retrieve specific values (eg: input voltage, kp gain, etc.))
         """
-        pass
+        self.testbench = self.testbench_class(log)
 
     def initialize(self):
         raise NotImplementedError
@@ -40,32 +45,14 @@ class Actuator:
         """
         raise NotImplementedError
 
-    def compute_gravity_torque(
-        self, q: float, mass: float, arm_mass: float, length: float
-    ) -> float:
-        """
-        Computes the gravity force given the current configuration
-        The defaults assume a pendulum where the configuration is an angle pointing downwards
-        """
-        g = -9.80665
-        return (mass + arm_mass / 2) * g * length * np.sin(q)
-
-    def get_inertia(self, mass: float, arm_mass: float, length: float) -> float:
-        """
-        Computes the inertia of the actuator given the mass, arm_mass and length
-        The defaults assume a pendulum where the configuration is an angle pointing downwards
-        """
-        inertia = mass * length**2
-        inertia += (arm_mass / 3) * length**2
-
-        return inertia
-
     def to_mujoco(self):
         raise NotImplementedError
 
 
 class Erob(Actuator):
-    def __init__(self):
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(testbench_class)
+
         # Maximum current [A]
         self.max_amps = 12.0
 
@@ -88,6 +75,8 @@ class Erob(Actuator):
         self.model.max_viscous_friction = 30.0
 
     def load_log(self, log: dict):
+        super().load_log(log)
+
         self.kp = log["kp"]
 
     def control_unit(self) -> str:
@@ -129,7 +118,9 @@ class MXActuator(Actuator):
     Represents a Dynamixel MX-64 or MX-106 actuator
     """
 
-    def __init__(self):
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(testbench_class)
+
         # Input voltage and (firmware) gain
         self.vin: float = 15.0
         self.kp: float = 32.0
@@ -142,6 +133,8 @@ class MXActuator(Actuator):
         self.max_pwm = 0.9625
 
     def load_log(self, log: dict):
+        super().load_log(log)
+
         self.kp = log["kp"]
 
         if "vin" in log:
@@ -259,4 +252,8 @@ class MXActuator(Actuator):
                 print(message.yellow("# velocity is the angular velocity of the motor"))
 
 
-actuators = {"mx": lambda: MXActuator(), "erob": lambda: Erob()}
+actuators = {
+    "mx64": lambda: MXActuator(Pendulum),
+    "mx106": lambda: MXActuator(Pendulum),
+    "erob": lambda: Erob(Pendulum),
+}

@@ -38,8 +38,9 @@ if not args.eval and args.validation_kp > 0:
     validation_logs = logs.split(args.validation_kp)
     print(f"{len(validation_logs.logs)} logs splitted for validation")
 
+
 def compute_score(model: Model, log: dict) -> float:
-    simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], model)
+    simulator = simulate.Simulate1R(model)
     result = simulator.rollout_log(
         log, reset_period=args.reset_period, simulate_control=args.control
     )
@@ -49,7 +50,7 @@ def compute_score(model: Model, log: dict) -> float:
     return np.mean(np.abs(positions - log_positions))
 
 
-def compute_scores(model: Model, compute_logs = None):
+def compute_scores(model: Model, compute_logs=None):
     scores = 0
     for log in compute_logs.logs:
         # t0 = time.time()
@@ -147,7 +148,7 @@ def monitor(study, trial):
                     infos = f"min: {model_parameters[key].min}, max: {model_parameters[key].max}"
                 else:
                     warning = "not optimized"
-            
+
             message.print_parameter(key, data[key], infos, warning)
 
             if type(data[key]) == float:
@@ -186,7 +187,6 @@ else:
     else:
         raise ValueError(f"Unknown method: {args.method}")
 
-
     def optuna_run(enable_monitoring=True):
         if args.workers > 1:
             study = optuna.load_study(study_name=study_name, storage=study_url)
@@ -197,7 +197,6 @@ else:
         if enable_monitoring:
             callbacks = [monitor]
         study.optimize(objective, n_trials=args.trials, n_jobs=1, callbacks=callbacks)
-
 
     if args.workers > 1:
         optuna.create_study(study_name=study_name, storage=study_url, sampler=sampler)

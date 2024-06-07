@@ -5,15 +5,7 @@ g: float = -9.81
 
 
 class Simulate1R:
-    def __init__(self, mass: float, length: float, arm_mass: float, model: Model):
-        # Mass [kg]
-        self.mass: float = mass
-        # Length [m]
-        self.length: float = length
-        # Arm mass [kg]
-        # This is considered apart, since it has a different effect on gravity (1/2) than on inertia (1/3)
-        self.arm_mass: float = arm_mass
-
+    def __init__(self, model: Model):
         self.screen = None
         self.model = model
         self.reset()
@@ -32,15 +24,13 @@ class Simulate1R:
         """
         Steps the simulation for dt given the applied control
         """
-        gravity_torque = self.model.actuator.compute_gravity_torque(
-            self.q, self.mass, self.arm_mass, self.length
-        )
+        gravity_torque = self.model.actuator.testbench.compute_bias(self.q, self.dq)
         motor_torque = self.model.actuator.compute_torque(control, self.q, self.dq)
         frictionloss, damping = self.model.compute_frictions(
             motor_torque, gravity_torque, self.dq
         )
 
-        inertia = self.model.actuator.get_inertia(self.mass, self.arm_mass, self.length)
+        inertia = self.model.actuator.testbench.compute_mass(self.q, self.dq)
         net_torque = motor_torque + gravity_torque
 
         # Tau_stop is the torque required to stop the motor (reach a velocity of 0 after dt)
@@ -103,41 +93,3 @@ class Simulate1R:
             self.step(control, dt)
 
         return positions, velocities, all_controls
-
-    def draw(self):
-        """
-        Draw using pygame
-        """
-        import pygame
-
-        if self.screen is None:
-            pygame.init()
-            self.screen = pygame.display.set_mode((800, 600))
-
-        # Draw the background
-        self.screen.fill((255, 255, 255))
-
-        # Draw the pendulum
-        x = 400 + 1000 * self.length * np.sin(self.q)
-        y = 300 + 1000 * self.length * np.cos(self.q)
-        pygame.draw.line(self.screen, (0, 0, 255), (400, 300), (x, y), 5)
-        pygame.draw.circle(self.screen, (255, 0, 0), (int(x), int(y)), 10)
-        pygame.display.flip()
-
-
-if __name__ == "__main__":
-    import pygame
-
-    model = load_model("params.json")
-    sim = Simulate1R(3.500, 0.105, 0.0, model)
-    sim.reset(-1.5, 0.0)
-    while True:
-        sim.step(-2.0, 0.01)
-        sim.draw()
-        import time
-
-        time.sleep(0.01)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                break
