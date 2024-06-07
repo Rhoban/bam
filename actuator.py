@@ -261,5 +261,5 @@ class MXActuator(Actuator):
 actuators = {
     "mx64": lambda: MXActuator(Pendulum),
     "mx106": lambda: MXActuator(Pendulum),
-    "erob": lambda: Erob(Pendulum),
+    "erob80_100": lambda: Erob(Pendulum),
 }
