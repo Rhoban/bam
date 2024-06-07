@@ -174,18 +174,18 @@ class DummyModel(Model):
 
 
 models = {
-    "m1": lambda: Model(name="m1", title="Coulomb"),
-    "m2": lambda: Model(name="m2", stribeck=True, title="Stribeck"),
-    "m3": lambda: Model(name="m3", load_dependent=True, title="Load-dependent"),
+    "m1": lambda: Model(name="m1", title="Coulomb (M1)"),
+    "m2": lambda: Model(name="m2", stribeck=True, title="Stribeck (M2)"),
+    "m3": lambda: Model(name="m3", load_dependent=True, title="Load-dependent (M3)"),
     "m4": lambda: Model(
-        name="m4", load_dependent=True, stribeck=True, title="Stribeck load-dependent"
+        name="m4", load_dependent=True, stribeck=True, title="Stribeck load-dependent (M4)"
     ),
     "m5": lambda: Model(
         name="m5",
         load_dependent=True,
         stribeck=True,
         directional=True,
-        title="Stribeck load-dependent directional",
+        title="Stribeck load-dependent directional (M5)",
     ),
     "m6": lambda: Model(
         name="m6",
@@ -193,7 +193,7 @@ models = {
         stribeck=True,
         directional=True,
         quadratic=True,
-        title="Stribeck load-dependent directional quadratic",
+        title="Stribeck load-dependent directional quadratic (M6)",
     ),
 }
 
