@@ -14,7 +14,7 @@ N=$[$N + 1]
 
 python fit.py --wandb --logdir $DATA \
 	--model $1 \
-    --control \
+    	--control \
 	--workers 1 --trials 10000 \
 	--validation_kp $VAL_KP \
 	--actuator $ACTUATOR \
