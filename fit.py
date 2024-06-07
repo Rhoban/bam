@@ -29,7 +29,7 @@ arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--wandb", action="store_true")
 arg_parser.add_argument("--set", type=str, default="")
-arg_parser.add_argument("--validation", type=float, default=0.2)
+arg_parser.add_argument("--validation", type=float, default=0.)
 arg_parser.add_argument("--eval", action="store_true")
 args = arg_parser.parse_args()
 
