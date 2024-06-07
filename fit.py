@@ -33,10 +33,19 @@ arg_parser.add_argument("--validation_kp", type=int, default=0)
 arg_parser.add_argument("--eval", action="store_true")
 args = arg_parser.parse_args()
 
+if not args.eval:
+    # Json params file
+    params_json_filename = args.output
+    if not params_json_filename.endswith(".json"):
+        params_json_filename = f"output/params_{params_json_filename}.json"
+    json.dump({}, open(params_json_filename, "w"))
+
 logs = Logs(args.logdir)
 if not args.eval and args.validation_kp > 0:
     validation_logs = logs.split(args.validation_kp)
     print(f"{len(validation_logs.logs)} logs splitted for validation")
+    if len(validation_logs.logs) == 0:
+        raise ValueError("No logs for validation")
 
 
 def compute_score(model: Model, log: dict) -> float:
@@ -168,12 +177,6 @@ else:
     # Study URL (when multiple workers are used)
     study_url = f"sqlite:///study.db"
     # study_url = f"mysql://root:root@127.0.0.1:6033/optuna"
-
-    # Json params file
-    params_json_filename = args.output
-    if not params_json_filename.endswith(".json"):
-        params_json_filename = f"output/params_{params_json_filename}.json"
-    json.dump({}, open(params_json_filename, "w"))
 
     if args.method == "cmaes":
         sampler = optuna.samplers.CmaEsSampler(
