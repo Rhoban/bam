@@ -19,12 +19,15 @@ class Logs:
                     data["arm_mass"] = 0.0
                 self.logs.append(data)
 
-    def split(self, ratio: float) -> "Logs":
+    def split(self, selector_kp: int) -> "Logs":
         """
-        Extract ratio% of the logs from the current object to 
-        """        
-        to_extract = int(len(self.logs) * ratio)
-        indices = random.sample(range(len(self.logs)), to_extract)
+        Extract ratio% of the logs from the current object to
+        """
+        indices = []
+        for k, log in enumerate(self.logs):
+            if log["kp"] == selector_kp:
+                indices.append(k)
+
         other_logs = copy.deepcopy(self)
 
         self.json_files = [
