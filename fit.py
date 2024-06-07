@@ -36,6 +36,7 @@ args = arg_parser.parse_args()
 logs = Logs(args.logdir)
 if not args.eval and args.validation_kp > 0:
     validation_logs = logs.split(args.validation_kp)
+    print(f"{len(validation_logs.logs)} logs splitted for validation")
 
 def compute_score(model: Model, log: dict) -> float:
     simulator = simulate.Simulate1R(log["mass"], log["length"], log["arm_mass"], model)
