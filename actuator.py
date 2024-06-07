@@ -45,6 +45,12 @@ class Actuator:
         """
         raise NotImplementedError
 
+    def get_extra_inertia(self) -> float:
+        """
+        Get apparent inertia
+        """
+        raise NotImplementedError
+
     def to_mujoco(self):
         raise NotImplementedError
 
@@ -109,8 +115,8 @@ class Erob(Actuator):
 
         return torque
 
-    def get_inertia(self, mass: float, arm_mass: float, length: float) -> float:
-        return self.model.armature.value + super().get_inertia(mass, arm_mass, length)
+    def get_extra_inertia(self) -> float:
+        return self.model.armature.value
 
 
 class MXActuator(Actuator):
@@ -150,8 +156,8 @@ class MXActuator(Actuator):
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.001, 0.05)
 
-    def get_inertia(self, mass: float, arm_mass: float, length: float) -> float:
-        return self.model.armature.value + super().get_inertia(mass, arm_mass, length)
+    def get_extra_inertia(self) -> float:
+        return self.model.armature.value
 
     def control_unit(self) -> str:
         return "volts"

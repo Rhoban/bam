@@ -30,7 +30,10 @@ class Simulate1R:
             motor_torque, gravity_torque, self.dq
         )
 
-        inertia = self.model.actuator.testbench.compute_mass(self.q, self.dq)
+        inertia = (
+            self.model.actuator.testbench.compute_mass(self.q, self.dq)
+            + self.model.actuator.get_extra_inertia()
+        )
         net_torque = motor_torque + gravity_torque
 
         # Tau_stop is the torque required to stop the motor (reach a velocity of 0 after dt)
