@@ -36,7 +36,7 @@ for velocity in range(10):
 plt.plot([0, args.max_torque], [0, args.max_torque], color="black", linestyle="--")
 plt.xlabel("Motor Torque [Nm]")
 plt.ylabel("External Torque [Nm]")
-plt.title("...")
+plt.title(model.title)
 plt.legend()
 plt.grid()
 plt.show()

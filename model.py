@@ -3,7 +3,8 @@ import json
 from actuator import Actuator, actuators
 from parameter import Parameter
 
-class Model():
+
+class Model:
     def __init__(
         self,
         load_dependent: bool = False,
@@ -11,8 +12,10 @@ class Model():
         stribeck: bool = False,
         quadratic: bool = False,
         name: str = None,
+        title: str = "",
     ):
         self.name = name
+        self.title = title
 
         # Model parameters
         self.load_dependent: bool = load_dependent
@@ -43,7 +46,9 @@ class Model():
         if self.load_dependent:
             if self.directional:
                 self.load_friction_motor = Parameter(0.05, 0.0, self.max_load_friction)
-                self.load_friction_external = Parameter(0.05, 0.0, self.max_load_friction)
+                self.load_friction_external = Parameter(
+                    0.05, 0.0, self.max_load_friction
+                )
             else:
                 self.load_friction_base = Parameter(0.05, 0.0, self.max_load_friction)
 
@@ -53,7 +58,7 @@ class Model():
                     self.load_friction_external_stribeck = Parameter(0.05, 0.0, 1.0)
                 else:
                     self.load_friction_stribeck = Parameter(0.05, 0.0, 1.0)
-            
+
                 if self.quadratic:
                     self.load_friction_motor_quad = Parameter(0.0, 0.0, 0.01)
                     self.load_friction_external_quad = Parameter(0.0, 0.0, 0.01)
@@ -112,9 +117,14 @@ class Model():
 
                 if self.quadratic and np.sign(external_torque) != np.sign(motor_torque):
                     if abs(external_torque) < abs(motor_torque):
-                        gearbox_torque2 = self.load_friction_external_quad.value * abs(external_torque)**2
+                        gearbox_torque2 = (
+                            self.load_friction_external_quad.value
+                            * abs(external_torque) ** 2
+                        )
                     else:
-                        gearbox_torque2 = self.load_friction_motor_quad.value * abs(motor_torque)**2
+                        gearbox_torque2 = (
+                            self.load_friction_motor_quad.value * abs(motor_torque) ** 2
+                        )
 
                     frictionloss += gearbox_torque2 * stribeck_coeff
 
@@ -162,16 +172,28 @@ class DummyModel(Model):
     def __init__(self):
         super().__init__()
 
+
 models = {
-    "m1": lambda: Model(name="m1"),
-    "m2": lambda: Model(name="m2", stribeck=True),
-    "m3": lambda: Model(name="m3", load_dependent=True),
-    "m4": lambda: Model(name="m4", load_dependent=True, stribeck=True),
+    "m1": lambda: Model(name="m1", title="Coulomb"),
+    "m2": lambda: Model(name="m2", stribeck=True, title="Stribeck"),
+    "m3": lambda: Model(name="m3", load_dependent=True, title="Load-dependent"),
+    "m4": lambda: Model(
+        name="m4", load_dependent=True, stribeck=True, title="Stribeck load-dependent"
+    ),
     "m5": lambda: Model(
-        name="m5", load_dependent=True, stribeck=True, directional=True
+        name="m5",
+        load_dependent=True,
+        stribeck=True,
+        directional=True,
+        title="Stribeck load-dependent directional",
     ),
     "m6": lambda: Model(
-        name="m6", load_dependent=True, stribeck=True, directional=True, quadratic=True
+        name="m6",
+        load_dependent=True,
+        stribeck=True,
+        directional=True,
+        quadratic=True,
+        title="Stribeck load-dependent directional quadratic",
     ),
 }
 

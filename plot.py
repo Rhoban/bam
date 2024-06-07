@@ -21,6 +21,7 @@ if args.sim:
     model_names = args.params.split(",")
 
 for log in logs.logs:
+    print(log["filename"])
     all_sim_q = []
     all_sim_speeds = []
     all_sim_controls = []
