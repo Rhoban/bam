@@ -58,7 +58,7 @@ def compute_scores(model: Model, compute_logs = None):
         # elapsed = t1 - t0
         # print(f"Durations: {elapsed:.6f} s")
 
-    return scores / len(logs.logs)
+    return scores / len(compute_logs.logs)
 
 
 def make_model() -> Model:
