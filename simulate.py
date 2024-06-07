@@ -2,7 +2,7 @@ import numpy as np
 from model import Model
 
 
-class Simulate1R:
+class Simulator:
     def __init__(self, model: Model):
         self.screen = None
         self.model = model

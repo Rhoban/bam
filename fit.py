@@ -40,7 +40,7 @@ if not args.eval and args.validation_kp > 0:
 
 
 def compute_score(model: Model, log: dict) -> float:
-    simulator = simulate.Simulate1R(model)
+    simulator = simulate.Simulator(model)
     result = simulator.rollout_log(
         log, reset_period=args.reset_period, simulate_control=args.control
     )
