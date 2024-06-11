@@ -70,7 +70,7 @@ class Erob(Actuator):
         self.model.kt = Parameter(1.6, 1.0, 15.0)
 
         # Motor resistance [Ohm]
-        # self.model.R = Parameter(2.0, 0.1, 3.5)
+        self.model.R = Parameter(2.0, 0.1, 3.5)
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.001, 2.0)
