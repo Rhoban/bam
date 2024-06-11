@@ -104,14 +104,14 @@ class Erob(Actuator):
         torque = self.model.kt.value * amps
 
         # Computing the torque boundaries given the maximum voltage and the back EMF
-        # volts_bounded_torque = (
-        #     self.model.kt.value / self.model.R.value
-        # ) * self.max_volts
-        # emf = (self.model.kt.value**2) * dq / self.model.R.value
+        volts_bounded_torque = (
+            self.model.kt.value / self.model.R.value
+        ) * self.max_volts
+        emf = (self.model.kt.value**2) * dq / self.model.R.value
 
-        # min_torque = -volts_bounded_torque - emf
-        # max_torque = volts_bounded_torque - emf
-        # torque = np.clip(torque, min_torque, max_torque)
+        min_torque = -volts_bounded_torque - emf
+        max_torque = volts_bounded_torque - emf
+        torque = np.clip(torque, min_torque, max_torque)
 
         return torque
 
