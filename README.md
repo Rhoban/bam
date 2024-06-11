@@ -130,3 +130,13 @@ python -m rham.plot \
 ```
 
 To plot simulated vs real data.
+
+### Drive/Backdrive diagram
+
+To draw some drive/backdrive diagrams, you can use for example:
+
+```
+python -m rham.drive_backdrive \
+    --params params.json \
+    --max_torque 90
+```
