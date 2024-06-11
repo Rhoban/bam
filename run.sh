@@ -3,9 +3,10 @@
 ACTUATOR="erob80_100"
 VAL_KP=25
 
+#ACTUATOR="mx64"
 #ACTUATOR="mx106"
 #VAL_KP=8
-#
+
 DATA="data/$ACTUATOR"
 
 if [ $# -eq 0 ]; then
@@ -16,7 +17,7 @@ fi
 N=`ls output/fit_*.log|wc -w`
 N=$[$N + 1]
 
-python fit.py --wandb --logdir $DATA \
+python -m rham.fit --wandb --logdir $DATA \
 	--model $1 \
     	--control \
 	--workers 1 --trials 10000 \
