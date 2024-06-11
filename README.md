@@ -1,4 +1,4 @@
-# Dynamixel Identification
+# RhAM: Rhoban Actuator Model
 
 ## Setup
 
@@ -13,7 +13,7 @@ When $\alpha = 0$, the pendulum is downward.
 You can use `record.py` to execute a trajectory and record it, here is an example of usage:
 
 ```
-python -m dynamixel.record \
+python -m rham.dynamixel.record \
     --port /dev/ttyUSB0 \
     --offset 1.23 \
     --mass 0.567 \
@@ -42,7 +42,7 @@ Where the arguments are:
 First, you need to have the Etherban server running. You also need to compile the `proto` files, by running:
 
 ```
-cd erob/
+cd rham/erob/
 bash generate_protobuf.sh
 ```
 
@@ -52,7 +52,7 @@ to use for the zero position.
 You can then use the `record.py` script as following:
 
 ```
-python -m erob.record \
+python -m rham.erob.record \
     --host 127.0.0.1 \
     --mass 2.0 \
     --arm_mass 1.0 \
@@ -101,7 +101,7 @@ This will process the data with linear interpolation to enforce a constant given
 The model fitting can be done with:
 
 ```
-python fit.py \
+python -m rham.fit \
     --actuator mx \
     --logdir data_processed \
     --method cmaes \
@@ -123,7 +123,7 @@ The argument meaning is:
 You can then use:
 
 ```
-python plot.py \
+python -m rham.plot \
     --logdir data_processed \
     --params params.json \
     --control
