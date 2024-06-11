@@ -1,5 +1,5 @@
 import numpy as np
-from model import Model
+from .model import Model
 
 
 class Simulator:

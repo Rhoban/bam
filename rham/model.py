@@ -1,7 +1,7 @@
 import numpy as np
 import json
-from actuator import Actuator, actuators
-from parameter import Parameter
+from .actuator import Actuator, actuators
+from .parameter import Parameter
 
 
 class Model:
@@ -178,7 +178,10 @@ models = {
     "m2": lambda: Model(name="m2", stribeck=True, title="Stribeck (M2)"),
     "m3": lambda: Model(name="m3", load_dependent=True, title="Load-dependent (M3)"),
     "m4": lambda: Model(
-        name="m4", load_dependent=True, stribeck=True, title="Stribeck load-dependent (M4)"
+        name="m4",
+        load_dependent=True,
+        stribeck=True,
+        title="Stribeck load-dependent (M4)",
     ),
     "m5": lambda: Model(
         name="m5",

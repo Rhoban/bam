@@ -1,20 +1,20 @@
 import argparse
 from datetime import datetime
-import os
 import sys
 from multiprocessing import Process
 import numpy as np
 import json
 from copy import deepcopy
-from actuator import actuators
 import json
 import time
 import optuna
-from model import models, Model, load_model
-import message
-import simulate
 import wandb
-from logs import Logs
+
+from .logs import Logs
+from .model import models, Model, load_model
+from . import message
+from . import simulate
+from .actuator import actuators
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)

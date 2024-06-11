@@ -1,10 +1,11 @@
 import argparse
 import numpy as np
-from model import load_model, DummyModel
-from actuator import actuators
-import simulate
-import logs
 import matplotlib.pyplot as plt
+
+from .model import load_model, DummyModel
+from .actuator import actuators
+from . import simulate
+from . import logs
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)

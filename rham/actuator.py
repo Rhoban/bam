@@ -1,7 +1,7 @@
-from parameter import Parameter
 import numpy as np
-from testbench import Testbench, Pendulum
-import message
+from .parameter import Parameter
+from .testbench import Testbench, Pendulum
+from . import message
 
 
 class Actuator:

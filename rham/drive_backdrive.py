@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from model import load_model, DummyModel
+from .model import load_model
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--params", type=str, default="params.json")
