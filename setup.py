@@ -17,10 +17,19 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     keywords="robot robotics",
-    install_requires=[
-        "numpy"
-    ],
+    install_requires=["numpy"],
+    extras_require={
+        "dev": [
+            "zmq",
+            "protobuf==3.20",
+            "dynamixel_sdk",
+            "pyserial",
+            "optuna",
+            "wandb",
+            "pygame"
+        ],  
+    },
     include_package_data=True,
     package_data={},
-    python_requires='>=3.6',
+    python_requires=">=3.6",
 )
