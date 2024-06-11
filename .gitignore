@@ -4,3 +4,6 @@ data/
 **.pyc
 **.swp
 params.json
+build/
+dist/
+rham.egg-info/
