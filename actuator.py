@@ -151,7 +151,7 @@ class MXActuator(Actuator):
         self.model.kt = Parameter(1.6, 1.0, 3.0)
 
         # Motor resistance [Ohm]
-        self.model.R = Parameter(2.0, 1.0, 3.5)
+        self.model.R = Parameter(2.0, 1.0, 5.0)
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.001, 0.05)
