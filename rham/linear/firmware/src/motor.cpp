@@ -4,20 +4,20 @@
 #include <Arduino.h>
 
 void motor_init() {
-  ledcSetup(0, 200, 10);
+  ledcSetup(0, 20000, 10);
   ledcAttachPin(MOTOR_PIN1, 0);
 
-  ledcSetup(1, 200, 10);
+  ledcSetup(1, 20000, 10);
   ledcAttachPin(MOTOR_PIN2, 1);
 }
 
 void motor_set_pwm(int pwm) {
   if (pwm > 0) {
-    ledcWrite(0, 1023);
-    ledcWrite(1, 1023-pwm);
+    ledcWrite(0, pwm);
+    ledcWrite(1, 0);
   } else {
-    ledcWrite(0, 1023+pwm);
-    ledcWrite(1, 1023);
+    ledcWrite(0, 0);
+    ledcWrite(1, -pwm);
   }
 }
 
