@@ -4,8 +4,8 @@ import os
 import numpy as np
 import argparse
 import time
-from dynamixel import DynamixelActuatorV1
-from trajectory import *
+from .dynamixel import DynamixelActuatorV1
+from rham.trajectory import *
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--mass", type=float, required=True)

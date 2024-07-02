@@ -2,8 +2,8 @@ import json
 import datetime
 import argparse
 import time
-from erob.etherban import Client
-from trajectory import *
+from .etherban import Client
+from rham.trajectory import *
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--host", type=str, default="127.0.0.1")
