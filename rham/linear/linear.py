@@ -33,25 +33,25 @@ class LinearActuator:
 
     def set_p_gain(self, gain: int):
         self.envoi_commande(f"kp={gain}")
-        self.ser.reset_output_buffer()
+        self.read_response()
        
     def set_torque(self, enable: bool):
         if not enable:
             self.envoi_commande("relay 1")
-            self.ser.reset_output_buffer()
         else:
             self.envoi_commande("relay 0")
-            self.ser.reset_output_buffer()
+        self.read_response()
 
 
     def set_goal_position(self, position: float):
         self.envoi_commande(f"servo {position}")
-        self.ser.reset_output_buffer()
+        self.read_response()
 
     def read_value(self, response: list[bytes], key: bytes) -> float|None:
         for line in response:
-            if b':' in line:
-                line_key, value = line.strip().split(b': ', 1)
+            parts = line.strip().split(b': ', 1)
+            if len(parts) == 2:
+                line_key, value = parts
                 if line_key == key:
                     try:
                         return float(value)
