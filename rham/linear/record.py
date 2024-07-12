@@ -10,7 +10,7 @@ arg_parser.add_argument("--mass", type=float, required=True)
 arg_parser.add_argument("--length", type=float, required=True)
 arg_parser.add_argument("--port", type=str, default="COM3")
 arg_parser.add_argument("--logdir", type=str, required=True)
-arg_parser.add_argument("--trajectory", type=str, default="lift_and_drop")
+arg_parser.add_argument("--trajectory", type=str, default="sin_time_square")
 arg_parser.add_argument("--actuator", type=str, required=True)
 arg_parser.add_argument("--kp", type=int, default=18.5)
 arg_parser.add_argument("--vin", type=float, default=12.0)
@@ -38,7 +38,7 @@ data = {
     "length": args.length,
     "kp": args.kp,
     "vin": args.vin,
-    "actuator": args.actuator,
+    "motor": args.actuator,
     "trajectory": args.trajectory,
     "entries": []
 }
