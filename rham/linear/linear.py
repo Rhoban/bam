@@ -62,9 +62,9 @@ class LinearActuator:
         
     def read_data(self):
         self.envoi_commande("l") 
-        position= self.read_value(self.read_response(), b"l")
-        self.envoi_commande("mag") 
-        encoder_value= self.read_value(self.read_response(), b"Value")
+        response = self.read_response()
+        position= self.read_value(response, b"l")
+        encoder_value= self.read_value(response, b"alpha")
 
         return {
             "position": position,
