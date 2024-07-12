@@ -9,14 +9,22 @@
 // Motors pinout configuration
 #define MOTOR_PIN1 32
 #define MOTOR_PIN2 33
+#define RELAY_PIN 15
 
 // Actuator tip to axis distance [m]
 #define L1 0.2
 
 // Actuator base to axis distance [m]
-#define L3 0.1
+#define L2 0.055
 
-// Offset for alpha [rad]
-#define ALPHA_OFFSET 0.5
+#define L_Min 0.1545
+
+#define L_Max 0.2545
+
+// Offset for alpha [encoder step]
+#define ALPHA_OFFSET 999
+
+
+
 
 #endif
