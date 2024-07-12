@@ -17,7 +17,7 @@ args = arg_parser.parse_args()
 kps = [10, 25, 50, 100]
 trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
 
-command_base = f"python3 erob/record.py --offset {args.offset} --mass {args.mass} --arm_mass {args.arm_mass} --length {args.length}"
+command_base = f"python3 -m rham.erob.record --offset {args.offset} --mass {args.mass} --arm_mass {args.arm_mass} --length {args.length}"
 command_base += f" --host {args.host} --logdir {args.logdir} --motor {args.motor}"
 
 
