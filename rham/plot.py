@@ -43,7 +43,7 @@ for log in logs.logs:
     ts = np.arange(len(log["entries"])) * log["dt"]
     q = [entry["position"] for entry in log["entries"]]
     goal_q = [entry["goal_position"] for entry in log["entries"]]
-    speed = [entry["speed"] for entry in log["entries"]]
+    speed = [entry["speed"] if "speed" in entry else 0.0 for entry in log["entries"]]
 
     dummy = DummyModel()
     dummy.set_actuator(actuators[args.actuator]())

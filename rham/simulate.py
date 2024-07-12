@@ -61,7 +61,7 @@ class Simulator:
         reset_period_t = 0.0
         dt = log["dt"]
         first_entry = log["entries"][0]
-        self.reset(first_entry["position"], first_entry["speed"])
+        self.reset(first_entry["position"], first_entry["speed"] if "speed" in first_entry else 0.0)
         self.model.actuator.load_log(log)
 
         for entry in log["entries"]:
