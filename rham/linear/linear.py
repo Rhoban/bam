@@ -51,7 +51,7 @@ class LinearActuator:
     def read_value(self, response: list[bytes], key: bytes) -> float|None:
         for line in response:
             if b':' in line:
-                line_key, value = line.strip().split(b': ', 2)
+                line_key, value = line.strip().split(b': ', 1)
                 if line_key == key:
                     try:
                         return float(value)
