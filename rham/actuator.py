@@ -185,81 +185,71 @@ class MXActuator(Actuator):
 
         return torque
 
-    def to_mujoco(self) -> None:
-        # TODO: This should be moved elsewhere, extra models (M5, M6) should be also handled
-        raise NotImplementedError
 
-        message.bright("MX Actuator")
-        message.print_parameter("Input voltage", self.vin)
-        message.print_parameter("Firmware KP", self.kp)
+class LinearActuator(Actuator):
+    """
+    Represents a linear actuator 
+    """
 
-        message.bright("Parameters")
-        # Armature
-        armature = self.model.armature.value
-        message.print_parameter("Armature", armature)
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(testbench_class)
 
-        # Computing forcerange
-        max_force = (self.model.kt.value / self.model.R.value) * self.vin
-        message.print_parameter("Force range", max_force)
+        # Input voltage and (firmware) gain
+        self.vin: float = 12.0
+        self.kp: float = 15.0
 
-        # Computing kp
-        kp = max_force * self.error_gain * self.kp
-        message.print_parameter("Kp", kp)
+    def load_log(self, log: dict):
+        super().load_log(log)
 
-        # Computing damping
-        damping = self.model.friction_viscous.value
-        damping += self.model.R.value / (self.model.kt.value**2)
-        message.print_parameter("Damping", damping)
+        self.kp = log["kp"]
 
-        # Computing frictionloss
-        frictionloss = self.model.friction_base.value
-        message.print_parameter("Frictionloss", frictionloss)
+        if "vin" in log:
+            self.vin = log["vin"]
 
-        xml = f'<position kp="{kp}" forcerange="-{max_force} {max_force}" />\n'
-        xml += f'<joint damping="{damping}" armature="{armature}" frictionloss="{frictionloss}" />'
-        message.bright("XML:")
-        print(message.emphasis(xml))
+    def initialize(self):
+        # Torque constant [Nm/A] or [V/(rad/s)]
+        self.model.kt = Parameter(1.6, 1.0, 3.0)
 
-        if self.model.stribeck or self.model.load_dependent:
-            message.bright("Runtime updates required:")
-            print(
-                message.yellow(
-                    "# WARNING: frictionloss should be updated dynamically with this model"
-                )
-            )
-            print(message.yellow("# Please use the following computation: "))
-            if self.model.stribeck:
-                print(
-                    f"stribeck_coeff = exp(-(abs(velocity / {self.model.dtheta_stribeck.value}) ** {self.model.alpha.value}))"
-                )
+        # Motor resistance [Ohm]
+        self.model.R = Parameter(2.0, 1.0, 5.0)
 
-            print(f"frictionloss = {self.model.friction_base.value}")
-            if self.model.load_dependent:
-                print(
-                    f"frictionloss += {self.model.load_friction_base.value} * gearbox_torque"
-                )
-            if self.model.stribeck:
-                print(
-                    f"frictionloss += stribeck_coeff * {self.model.friction_stribeck.value}"
-                )
-                if self.model.load_dependent:
-                    print(
-                        f"frictionloss += {self.model.load_friction_stribeck.value} * gearbox_torque * stribeck_coeff"
-                    )
+        # Motor armature / apparent inertia [kg m^2]
+        self.model.armature = Parameter(0.005, 0.001, 0.05)
 
-            print()
-            if self.model.load_dependent:
-                print(
-                    message.yellow(
-                        "# gearbox_torque is the torque applied to the gearbox"
-                    )
-                )
-            if self.model.stribeck:
-                print(message.yellow("# velocity is the angular velocity of the motor"))
+    def get_extra_inertia(self) -> float:
+        return self.model.armature.value
+
+    def control_unit(self) -> str:
+        return "volts"
+
+    def compute_control(
+        self, position_error: float, q: float, dq: float
+    ) -> float | None:
+        duty_cycle = position_error * self.kp
+        duty_cycle = np.clip(duty_cycle, -1.0, 1.0)
+
+        return self.vin * duty_cycle
+
+    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+        # Volts to None means that the motor is disconnected
+        if control is None:
+            return 0.0
+
+        volts = control
+
+        # Torque produced
+        torque = self.model.kt.value * volts / self.model.R.value
+
+        # Back EMF
+        torque -= (self.model.kt.value**2) * dq / self.model.R.value
+
+        return torque
+
 
 
 actuators = {
     "mx64": lambda: MXActuator(Pendulum),
     "mx106": lambda: MXActuator(Pendulum),
+    "linear": lambda: LinearActuator(Pendulum),
     "erob80_100": lambda: Erob(Pendulum),
 }
