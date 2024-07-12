@@ -44,6 +44,7 @@ for log in logs.logs:
     q = [entry["position"] for entry in log["entries"]]
     goal_q = [entry["goal_position"] for entry in log["entries"]]
     speed = [entry["speed"] if "speed" in entry else 0.0 for entry in log["entries"]]
+    has_speed = any("speed" in entry for entry in log["entries"])
 
     dummy = DummyModel()
     dummy.set_actuator(actuators[args.actuator]())
@@ -52,7 +53,10 @@ for log in logs.logs:
     torque_enable = np.array([entry["torque_enable"] for entry in log["entries"]])
 
     # Using 2 x-shared subplots
-    f, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
+    if has_speed:
+        f, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
+    else:
+        f, (ax1, ax3) = plt.subplots(2, sharex=True)
 
     ax1.plot(ts, q, label="q")
     ax1.plot(ts, goal_q, label="goal_q", color="black", linestyle="--")
@@ -68,13 +72,14 @@ for log in logs.logs:
     ax1.set_ylabel("angle [rad]")
     ax1.grid()
 
-    ax2.plot(ts, speed, label="speed")
-    if args.sim:
-        for model_name, sim_speeds in zip(all_names, all_sim_speeds):
-            ax2.plot(ts, sim_speeds, label=f"{model_name}_speed")
-    ax2.set_ylabel("speed [rad/s]")
-    ax2.grid()
-    ax2.legend()
+    if has_speed:
+        ax2.plot(ts, speed, label="speed")
+        if args.sim:
+            for model_name, sim_speeds in zip(all_names, all_sim_speeds):
+                ax2.plot(ts, sim_speeds, label=f"{model_name}_speed")
+        ax2.set_ylabel("speed [rad/s]")
+        ax2.grid()
+        ax2.legend()
 
     # Using torque_enable color piecewise
     ax3.plot(ts, controls, label=dummy.actuator.control_unit())
