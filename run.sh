@@ -16,6 +16,7 @@ fi
 
 N=`ls output/fit_*.log|wc -w`
 N=$[$N + 1]
+mkdir -p output/
 
 python -m rham.fit --wandb --logdir $DATA \
 	--model $1 \
