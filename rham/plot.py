@@ -12,7 +12,6 @@ arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--params", type=str, default="params.json")
 arg_parser.add_argument("--actuator", type=str, required=True)
 arg_parser.add_argument("--reset_period", default=None, type=float)
-arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--sim", action="store_true")
 args = arg_parser.parse_args()
 
@@ -34,7 +33,7 @@ for log in logs.logs:
             all_names.append(model.name)
             simulator = simulate.Simulator(model)
             sim_q, sim_speed, sim_controls = simulator.rollout_log(
-                log, reset_period=args.reset_period, simulate_control=args.control
+                log, reset_period=args.reset_period, simulate_control=True
             )
             all_sim_q.append(np.array(sim_q))
             all_sim_speeds.append(np.array(sim_speed))
@@ -83,14 +82,13 @@ for log in logs.logs:
 
     # Using torque_enable color piecewise
     ax3.plot(ts, controls, label=dummy.actuator.control_unit())
-    if args.control:
-        if args.sim:
-            for model_name, sim_controls in zip(all_names, all_sim_controls):
-                ax3.plot(
-                    ts,
-                    sim_controls,
-                    label=f"{model_name}_{dummy.actuator.control_unit()}",
-                )
+    if args.sim:
+        for model_name, sim_controls in zip(all_names, all_sim_controls):
+            ax3.plot(
+                ts,
+                sim_controls,
+                label=f"{model_name}_{dummy.actuator.control_unit()}",
+            )
     # Shading the areas where torque is False
     ax3.fill_between(
         ts,

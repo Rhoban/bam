@@ -26,7 +26,6 @@ arg_parser.add_argument("--trials", type=int, default=100_000)
 arg_parser.add_argument("--workers", type=int, default=1)
 arg_parser.add_argument("--load-study", type=str, default=None)
 arg_parser.add_argument("--reset_period", default=None, type=float)
-arg_parser.add_argument("--control", action="store_true")
 arg_parser.add_argument("--wandb", action="store_true")
 arg_parser.add_argument("--set", type=str, default="")
 arg_parser.add_argument("--validation_kp", type=int, default=0)
@@ -51,7 +50,7 @@ if not args.eval and args.validation_kp > 0:
 def compute_score(model: Model, log: dict) -> float:
     simulator = simulate.Simulator(model)
     result = simulator.rollout_log(
-        log, reset_period=args.reset_period, simulate_control=args.control
+        log, reset_period=args.reset_period, simulate_control=True
     )
     positions = result[0]
     log_positions = np.array([entry["position"] for entry in log["entries"]])
@@ -106,16 +105,14 @@ def monitor(study, trial):
     elapsed = time.time() - last_log
 
     if args.wandb and wandb_run is None:
-        control = "c1" if args.control else "c0"
         wandb_run = wandb.init(
-            name=f"{args.output}_{args.model}_{control}_{args.logdir}",
+            name=f"{args.output}_{args.model}_{args.logdir}",
             # Set the project where this run will be logged
             project=f"{args.actuator}_identification",
             # Track hyperparameters and run metadata
             config={
                 "logdir": args.logdir,
-                "model": args.model,
-                "control": args.control,
+                "model": args.model
             },
         )
 
