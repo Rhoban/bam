@@ -1,4 +1,5 @@
 import argparse
+import socket
 from datetime import datetime
 import sys
 from multiprocessing import Process
@@ -112,7 +113,8 @@ def monitor(study, trial):
             # Track hyperparameters and run metadata
             config={
                 "logdir": args.logdir,
-                "model": args.model
+                "model": args.model,
+                "hostname": socket.gethostname(),
             },
         )
 
