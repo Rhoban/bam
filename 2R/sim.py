@@ -4,6 +4,8 @@ import time
 import json
 import mujoco
 import mujoco.viewer
+import placo
+from placo_utils.tf import tf
 from rham.model import load_model
 from rham.mujoco import MujocoController
 
@@ -72,6 +74,10 @@ if __name__ == "__main__":
     sim = MujocoSimulation2R()
     model = load_model(args.params)
 
+    this_directory = os.path.dirname(os.path.realpath(__file__))
+    robot = placo.RobotWrapper(this_directory + "/sw_106/robot.urdf", placo.Flags.ignore_collisions)
+    robot.set_T_world_frame("base", tf.rotation_matrix(np.pi, [1, 0, 0]))
+
     data = json.load(open(args.log))
     model.actuator.kp = data["kp"]
     print(f"Using kp: {model.actuator.kp}")
@@ -80,6 +86,7 @@ if __name__ == "__main__":
     if not args.replay:
         r1 = MujocoController(model, "R1", sim.model, sim.data)
         r2 = MujocoController(model, "R2", sim.model, sim.data)
+    mujoco.mj_resetData(sim.model, sim.data)
 
     while True:
         sim.reset()
@@ -106,10 +113,30 @@ if __name__ == "__main__":
                 entry_index += 1
                 entry["r1"]["sim_position"] = sim.data.joint("R1").qpos[0]
                 entry["r2"]["sim_position"] = sim.data.joint("R2").qpos[0]
+
+                entry["end_effector"] = {}
+                for position in "position", "goal_position", "sim_position":
+                    robot.set_joint("R1", entry["r1"][position])
+                    robot.set_joint("R2", entry["r2"][position])
+                    robot.update_kinematics()
+                    pos = robot.get_T_world_frame("end")[:3, 3]
+                    entry["end_effector"][position] = pos
+
                 if entry_index == len(data["entries"]):
                     running = False
 
         if args.plot:
+            for position in "position", "goal_position", "sim_position":
+                plt.plot(
+                    [entry["end_effector"][position][0] for entry in data["entries"]],
+                    [entry["end_effector"][position][2] for entry in data["entries"]],
+                    label=position,
+                )
+            plt.legend()
+            plt.grid()
+            plt.axis("equal")
+            plt.show()            
+
             for dof in "r1", "r2":
                 # Creating two subplots axises
                 f, (ax1, ax2) = plt.subplots(2, sharex=True)
@@ -126,7 +153,7 @@ if __name__ == "__main__":
 
                 errors = [read - sim for read, sim in zip(positions, sim_positions)]
                 ax2.plot(errors, color="black", label="Simulation error")
-                ax2.set_ylim(-0.1, 0.1)
+                ax2.set_ylim(-0.05, 0.05)
                 ax2.grid()
 
                 plt.title(args.params)
