@@ -19,7 +19,8 @@ class MujocoController:
         self.mujoco_data = mujoco_data
 
         self.joint_model = self.mujoco_model.joint(actuator)
-        self.joint_model.armature = model.actuator.get_extra_inertia()
+        self.joint_model.armature[:] = model.actuator.get_extra_inertia()
+
         self.joint_data = self.mujoco_data.joint(actuator)
         self.actuator_data = self.mujoco_data.actuator(actuator)
 
@@ -34,7 +35,7 @@ class MujocoController:
         torque = self.model.actuator.compute_torque(control, q, dq)
 
         # Applying the torque
-        self.actuator_data.ctrl = torque
+        self.actuator_data.ctrl[:] = torque
 
         # Updating friction parameters
         torque_external = (
@@ -54,6 +55,6 @@ class MujocoController:
         frictionloss, damping = self.model.compute_frictions(
             self.joint_data.qfrc_actuator[0], torque_external, dq
         )
-        self.joint_model.frictionloss = frictionloss
-        self.joint_model.damping = damping
+        self.joint_model.frictionloss[:] = frictionloss
+        self.joint_model.damping[:] = damping 
 
