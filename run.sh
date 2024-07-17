@@ -20,7 +20,6 @@ mkdir -p output/
 
 python -m rham.fit --wandb --logdir $DATA \
 	--model $1 \
-    	--control \
 	--workers 1 --trials 10000 \
 	--validation_kp $VAL_KP \
 	--actuator $ACTUATOR \
