@@ -38,7 +38,7 @@ class MujocoController:
 
         # Updating friction parameters
         torque_external = (
-            self.joint_data.qfrc_bias[0] + self.joint_data.qfrc_constraint[0]
+            -self.joint_data.qfrc_bias[0] + self.joint_data.qfrc_constraint[0]
         )
 
         # Removing all bias forces that were caused by friction
@@ -52,7 +52,7 @@ class MujocoController:
 
         # Updating friction parameters
         frictionloss, damping = self.model.compute_frictions(
-            torque, torque_external, dq
+            self.joint_data.qfrc_actuator[0], torque_external, dq
         )
         self.joint_model.frictionloss = frictionloss
         self.joint_model.damping = damping
