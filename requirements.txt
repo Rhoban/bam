@@ -3,6 +3,7 @@ protobuf==3.20
 numpy
 dynamixel_sdk
 optuna
+cmaes
 wandb
 matplotlib
 pygame
