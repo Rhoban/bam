@@ -146,6 +146,8 @@ if __name__ == "__main__":
             f, axs = plt.subplots(1, n, sharey=True)
             # Setting figure size
             f.set_size_inches(12, 4)
+        else:
+            axs = [None] * n
 
         for params, ax in zip(args.params, axs):
             # Loading rham model
