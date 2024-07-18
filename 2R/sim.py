@@ -5,8 +5,9 @@ import json
 import mujoco
 import mujoco.viewer
 import placo
+import pandas
 from placo_utils.tf import tf
-from rham.model import load_model
+from rham.model import load_model, Model as rhamModel
 from rham.mujoco import MujocoController
 
 
@@ -21,6 +22,9 @@ class MujocoSimulation2R:
             f"{this_directory}/sw_106/scene.xml"
         )
         self.data: mujoco.MjData = mujoco.MjData(self.model)
+
+        # Placo robot
+        self.robot = None
 
         self.viewer = None
         self.viewer_start = None
@@ -57,54 +61,43 @@ class MujocoSimulation2R:
 
         self.viewer.sync()
 
+    def simulate_log(
+        self, log: dict, model: rhamModel, replay: bool = False, render: bool = False
+    ):
+        if self.robot is None:
+            this_directory = os.path.dirname(os.path.realpath(__file__))
+            self.robot = placo.RobotWrapper(
+                this_directory + "/sw_106/robot.urdf", placo.Flags.ignore_collisions
+            )
+            self.robot.set_T_world_frame("base", tf.rotation_matrix(np.pi, [1, 0, 0]))
 
-if __name__ == "__main__":
-    import argparse
-    import matplotlib.pyplot as plt
+        # Updating actuator KP
+        model.actuator.kp = data["kp"]
 
-    args_parser = argparse.ArgumentParser()
-    args_parser.add_argument("--log", type=str, default="2R/log.json")
-    args_parser.add_argument("--params", type=str, default="params/mx106/m1.json")
-    args_parser.add_argument("--replay", action="store_true")
-    args_parser.add_argument("--render", action="store_true")
-    args_parser.add_argument("--loop", action="store_true")
-    args_parser.add_argument("--plot", action="store_true")
-    args = args_parser.parse_args()
+        # Creating rham controllers
+        if not replay:
+            r1 = MujocoController(model, "R1", sim.model, sim.data)
+            r2 = MujocoController(model, "R2", sim.model, sim.data)
 
-    sim = MujocoSimulation2R()
-    model = load_model(args.params)
-
-    this_directory = os.path.dirname(os.path.realpath(__file__))
-    robot = placo.RobotWrapper(this_directory + "/sw_106/robot.urdf", placo.Flags.ignore_collisions)
-    robot.set_T_world_frame("base", tf.rotation_matrix(np.pi, [1, 0, 0]))
-
-    data = json.load(open(args.log))
-    model.actuator.kp = data["kp"]
-    print(f"Using kp: {model.actuator.kp}")
-    log_t0 = data["entries"][0]["timestamp"]
-
-    if not args.replay:
-        r1 = MujocoController(model, "R1", sim.model, sim.data)
-        r2 = MujocoController(model, "R2", sim.model, sim.data)
-    mujoco.mj_resetData(sim.model, sim.data)
-
-    while True:
-        sim.reset()
+        # Setting initial configuration
+        self.data.joint("R1").qpos[0] = data["entries"][0]["r1"]["position"]
+        self.data.joint("R2").qpos[0] = data["entries"][0]["r2"]["position"]
+        log_t0 = data["entries"][0]["timestamp"]
+        self.reset()
         entry_index = 0
-        sim.data.joint("R1").qpos[0] = data["entries"][0]["r1"]["position"]
-        sim.data.joint("R2").qpos[0] = data["entries"][0]["r2"]["position"]
         running = True
 
         while running:
             entry = data["entries"][entry_index]
 
-            sim.step()
-            if args.render:
-                sim.render()
+            self.step()
+            if render:
+                self.render()
 
-            if args.replay:
-                sim.data.joint("R1").qpos[0] = entry["r1"]["position"]
-                sim.data.joint("R2").qpos[0] = entry["r2"]["position"]
+            if replay:
+                # If it's a replay, simply jump to the read position
+                self.data.joint("R1").qpos[0] = entry["r1"]["position"]
+                self.data.joint("R2").qpos[0] = entry["r2"]["position"]
             else:
                 r1.update(entry["r1"]["goal_position"])
                 r2.update(entry["r2"]["goal_position"])
@@ -116,48 +109,123 @@ if __name__ == "__main__":
 
                 entry["end_effector"] = {}
                 for position in "position", "goal_position", "sim_position":
-                    robot.set_joint("R1", entry["r1"][position])
-                    robot.set_joint("R2", entry["r2"][position])
-                    robot.update_kinematics()
-                    pos = robot.get_T_world_frame("end")[:3, 3]
+                    self.robot.set_joint("R1", entry["r1"][position])
+                    self.robot.set_joint("R2", entry["r2"][position])
+                    self.robot.update_kinematics()
+                    pos = self.robot.get_T_world_frame("end")[:3, 3]
                     entry["end_effector"][position] = pos
 
                 if entry_index == len(data["entries"]):
                     running = False
 
+
+if __name__ == "__main__":
+    import argparse
+    import matplotlib.pyplot as plt
+
+    args_parser = argparse.ArgumentParser()
+    args_parser.add_argument("--log", type=str, default="2R/log.json", nargs="+")
+    args_parser.add_argument("--params", type=str, default="params/mx106/m1.json", nargs="+")
+    args_parser.add_argument("--replay", action="store_true")
+    args_parser.add_argument("--render", action="store_true")
+    args_parser.add_argument("--plot", action="store_true")
+    args_parser.add_argument("--plot_joint", action="store_true")
+    args = args_parser.parse_args()
+
+    sim = MujocoSimulation2R()
+    maes = {}
+
+    for log in args.log:
+        # Loading log
+        data = json.load(open(log))
+        maes[log] = {}
+        n = len(args.params)
+
         if args.plot:
-            for position in "position", "goal_position", "sim_position":
-                plt.plot(
-                    [entry["end_effector"][position][0] for entry in data["entries"]],
-                    [entry["end_effector"][position][2] for entry in data["entries"]],
-                    label=position,
-                )
-            plt.legend()
-            plt.grid()
-            plt.axis("equal")
-            plt.show()            
+            # Creating n horizontal subplots
+            f, axs = plt.subplots(1, n, sharey=True)
+            # Setting figure size
+            f.set_size_inches(12, 4)
 
+        for params, ax in zip(args.params, axs):
+            # Loading rham model
+            model = load_model(params)
+
+            sim.simulate_log(data, model, args.replay, args.render)
+
+            mae = 0
             for dof in "r1", "r2":
-                # Creating two subplots axises
-                f, (ax1, ax2) = plt.subplots(2, sharex=True)
+                errors = [
+                    entry[dof]["position"] - entry[dof]["sim_position"]
+                    for entry in data["entries"]
+                ]
+                mae += np.mean(np.abs(errors))
+            mae /= 2
+            maes[log][params] = mae
 
-                goal_positions = [entry[dof]["goal_position"] for entry in data["entries"]]
-                positions = [entry[dof]["position"] for entry in data["entries"]]
-                sim_positions = [entry[dof]["sim_position"] for entry in data["entries"]]
+            if args.plot:
+                for position in "position", "goal_position", "sim_position":
+                    ax.plot(
+                        [entry["end_effector"][position][0] for entry in data["entries"]],
+                        [entry["end_effector"][position][2] for entry in data["entries"]],
+                        label=position,
+                        ls="--" if position == "goal_position" else "-",
+                    )
+                ax.legend()
+                ax.grid()
+                ax.axis("equal")
+                ax.set_title(f"{log}, {params}")
+                
 
-                ax1.plot(goal_positions, label=f"{dof} goal", color="red")
-                ax1.plot(positions, label=f"{dof} read", color="blue")
-                ax1.plot(sim_positions, label=f"{dof} sim", color="green")
-                ax1.grid()
-                ax1.legend()
+            if args.plot_joint:
+                for dof in "r1", "r2":
+                    # Creating two subplots axises
+                    f, (ax1, ax2) = plt.subplots(2, sharex=True)
 
-                errors = [read - sim for read, sim in zip(positions, sim_positions)]
-                ax2.plot(errors, color="black", label="Simulation error")
-                ax2.set_ylim(-0.05, 0.05)
-                ax2.grid()
+                    goal_positions = [
+                        entry[dof]["goal_position"] for entry in data["entries"]
+                    ]
+                    positions = [entry[dof]["position"] for entry in data["entries"]]
+                    sim_positions = [
+                        entry[dof]["sim_position"] for entry in data["entries"]
+                    ]
 
-                plt.title(args.params)
-                plt.show()
+                    ax1.plot(goal_positions, label=f"{dof} goal", color="red")
+                    ax1.plot(positions, label=f"{dof} read", color="blue")
+                    ax1.plot(sim_positions, label=f"{dof} sim", color="green")
+                    ax1.grid()
+                    ax1.legend()
 
-        if not args.loop:
-            break
+                    errors = [read - sim for read, sim in zip(positions, sim_positions)]
+                    mae = np.mean(np.abs(errors))
+                    print("MAE: ", mae)
+                    ax2.plot(errors, color="black", label="Simulation error")
+                    ax2.set_ylim(-0.05, 0.05)
+                    ax2.grid()
+
+                    plt.title(f"{log}, {params}")
+                    plt.show()
+        
+        plt.tight_layout()
+        plt.show()
+
+
+    total_mae = {params: [] for params in args.params}
+    for log in maes:
+        for params in maes[log]:
+            print(f"  {params}: {maes[log][params]}")
+            total_mae[params] += [maes[log][params]]
+
+    labels = [os.path.basename(log) for log in maes]
+    df = pandas.DataFrame(total_mae, index=labels)
+    df.plot(kind="bar")
+    plt.grid(axis="y")
+    # Setting x label with 45°, keeping the top aligned
+    plt.xticks(rotation=45, ha="right")
+    plt.title("MAE per log")
+    plt.tight_layout()
+    plt.show()
+    
+    
+    for params in total_mae:
+        print(f"Total MAE for {params}: {np.mean(total_mae[params])}")
