@@ -9,7 +9,7 @@ from . import logs
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
-arg_parser.add_argument("--params", type=str, default="params.json")
+arg_parser.add_argument("--params", type=str, default="params.json", nargs="+")
 arg_parser.add_argument("--actuator", type=str, required=True)
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--sim", action="store_true")
@@ -18,7 +18,7 @@ args = arg_parser.parse_args()
 logs = logs.Logs(args.logdir)
 
 if args.sim:
-    model_names = args.params.split(",")
+    model_names = args.params
 
 for log in logs.logs:
     print(log["filename"])
