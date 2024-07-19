@@ -12,16 +12,17 @@ from rham.mujoco import MujocoController
 
 
 class MujocoSimulation2R:
-    def __init__(self):
+    def __init__(self, actuator: str):
         """
         Loading the 2R simulation
         """
         this_directory = os.path.dirname(os.path.realpath(__file__))
 
         self.model: mujoco.MjModel = mujoco.MjModel.from_xml_path(
-            f"{this_directory}/sw_106/scene.xml"
+            f"{this_directory}/2r_{actuator}/scene.xml"
         )
         self.data: mujoco.MjData = mujoco.MjData(self.model)
+        self.actuator = actuator
 
         # Placo robot
         self.robot = None
@@ -67,7 +68,7 @@ class MujocoSimulation2R:
         if self.robot is None:
             this_directory = os.path.dirname(os.path.realpath(__file__))
             self.robot = placo.RobotWrapper(
-                this_directory + "/sw_106/robot.urdf", placo.Flags.ignore_collisions
+                this_directory + f"/2r_{self.actuator}/robot.urdf", placo.Flags.ignore_collisions
             )
             self.robot.set_T_world_frame("base", tf.rotation_matrix(np.pi, [1, 0, 0]))
 
@@ -130,9 +131,14 @@ if __name__ == "__main__":
     args_parser.add_argument("--render", action="store_true")
     args_parser.add_argument("--plot", action="store_true")
     args_parser.add_argument("--plot_joint", action="store_true")
+    args_parser.add_argument("--vertical", action="store_true")
+    args_parser.add_argument("--mae", action="store_true")
     args = args_parser.parse_args()
 
-    sim = MujocoSimulation2R()
+    # Loading rham model
+    model = load_model(args.params[0])
+
+    sim = MujocoSimulation2R(actuator=model.actuator_name)
     maes = {}
 
     for log in args.log:
@@ -143,7 +149,10 @@ if __name__ == "__main__":
 
         if args.plot:
             # Creating n horizontal subplots
-            f, axs = plt.subplots(1, n, sharey=True)
+            if args.vertical:
+                f, axs = plt.subplots(n, 1, sharex=True)
+            else:
+                f, axs = plt.subplots(1, n, sharey=True)
             # Setting figure size
             f.set_size_inches(12, 4)
         else:
@@ -176,7 +185,7 @@ if __name__ == "__main__":
                 ax.legend()
                 ax.grid()
                 ax.axis("equal")
-                ax.set_title(f"{log}, {params}")
+                ax.set_title(f"{os.path.basename(log)}, {params}")
                 
 
             if args.plot_joint:
@@ -208,26 +217,29 @@ if __name__ == "__main__":
                     plt.title(f"{log}, {params}")
                     plt.show()
         
+        if args.plot:
+            plt.tight_layout()
+            plt.show()
+
+
+    if args.mae:
+        total_mae = {params: [] for params in args.params}
+        for log in maes:
+            print(f"Log: {log}")
+            for params in maes[log]:
+                print(f"  {params}: {maes[log][params]}")
+                total_mae[params] += [maes[log][params]]
+
+        labels = [os.path.basename(log) for log in maes]
+        df = pandas.DataFrame(total_mae, index=labels)
+        df.plot(kind="bar")
+        plt.grid(axis="y")
+        # Setting x label with 45°, keeping the top aligned
+        plt.xticks(rotation=45, ha="right")
+        plt.title("MAE per log")
         plt.tight_layout()
         plt.show()
-
-
-    total_mae = {params: [] for params in args.params}
-    for log in maes:
-        for params in maes[log]:
-            print(f"  {params}: {maes[log][params]}")
-            total_mae[params] += [maes[log][params]]
-
-    labels = [os.path.basename(log) for log in maes]
-    df = pandas.DataFrame(total_mae, index=labels)
-    df.plot(kind="bar")
-    plt.grid(axis="y")
-    # Setting x label with 45°, keeping the top aligned
-    plt.xticks(rotation=45, ha="right")
-    plt.title("MAE per log")
-    plt.tight_layout()
-    plt.show()
-    
-    
-    for params in total_mae:
-        print(f"Total MAE for {params}: {np.mean(total_mae[params])}")
+        
+        
+        for params in total_mae:
+            print(f"Total MAE for {params}: {np.mean(total_mae[params])}")
