@@ -1,0 +1,55 @@
+<mujoco model="onshape">
+    <compiler angle="radian" />
+    <asset>
+        <mesh name="80i_v5" file="80i_v5.stl" />
+        <mesh name="bati_erob80" file="bati_erob80.stl" />
+        <mesh name="bras1" file="bras1.stl" />
+        <mesh name="bras2" file="bras2.stl" />
+        <mesh name="weight" file="weight.stl" />
+    </asset>
+
+    <default>
+        <default class="erob">
+            <joint armature="1." />
+        </default>
+        <geom conaffinity="2" />
+    </default>
+
+    <actuator>
+        <motor class="erob" name="R1" joint="R1" />
+        <motor class="erob" name="R2" joint="R2" />
+    </actuator>
+
+    <worldbody>
+        <body name="base" pos="0 0 1.0">
+            <site name="base" />
+            <inertial pos="8.59656e-05 -0.0280347 0.0562654"
+                quat="0.67348 0.199762 -0.209805 0.680075" mass="2.16222"
+                diaginertia="0.00433059 0.00354085 0.00321886" />
+            <geom pos="0 -0.0110361 0.062" quat="0 0 0 1" type="mesh"
+                rgba="0.615686 0.811765 0.929412 1" mesh="80i_v5" />
+            <geom pos="0 -0.0609361 0.002" quat="0.707107 0 0 0.707107" type="mesh"
+                rgba="0.47451 0.352941 0 1" mesh="bati_erob80" />
+            <body name="bras1" pos="0 -0.0704361 0.062" quat="0.5 -0.5 -0.5 -0.5">
+                <inertial pos="-0.125 0 -0.00750535" quat="0 0.707107 0 0.707107" mass="1.64016"
+                    diaginertia="0.0159418 0.0145856 0.00145734" />
+                <joint class="erob" name="R1" pos="0 0 0" axis="0 0 1" />
+                <geom pos="-0.125 0 -0.017" quat="0.707107 -0.707107 0 0" type="mesh"
+                    rgba="0.501961 0.501961 0.501961 1" mesh="bras1" />
+                <body name="segment2" pos="-0.25 0 0" quat="0 -0.707107 0.707107 0">
+                    <inertial pos="-1.44572e-05 0.204432 0.00238476"
+                        quat="0.46809 0.529875 -0.530191 0.467997" mass="12.857"
+                        diaginertia="0.2237 0.167934 0.0621469" />
+                    <joint class="erob" name="R2" pos="0 0 0" axis="0 0 1" />
+                    <geom pos="0 0 -0.0275" quat="0 0 -0.707107 0.707107" type="mesh"
+                        rgba="0.501961 0.501961 0.501961 1" mesh="bras2" />
+                    <geom pos="0 0 -0.0594" quat="0.707107 0.707107 0 0" type="mesh"
+                        rgba="0.615686 0.811765 0.929412 1" mesh="80i_v5" />
+                    <geom pos="0 0.25 0.0275" quat="0 0 -1 0" type="mesh"
+                        rgba="0.301961 0.301961 0.301961 1" mesh="weight" />
+                    <site name="end" pos="0 0.25 0.03" quat="0.707107 0 0 -0.707107" />
+                </body>
+            </body>
+        </body>
+    </worldbody>
+</mujoco>

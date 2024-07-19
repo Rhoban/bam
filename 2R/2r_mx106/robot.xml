@@ -29,7 +29,7 @@
         <motor class="mx106" name="R2" joint="R2" />
     </actuator>
 
-    <option noslip_iterations="1" ls_tolerance="0.0001" ls_iterations="1000" ></option>
+    <option noslip_iterations="1"></option>
 
     <worldbody>
         <body name="base_106" quat="0 1 0 0" pos="0 0 0.75">
