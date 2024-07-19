@@ -1,9 +1,14 @@
 #!/bin/bash
 
-ACTUATOR="erob80_100"
-VAL_KP=25
+#ACTUATOR="erob80_100"
+#VAL_KP=25
+
+ACTUATOR="erob80_50"
+VAL_KP=10
 
 #ACTUATOR="mx64"
+#VAL_KP=8
+
 #ACTUATOR="mx106"
 #VAL_KP=8
 
