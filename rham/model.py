@@ -14,6 +14,7 @@ class Model:
         name: str = None,
         title: str = "",
     ):
+        self.actuator_name = None
         self.name = name
         self.title = title
 
@@ -206,5 +207,6 @@ def load_model(json_file: str):
         data = json.load(f)
         model = models[data["model"]]()
         model.set_actuator(actuators[data["actuator"]]())
+        model.actuator_name = data["actuator"]
         model.load_parameters(json_file)
         return model
