@@ -33,14 +33,14 @@
             <body name="bras1" pos="0 -0.0704361 0.062" quat="0.5 -0.5 -0.5 -0.5">
                 <inertial pos="-0.125 0 -0.00750535" quat="0 0.707107 0 0.707107" mass="1.64016"
                     diaginertia="0.0159418 0.0145856 0.00145734" />
-                <joint class="erob" name="R1" pos="0 0 0" axis="0 0 1" />
+                <joint class="erob" name="R1" pos="0 0 0" axis="0 0 -1" />
                 <geom pos="-0.125 0 -0.017" quat="0.707107 -0.707107 0 0" type="mesh"
                     rgba="0.501961 0.501961 0.501961 1" mesh="bras1" />
                 <body name="segment2" pos="-0.25 0 0" quat="0 -0.707107 0.707107 0">
                     <inertial pos="-1.44572e-05 0.204432 0.00238476"
                         quat="0.46809 0.529875 -0.530191 0.467997" mass="12.857"
                         diaginertia="0.2237 0.167934 0.0621469" />
-                    <joint class="erob" name="R2" pos="0 0 0" axis="0 0 1" />
+                    <joint class="erob" name="R2" pos="0 0 0" axis="0 0 -1" />
                     <geom pos="0 0 -0.0275" quat="0 0 -0.707107 0.707107" type="mesh"
                         rgba="0.501961 0.501961 0.501961 1" mesh="bras2" />
                     <geom pos="0 0 -0.0594" quat="0.707107 0.707107 0 0" type="mesh"

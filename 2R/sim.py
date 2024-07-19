@@ -12,17 +12,17 @@ from rham.mujoco import MujocoController
 
 
 class MujocoSimulation2R:
-    def __init__(self, actuator: str):
+    def __init__(self, testbench: str):
         """
         Loading the 2R simulation
         """
         this_directory = os.path.dirname(os.path.realpath(__file__))
 
         self.model: mujoco.MjModel = mujoco.MjModel.from_xml_path(
-            f"{this_directory}/2r_{actuator}/scene.xml"
+            f"{this_directory}/2r_{testbench}/scene.xml"
         )
         self.data: mujoco.MjData = mujoco.MjData(self.model)
-        self.actuator = actuator
+        self.testbench = testbench
 
         # Placo robot
         self.robot = None
@@ -63,22 +63,34 @@ class MujocoSimulation2R:
         self.viewer.sync()
 
     def simulate_log(
-        self, log: dict, model: rhamModel, replay: bool = False, render: bool = False
+        self, log: dict, params: str, replay: bool = False, render: bool = False
     ):
         if self.robot is None:
             this_directory = os.path.dirname(os.path.realpath(__file__))
             self.robot = placo.RobotWrapper(
-                this_directory + f"/2r_{self.actuator}/robot.urdf", placo.Flags.ignore_collisions
+                this_directory + f"/2r_{self.testbench}/robot.urdf", placo.Flags.ignore_collisions
             )
-            self.robot.set_T_world_frame("base", tf.rotation_matrix(np.pi, [1, 0, 0]))
+            if self.testbench == "mx106":
+                self.robot.set_T_world_frame("base", tf.rotation_matrix(np.pi, [1, 0, 0]))
 
         # Updating actuator KP
-        model.actuator.kp = data["kp"]
+        if "," in params:
+            params_r1, params_r2 = params.split(",")
+            model_r1, model_r2 = load_model(params_r1), load_model(params_r2)
+        else:
+            model_r1, model_r2 = load_model(params), load_model(params)
+
+        if type(data["kp"]) is list:
+            model_r1.actuator.kp = data["kp"][0]
+            model_r2.actuator.kp = data["kp"][1]
+        else:
+            model_r1.actuator.kp = data["kp"]
+            model_r2.actuator.kp = data["kp"]
 
         # Creating rham controllers
         if not replay:
-            r1 = MujocoController(model, "R1", sim.model, sim.data)
-            r2 = MujocoController(model, "R2", sim.model, sim.data)
+            r1 = MujocoController(model_r1, "R1", sim.model, sim.data)
+            r2 = MujocoController(model_r2, "R2", sim.model, sim.data)
 
         # Setting initial configuration
         self.data.joint("R1").qpos[0] = data["entries"][0]["r1"]["position"]
@@ -127,6 +139,7 @@ if __name__ == "__main__":
     args_parser = argparse.ArgumentParser()
     args_parser.add_argument("--log", type=str, default="2R/log.json", nargs="+")
     args_parser.add_argument("--params", type=str, default="params/mx106/m1.json", nargs="+")
+    args_parser.add_argument("--testbench", type=str, required=True)
     args_parser.add_argument("--replay", action="store_true")
     args_parser.add_argument("--render", action="store_true")
     args_parser.add_argument("--plot", action="store_true")
@@ -136,9 +149,7 @@ if __name__ == "__main__":
     args = args_parser.parse_args()
 
     # Loading rham model
-    model = load_model(args.params[0])
-
-    sim = MujocoSimulation2R(actuator=model.actuator_name)
+    sim = MujocoSimulation2R(testbench=args.testbench)
     maes = {}
 
     for log in args.log:
@@ -153,16 +164,16 @@ if __name__ == "__main__":
                 f, axs = plt.subplots(n, 1, sharex=True)
             else:
                 f, axs = plt.subplots(1, n, sharey=True)
+
+            if n == 1:
+                axs = [axs]
             # Setting figure size
             f.set_size_inches(12, 4)
         else:
             axs = [None] * n
 
         for params, ax in zip(args.params, axs):
-            # Loading rham model
-            model = load_model(params)
-
-            sim.simulate_log(data, model, args.replay, args.render)
+            sim.simulate_log(data, params, args.replay, args.render)
 
             mae = 0
             for dof in "r1", "r2":
