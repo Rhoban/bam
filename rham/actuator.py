@@ -56,7 +56,7 @@ class Actuator:
 
 
 class Erob(Actuator):
-    def __init__(self, testbench_class: Testbench):
+    def __init__(self, testbench_class: Testbench, damping=2.0):
         super().__init__(testbench_class)
 
         # Maximum current [A]
@@ -64,6 +64,9 @@ class Erob(Actuator):
 
         # Maximum input voltage [V]
         self.max_volts = 48.0
+
+        # Damping factor
+        self.damping = damping
 
     def initialize(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
@@ -85,6 +88,9 @@ class Erob(Actuator):
 
         self.kp = log["kp"]
 
+        if "damping" in log:
+            self.damping = log["damping"]
+
     def control_unit(self) -> str:
         return "amps"
 
@@ -92,7 +98,7 @@ class Erob(Actuator):
         self, position_error: float, q: float, dq: float
     ) -> float | None:
         # Target velocity is assumed to be 0
-        amps = position_error * self.kp + 2 * np.sqrt(self.kp) * (0.0 - dq)
+        amps = position_error * self.kp + self.damping * np.sqrt(self.kp) * (0.0 - dq)
         amps = np.clip(amps, -self.max_amps, self.max_amps)
 
         return amps
@@ -188,7 +194,7 @@ class MXActuator(Actuator):
 
 class LinearActuator(Actuator):
     """
-    Represents a linear actuator 
+    Represents a linear actuator
     """
 
     def __init__(self, testbench_class: Testbench):
@@ -246,10 +252,10 @@ class LinearActuator(Actuator):
         return torque
 
 
-
 actuators = {
     "mx64": lambda: MXActuator(Pendulum),
     "mx106": lambda: MXActuator(Pendulum),
     "linear": lambda: LinearActuator(Pendulum),
-    "erob80_100": lambda: Erob(Pendulum),
+    "erob80_100": lambda: Erob(Pendulum, damping=2.0),
+    "erob80_50": lambda: Erob(Pendulum, damping=1.0),
 }
