@@ -115,7 +115,8 @@ class MujocoSimulation2R:
                 r1.update(entry["r1"]["goal_position"])
                 r2.update(entry["r2"]["goal_position"])
 
-            if log_t0 + sim.t >= entry["timestamp"]:
+            while running and (log_t0 + sim.t >= entry["timestamp"]):
+                entry = data["entries"][entry_index]
                 entry_index += 1
                 entry["r1"]["sim_position"] = sim.data.joint("R1").qpos[0]
                 entry["r2"]["sim_position"] = sim.data.joint("R2").qpos[0]
