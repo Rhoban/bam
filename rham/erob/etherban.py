@@ -43,12 +43,13 @@ class Client:
         target_position: float,
         target_velocity: float = 0.0,
         kp: float = 10.0,
+        damping: float = 2.0,
         max_amps: float = 12.0,
     ):
         status = self.statuses[index]
         position_error = target_position - status["position"]
         velocity_error = target_velocity - status["velocity"]
-        amps = position_error * kp + 2 * np.sqrt(kp) * velocity_error
+        amps = position_error * kp + damping * np.sqrt(kp) * velocity_error
         amps = max(-max_amps, min(max_amps, amps))
         self.set_order(index, "torque", amps)
 

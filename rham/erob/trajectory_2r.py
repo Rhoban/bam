@@ -12,7 +12,7 @@ class Trajectory:
 
 class SquareWave:
     def __init__(
-        self, z_min=-0.35, z_max=-0.25, x_range=0.5, strides=8, stride_duration=5.0
+        self, z_min=-0.3, z_max=-0.2, x_range=0.5, strides=6, stride_duration=8.0
     ):
 
         self.spline = placo.CubicSpline3D()
@@ -25,17 +25,40 @@ class SquareWave:
                 np.array([0.0, 0.0, 0.0]),
             )
             self.spline.add_point(
-                t + stride_duration / 4,
+                t + stride_duration / 8,
+                np.array([-(x_range / 2) + k * stride_length, 0, z_min]),
+                np.array([0.0, 0.0, 0.0]),
+            )
+
+            self.spline.add_point(
+                t + 2 * stride_duration / 8,
                 np.array([-(x_range / 2) + k * stride_length, 0, z_max]),
                 np.array([0.0, 0.0, 0.0]),
             )
             self.spline.add_point(
-                t + 2 * stride_duration / 4,
+                t + 3 * stride_duration / 8,
+                np.array([-(x_range / 2) + k * stride_length, 0, z_max]),
+                np.array([0.0, 0.0, 0.0]),
+            )
+
+            self.spline.add_point(
+                t + 4 * stride_duration / 8,
                 np.array([-(x_range / 2) + (k + 0.5) * stride_length, 0, z_max]),
                 np.array([0.0, 0.0, 0.0]),
             )
             self.spline.add_point(
-                t + 3 * stride_duration / 4,
+                t + 5 * stride_duration / 8,
+                np.array([-(x_range / 2) + (k + 0.5) * stride_length, 0, z_max]),
+                np.array([0.0, 0.0, 0.0]),
+            )
+
+            self.spline.add_point(
+                t + 6 * stride_duration / 8,
+                np.array([-(x_range / 2) + (k + 0.5) * stride_length, 0, z_min]),
+                np.array([0.0, 0.0, 0.0]),
+            )
+            self.spline.add_point(
+                t + 7 * stride_duration / 8,
                 np.array([-(x_range / 2) + (k + 0.5) * stride_length, 0, z_min]),
                 np.array([0.0, 0.0, 0.0]),
             )

@@ -7,14 +7,15 @@ from rham.trajectory import *
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--host", type=str, default="127.0.0.1")
-arg_parser.add_argument("--offset", type=float, required=True)
+arg_parser.add_argument("--offset", type=float, required=True, help="Offset in radians for the zero position")
 arg_parser.add_argument("--mass", type=float, required=True)
 arg_parser.add_argument("--arm_mass", type=float, required=True)
 arg_parser.add_argument("--length", type=float, required=True)
 arg_parser.add_argument("--logdir", type=str, required=True)
-arg_parser.add_argument("--trajectory", type=str, default="lift_and_drop")
+arg_parser.add_argument("--trajectory", type=str, default="sin_time_square")
 arg_parser.add_argument("--motor", type=str, required=True)
 arg_parser.add_argument("--kp", type=int, default=10.0)
+arg_parser.add_argument("--damping", type=float, required=True)
 args = arg_parser.parse_args()
 
 if args.trajectory not in trajectories:
@@ -38,6 +39,7 @@ data = {
     "arm_mass": args.arm_mass,
     "length": args.length,
     "kp": args.kp,
+    "damping": args.damping,
     "motor": args.motor,
     "trajectory": args.trajectory,
     "entries": []
@@ -48,7 +50,7 @@ while time.time() - start < trajectory.duration:
     goal_position, torque_enable = trajectory(t)
 
     if torque_enable:
-        eth.position_control(0, args.offset + goal_position, 0.0, args.kp)
+        eth.position_control(0, args.offset + goal_position, 0.0, args.kp, args.damping)
     else:
         eth.set_order(0, "torque", 0.0)
     eth.sync()

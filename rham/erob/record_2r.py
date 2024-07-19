@@ -22,6 +22,8 @@ args = args_parser.parse_args()
 
 robot = placo.RobotWrapper("2R/2r_erob/robot.urdf", placo.Flags.ignore_collisions)
 robot.update_kinematics()
+robot.set_joint_limits("R1", -np.pi / 2, np.pi / 2)
+robot.set_joint_limits("R2", -np.pi, 0.0)
 
 solver = placo.KinematicsSolver(robot)
 solver.mask_fbase(True)
@@ -71,7 +73,7 @@ if args.plot:
 
 def send_order(eth: Client, r1: float, r2: float):
     eth.position_control(0, args.r1_offset + r1, 0.0, args.kp, 2.0)
-    eth.position_control(1, args.r2_offset + r2, 0.0, args.kp, 1.0)
+    eth.position_control(1, args.r2_offset + r2, 0.0, args.kp / 2.0, 1.0)
 
 
 if not args.meshcat and not args.robot and not args.plot:
@@ -91,14 +93,34 @@ elif args.robot:
     eth.wait_stability(0)
     eth.wait_stability(1)
 
-    send_order(robot.get_joint("R1"), robot.get_joint("R2"))
-    time.sleep(5.0)
+    r1_traj = placo.CubicSpline()
+    r1_traj.add_point(0.0, eth.statuses[0]["position"] - args.r1_offset, 0.0)
+    r1_traj.add_point(5.0, robot.get_joint("R1"), 0.0)
+
+    r2_traj = placo.CubicSpline()
+    r2_traj.add_point(0.0, eth.statuses[1]["position"] - args.r2_offset, 0.0)
+    r2_traj.add_point(5.0, robot.get_joint("R2"), 0.0)
+
+    t_start = time.time()
+    t = 0
+    while t < 5.0:
+        t = time.time() - t_start
+        r1 = r1_traj.pos(t)
+        r2 = r2_traj.pos(t)
+        send_order(eth, r1, r2)
+        eth.sync()
+    
+    print("Reached initial target, starting trajectory")
+
+    # eth.set_order(0, "torque", 0)
+    # eth.set_order(1, "torque", 0)
+    # exit()
 
 t_start = time.time()
 data = {
     "mass": args.mass,
     "length": [0.25, 0.25],
-    "kp": args.kp,
+    "kp": [args.kp, args.kp / 2.0],
     "trajectory": "square_wave",
     "entries": [],
 }
@@ -113,14 +135,28 @@ while t < trajectory.duration:
 
     if args.meshcat:
         viz.display(robot.state.q)
+        point_viz("target", effector_task.target_world)
         time.sleep(0.01)
     elif args.robot:
-        send_order(robot.get_joint("R1"), robot.get_joint("R2"))
         status = eth.statuses
-        # TODO: Retrieve in statuses
+        entry = {"timestamp": t}
+        for dof, index, offset in [
+            ("r1", 0, args.r1_offset),
+            ("r2", 1, args.r2_offset),
+        ]:
+            entry[dof] = {
+                "position": status[index]["position"] - offset,
+                "goal_position": robot.get_joint(dof.upper()),
+                "current": status[index]["current"],
+                "current_demand": status[index]["torque_demand"],
+            }
+        data["entries"].append(entry)
+        send_order(eth, robot.get_joint("R1"), robot.get_joint("R2"))
+        eth.sync()
 
-    point_viz("target", effector_task.target_world)
+if args.robot:
+    filename = f"{args.logdir}/{args.trajectory}_{args.kp}.json"
+    with open(filename, "w") as f:
+        json.dump(data, f)
 
-filename = f"{args.logdir}_{trajectory}_{args.kp}.json"
-with open(filename, "w") as f:
-    json.dump(data, f)
+eth.stop()
