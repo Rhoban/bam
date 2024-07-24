@@ -1,0 +1,18 @@
+{
+    "kt": 2.209828156174588,
+    "R": 2.033661749312417,
+    "armature": 0.026016184370993383,
+    "friction_base": 1.0232526438525893e-05,
+    "friction_stribeck": 0.12195409579603411,
+    "load_friction_motor": 0.19800553725822115,
+    "load_friction_external": 0.022215529897348624,
+    "load_friction_motor_stribeck": 0.19859970173941574,
+    "load_friction_external_stribeck": 0.08710328264676681,
+    "load_friction_motor_quad": 0.009999930103371748,
+    "load_friction_external_quad": 7.326919843140997e-05,
+    "dtheta_stribeck": 1.7463251741328727,
+    "alpha": 1.142827788004191,
+    "friction_viscous": 0.05071566473605552,
+    "model": "m6",
+    "actuator": "mx106"
+}
