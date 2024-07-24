@@ -1,0 +1,198 @@
+<mujoco model="onshape">
+  <compiler angle="radian" />
+  <asset>
+    <mesh name="ecrou_2.5" file="ecrou_2.5.stl" />
+    <mesh name="m2.5x20__list_khwhpz53lblddb__20" file="m2.5x20__list_khwhpz53lblddb__20.stl" />
+    <mesh name="dc08_m01_dummy" file="dc08_m01_dummy.stl" />
+    <mesh name="hn05-i101" file="hn05-i101.stl" />
+    <mesh name="base_mx106" file="base_mx106.stl" />
+    <mesh name="m2.5x6__list_khwhpz53lblddb__6" file="m2.5x6__list_khwhpz53lblddb__6.stl" />
+    <mesh name="mid_part" file="mid_part.stl" />
+    <mesh name="dc05_m01_dummy" file="dc05_m01_dummy.stl" />
+    <mesh name="first_segment_mix" file="first_segment_mix.stl" />
+    <mesh name="m2.5x12__list_khwhpz53lblddb__12" file="m2.5x12__list_khwhpz53lblddb__12.stl" />
+    <mesh name="sw_mx64_segment" file="sw_mx64_segment.stl" />
+    <mesh name="ecrou_4" file="ecrou_4.stl" />
+    <mesh name="weight_985" file="weight_985.stl" />
+    <mesh name="m4x25__list_ghzg3zmty1cemm__30" file="m4x25__list_ghzg3zmty1cemm__30.stl" />
+  </asset>
+
+  <default>
+    <default class="mx106">
+        <joint armature="1." />
+    </default>
+    <geom conaffinity="2" />
+  </default>
+
+  <default>
+    <default class="mx64">
+        <joint armature="1." />
+    </default>
+    <geom conaffinity="2" />
+  </default>
+
+  <actuator>
+    <motor class="mx106" name="R1" joint="R1" />
+    <motor class="mx64" name="R2" joint="R2" />
+  </actuator>
+  <option noslip_iterations="1"></option>
+
+  <worldbody>
+    <body name="base_106" quat="0 1 0 0" pos="0 0 0.75">
+      <site name="base" />
+      <inertial pos="2.78082e-06 0.000173734 0.032547"
+        quat="0.999963 0.0086095 9.36959e-05 -0.000655537" mass="0.206556"
+        diaginertia="0.000135916 0.000132898 9.79608e-05" />
+      <geom pos="0.011 0.01347 0.007" quat="0.5 -0.5 -0.5 0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="ecrou_2.5" />
+      <geom pos="0.0173 -0.03097 0.0148" quat="0.5 -0.5 -0.5 0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x20__list_khwhpz53lblddb__20" />
+      <geom pos="0 -3e-05 0.0548" quat="0.707107 0.707107 0 0" type="mesh"
+        rgba="0.498039 0.498039 0.498039 1" mesh="dc08_m01_dummy" />
+      <geom pos="-0.0173 0.01347 0.0148" quat="0 0.707107 0.707107 0" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="ecrou_2.5" />
+      <geom pos="0.0173 0.01347 0.0148" quat="0 0.707107 0.707107 0" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="ecrou_2.5" />
+      <geom pos="0.011 0.03097 0.007" quat="0.5 0.5 -0.5 -0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x20__list_khwhpz53lblddb__20" />
+      <geom pos="0.011 -0.03097 0.007" quat="0.5 -0.5 -0.5 0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x20__list_khwhpz53lblddb__20" />
+      <geom pos="-0.0173 -0.03097 0.0148" quat="0.5 -0.5 -0.5 0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x20__list_khwhpz53lblddb__20" />
+      <geom pos="0 -6e-05 0.0548" quat="0.707107 0.707107 0 0" type="mesh"
+        rgba="0.8 0.776471 0.713726 1" mesh="hn05-i101" />
+      <geom pos="-0.011 0.01347 0.007" quat="0.5 -0.5 -0.5 0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="ecrou_2.5" />
+      <geom pos="-0.0173 0.03097 0.0148" quat="0.5 0.5 -0.5 -0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x20__list_khwhpz53lblddb__20" />
+      <geom pos="-0.011 0.03097 0.007" quat="0.5 0.5 -0.5 -0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x20__list_khwhpz53lblddb__20" />
+      <geom pos="-0.011 -0.03097 0.007" quat="0.5 -0.5 -0.5 0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x20__list_khwhpz53lblddb__20" />
+      <geom pos="0.0173 0.03097 0.0148" quat="0.5 0.5 -0.5 -0.5" type="mesh"
+        rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x20__list_khwhpz53lblddb__20" />
+      <geom pos="0 0 0.0548" quat="0.707107 0.707107 0 0" type="mesh"
+        rgba="0.917647 0.917647 0.917647 1" mesh="base_mx106" />
+      <body name="base" pos="0 0 0">
+        <inertial pos="0 0 0" mass="1e-09" diaginertia="0 0 0" />
+      </body>
+      <body name="first_segment_mix" pos="0 -0.02603 0.0548" quat="0.707107 -0.707107 0 0">
+        <inertial pos="5.57459e-09 -0.138051 0.026169" quat="0.707647 0.706567 0 0" mass="0.211448"
+          diaginertia="0.000602098 0.000561943 8.00351e-05" />
+        <joint name="R1" pos="0 0 0" axis="0 0 1" range="-1.91986 1.91986" />
+        <geom pos="-0.011 0 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="-0.00777817 -0.00777817 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0 -0.047 0.02597" quat="0 0 0 -1" type="mesh" rgba="0.917647 0.917647 0.917647 1"
+          mesh="mid_part" />
+        <geom pos="0 0.011 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0 -0.18 0.026" quat="0 -1 0 0" type="mesh" rgba="0.231373 0.380392 0.705882 1"
+          mesh="dc05_m01_dummy" />
+        <geom pos="0.00777817 0.00777817 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0 -0.002 0.026" quat="0 -1 0 0" type="mesh" rgba="0.615686 0.811765 0.929412 1"
+          mesh="first_segment_mix" />
+        <geom pos="-0.009 -0.0823234 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x12__list_khwhpz53lblddb__12" />
+        <geom pos="-0.00777817 -0.00777817 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="-0.00777817 0.00777817 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0.00777817 0.00777817 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0.011 0 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0 -0.011 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0.009 -0.0353234 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x12__list_khwhpz53lblddb__12" />
+        <geom pos="-0.009 -0.0353234 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x12__list_khwhpz53lblddb__12" />
+        <geom pos="0.011 0 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0.00777817 -0.00777817 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0 -0.0706468 0.02597" quat="1 0 0 0" type="mesh"
+          rgba="0.917647 0.917647 0.917647 1" mesh="mid_part" />
+        <geom pos="0 -0.002 0.02594" quat="0 0 0 -1" type="mesh" rgba="0.615686 0.811765 0.929412 1"
+          mesh="first_segment_mix" />
+        <geom pos="0 0.011 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="-0.00777817 0.00777817 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="-0.011 0 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0.009 -0.0823234 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x12__list_khwhpz53lblddb__12" />
+        <geom pos="0.009 -0.0353234 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x12__list_khwhpz53lblddb__12" />
+        <geom pos="0 -0.011 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="-0.009 -0.0823234 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x12__list_khwhpz53lblddb__12" />
+        <geom pos="0.00777817 -0.00777817 0.05694" quat="0.707107 0 0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+        <geom pos="0.009 -0.0823234 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x12__list_khwhpz53lblddb__12" />
+        <geom pos="-0.009 -0.0353234 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+          rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x12__list_khwhpz53lblddb__12" />
+        <geom pos="0 -0.18 0.04564" quat="1 0 0 0" type="mesh" rgba="0.8 0.776471 0.713726 1"
+          mesh="hn05-i101" />
+        <body name="sw_segment_64" pos="0 -0.18 0.0025" quat="1 0 0 0">
+          <inertial pos="0 -0.177175 0.0233766" quat="0.499985 0.500015 -0.500015 0.499985"
+            mass="1.04661" diaginertia="0.00334693 0.00198375 0.00143404" />
+          <joint name="R2" pos="0 0 0" axis="0 0 1" range="-2.61799 2.61799" />
+          <geom pos="0 0.18 0.02077" quat="0 0 0 1" type="mesh" rgba="0.615686 0.811765 0.929412 1"
+            mesh="sw_mx64_segment" />
+          <geom pos="0.011 0 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="-0.011 0 0.05174" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0 -0.14 0.03487" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="ecrou_4" />
+          <geom pos="0 -0.18 0.02012" quat="0.707107 -0.707107 0 0" type="mesh"
+            rgba="0.301961 0.301961 0.301961 1" mesh="weight_985" />
+          <geom pos="-0.00777817 -0.00777817 0.05174" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0 0.011 0.05174" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="-0.011 0 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0 -0.18 0.03487" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="ecrou_4" />
+          <geom pos="-0.00777817 0.00777817 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0 -0.011 0.05174" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0 -0.14 0.01347" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m4x25__list_ghzg3zmty1cemm__30" />
+          <geom pos="0 0.011 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0 0.18 0.02597" quat="0 -1 0 0" type="mesh" rgba="0.615686 0.811765 0.929412 1"
+            mesh="sw_mx64_segment" />
+          <geom pos="0.00777817 -0.00777817 0.05174" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="-0.00777817 -0.00777817 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0.00777817 0.00777817 0.05174" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0 -0.011 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0.00777817 -0.00777817 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="-0.00777817 0.00777817 0.05174" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0 -0.18 0.01347" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m4x25__list_ghzg3zmty1cemm__30" />
+          <geom pos="0.011 0 0.05174" quat="0.707107 0 0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <geom pos="0.00777817 0.00777817 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
+            rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
+          <site name="end" pos="0 -0.18 0.02337" quat="0.707107 0.707107 0 0" />
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
