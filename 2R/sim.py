@@ -70,7 +70,7 @@ class MujocoSimulation2R:
             self.robot = placo.RobotWrapper(
                 this_directory + f"/2r_{self.testbench}/robot.urdf", placo.Flags.ignore_collisions
             )
-            if self.testbench == "mx106":
+            if self.testbench in ["mx106", "mx64", "mx_mix"]:
                 self.robot.set_T_world_frame("base", tf.rotation_matrix(np.pi, [1, 0, 0]))
 
         # Updating actuator KP
@@ -196,7 +196,9 @@ if __name__ == "__main__":
                     )
                 ax.legend()
                 ax.grid()
-                ax.axis("equal")
+                ax.set_aspect('equal',adjustable='box')
+                ax.set_xlim(-0.22, 0.22)
+                ax.set_ylim(-0.4, -0.2)
                 ax.set_title(f"{os.path.basename(log)}, {params}")
                 
 
