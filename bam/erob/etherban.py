@@ -5,7 +5,7 @@ import threading
 import os
 import time
 from . import etherban_pb2 as messages
-from rham.trajectory import cubic_interpolate
+from bam.trajectory import cubic_interpolate
 
 
 class Client:

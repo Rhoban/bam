@@ -3,7 +3,7 @@ import datetime
 import argparse
 import time
 from .etherban import Client
-from rham.trajectory import *
+from bam.trajectory import *
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--host", type=str, default="127.0.0.1")

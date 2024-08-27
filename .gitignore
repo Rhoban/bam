@@ -6,4 +6,4 @@ data/
 params.json
 build/
 dist/
-rham.egg-info/
+bam.egg-info/

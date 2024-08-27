@@ -23,7 +23,7 @@ N=`ls output/fit_*.log|wc -w`
 N=$[$N + 1]
 mkdir -p output/
 
-python -m rham.fit --wandb --logdir $DATA \
+python -m bam.fit --wandb --logdir $DATA \
 	--model $1 \
 	--workers 1 --trials 10000 \
 	--validation_kp $VAL_KP \

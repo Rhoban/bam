@@ -7,8 +7,8 @@ import mujoco.viewer
 import placo
 import pandas
 from placo_utils.tf import tf
-from rham.model import load_model, Model as rhamModel
-from rham.mujoco import MujocoController
+from bam.model import load_model
+from bam.mujoco import MujocoController
 
 
 class MujocoSimulation2R:
@@ -87,7 +87,7 @@ class MujocoSimulation2R:
             model_r1.actuator.kp = data["kp"]
             model_r2.actuator.kp = data["kp"]
 
-        # Creating rham controllers
+        # Creating bam controllers
         if not replay:
             r1 = MujocoController(model_r1, "R1", sim.model, sim.data)
             r2 = MujocoController(model_r2, "R2", sim.model, sim.data)
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     args_parser.add_argument("--mae", action="store_true")
     args = args_parser.parse_args()
 
-    # Loading rham model
+    # Loading bam model
     sim = MujocoSimulation2R(testbench=args.testbench)
     maes = {}
 
