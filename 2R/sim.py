@@ -63,7 +63,7 @@ class MujocoSimulation2R:
         self.viewer.sync()
 
     def simulate_log(
-        self, log: dict, params: str, replay: bool = False, render: bool = False
+        self, data: dict, params: str, replay: bool = False, render: bool = False
     ):
         if self.robot is None:
             this_directory = os.path.dirname(os.path.realpath(__file__))
@@ -89,8 +89,8 @@ class MujocoSimulation2R:
 
         # Creating rham controllers
         if not replay:
-            r1 = MujocoController(model_r1, "R1", sim.model, sim.data)
-            r2 = MujocoController(model_r2, "R2", sim.model, sim.data)
+            r1 = MujocoController(model_r1, "R1", self.model, self.data)
+            r2 = MujocoController(model_r2, "R2", self.model, self.data)
 
         # Setting initial configuration
         self.data.joint("R1").qpos[0] = data["entries"][0]["r1"]["position"]
@@ -115,11 +115,11 @@ class MujocoSimulation2R:
                 r1.update(entry["r1"]["goal_position"])
                 r2.update(entry["r2"]["goal_position"])
 
-            while running and (log_t0 + sim.t >= entry["timestamp"]):
+            while running and (log_t0 + self.t >= entry["timestamp"]):
                 entry = data["entries"][entry_index]
                 entry_index += 1
-                entry["r1"]["sim_position"] = sim.data.joint("R1").qpos[0]
-                entry["r2"]["sim_position"] = sim.data.joint("R2").qpos[0]
+                entry["r1"]["sim_position"] = self.data.joint("R1").qpos[0]
+                entry["r2"]["sim_position"] = self.data.joint("R2").qpos[0]
 
                 entry["end_effector"] = {}
                 for position in "position", "goal_position", "sim_position":
