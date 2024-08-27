@@ -5,7 +5,7 @@ import time
 from placo_utils.visualization import robot_viz, point_viz
 from placo_utils.tf import tf
 from .etherban import Client
-from .trajectory_2r import SquareWave
+from .trajectory_2r import SquareWave, TriangularWave, Square, Circle
 import argparse
 
 args_parser = argparse.ArgumentParser()
@@ -33,8 +33,14 @@ effector_task.mask.set_axises("xz")
 
 solver.add_regularization_task(1e-3)
 
+if args.trajectory == "square":
+    trajectory = Square()
+if args.trajectory == "circle":
+    trajectory = Circle()
 if args.trajectory == "square_wave":
     trajectory = SquareWave()
+if args.trajectory == "triangular_wave":
+    trajectory = TriangularWave()
 else:
     print(f"Unknown trajectory: {args.trajectory}")
 
@@ -159,4 +165,4 @@ if args.robot:
     with open(filename, "w") as f:
         json.dump(data, f)
 
-eth.stop()
+    eth.stop()
