@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
     args_parser = argparse.ArgumentParser()
     args_parser.add_argument("--log", type=str, default="2R/log.json", nargs="+")
-    args_parser.add_argument("--params", type=str, default="params/mx106/m1.json", nargs="+")
+    args_parser.add_argument("--params", type=str, default=[], nargs="+")
     args_parser.add_argument("--testbench", type=str, required=True)
     args_parser.add_argument("--replay", action="store_true")
     args_parser.add_argument("--render", action="store_true")
