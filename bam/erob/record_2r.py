@@ -127,7 +127,7 @@ data = {
     "mass": args.mass,
     "length": [0.25, 0.25],
     "kp": [args.kp, args.kp / 2.0],
-    "trajectory": "square_wave",
+    "trajectory": args.trajectory,
     "entries": [],
 }
 
