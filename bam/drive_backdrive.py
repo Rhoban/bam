@@ -8,8 +8,9 @@ arg_parser.add_argument("--params", type=str, default="params.json")
 arg_parser.add_argument("--max_torque", type=float, required=True)
 args = arg_parser.parse_args()
 
-model = load_model(args.params)
+plt.figure(figsize=(3, 2))
 
+model = load_model(args.params)
 for velocity in range(10):
     torques = np.linspace(0, args.max_torque, 500)
     lows = []
@@ -30,13 +31,26 @@ for velocity in range(10):
         lows.append(external_torque_low)
         highs.append(external_torque_high)
             
-    plt.plot(torques, lows, color="blue", label="drive" if velocity == 0 else None, alpha=np.exp(-velocity/2))
-    plt.plot(torques, highs, color="red", label="back-drive" if velocity == 0 else None, alpha=np.exp(-velocity/2))
+    plt.plot(torques, lows, color="tab:blue", label="Drive" if velocity == 0 else None, alpha=np.exp(-velocity/2))
+    plt.plot(torques, highs, color="tab:red", label="Backdrive" if velocity == 0 else None, alpha=np.exp(-velocity/2))
 
-plt.plot([0, args.max_torque], [0, args.max_torque], color="black", linestyle="--")
-plt.xlabel("Motor Torque [Nm]")
-plt.ylabel("External Torque [Nm]")
-plt.title(model.title)
-plt.legend()
+plt.plot([0, args.max_torque], [0, args.max_torque], color="black", linestyle="--", label=r"$\tau_f = 0$")
+plt.xlabel(r"$\tau_m$ [N.m]")
+plt.ylabel(r"$-\tau_e$ [N.m]")
+
+title = r"$\mathcal{M}_1$"
+if "M2" in model.title:
+    title = r"$\mathcal{M}_2$"
+elif "M3" in model.title:
+    title = r"$\mathcal{M}_3$"
+elif "M4" in model.title:
+    title = r"$\mathcal{M}_4$"
+elif "M5" in model.title:
+    title = r"$\mathcal{M}_5$"
+elif "M6" in model.title:
+    title = r"$\mathcal{M}_6$"
+
+plt.title(title)
+plt.legend(ncol=3)
 plt.grid()
 plt.show()
