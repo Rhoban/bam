@@ -1,5 +1,11 @@
 # BAM: Better Actuator Model
 
+This repository implements the method presented in [this article](TODO), 
+for the identification and simulation of extended friction models for servo actuators. The logs used 
+in the article for the identification of Dynamixel MX-64, Dynamixel MX-106, eRob80:50 and
+eRob80:100, as well as validation logs obtained on 2R arms are available [here](https://drive.google.com/drive/folders/1SwVCcpJko7ZBsmSTuu3G_ZipVQFGZ11N?usp=drive_link).
+
+
 ## Setup
 
 **TODO**: Picture of the setup
@@ -7,6 +13,8 @@
 When $\alpha = 0$, the pendulum is downward.
 
 ## Recording raw data
+
+
 
 ### Dynamixel
 

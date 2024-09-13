@@ -31,8 +31,8 @@ for velocity in range(10):
         lows.append(external_torque_low)
         highs.append(external_torque_high)
             
-    plt.plot(torques, lows, color="tab:blue", label="Drive" if velocity == 0 else None, alpha=np.exp(-velocity/2))
-    plt.plot(torques, highs, color="tab:red", label="Backdrive" if velocity == 0 else None, alpha=np.exp(-velocity/2))
+    plt.plot(torques, lows, color="tab:blue", label=r"$\tau_{drive}(\tau_m)$" if velocity == 0 else None, alpha=np.exp(-velocity/2))
+    plt.plot(torques, highs, color="tab:red", label=r"$\tau_{backdrive}(\tau_m)$" if velocity == 0 else None, alpha=np.exp(-velocity/2))
 
 plt.plot([0, args.max_torque], [0, args.max_torque], color="black", linestyle="--", label=r"$\tau_f = 0$")
 plt.xlabel(r"$\tau_m$ [N.m]")
@@ -52,5 +52,7 @@ elif "M6" in model.title:
 
 plt.title(title)
 plt.legend(ncol=3)
+plt.xlim(0, args.max_torque)
+plt.ylim(0, args.max_torque)
 plt.grid()
 plt.show()
