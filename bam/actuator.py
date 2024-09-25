@@ -190,7 +190,8 @@ class MXActuator(Actuator):
         torque -= (self.model.kt.value**2) * dq / self.model.R.value
 
         return torque
-    
+
+
 class XC330M288T(MXActuator):
     """
     XC330M288T
@@ -227,6 +228,10 @@ class XC330M288T(MXActuator):
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.001, 0.0001, 0.001)
+
+        # self.model.max_friction_base = 10.0
+        # self.model.max_load_friction = 1.0
+        # self.model.max_viscous_friction = 30.0
 
 
 class LinearActuator(Actuator):
@@ -287,6 +292,7 @@ class LinearActuator(Actuator):
         torque -= (self.model.kt.value**2) * dq / self.model.R.value
 
         return torque
+
 
 actuators = {
     "mx64": lambda: MXActuator(Pendulum),
