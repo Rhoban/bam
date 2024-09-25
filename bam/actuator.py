@@ -221,10 +221,10 @@ class XC330M288T(MXActuator):
 
     def initialize(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.model.kt = Parameter(1.6, 1.0, 3.0)
+        self.model.kt = Parameter(1.6, 0.1, 3.0)
 
         # Motor resistance [Ohm]
-        self.model.R = Parameter(2.0, 1.0, 4.0)
+        self.model.R = Parameter(2.0, 1.0, 8.0)
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.001, 0.0001, 0.001)
