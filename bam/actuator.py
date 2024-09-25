@@ -252,10 +252,19 @@ class LinearActuator(Actuator):
         return torque
 
 
+class XC330M288T(Actuator):
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(testbench_class)
+
+        self.vin: float = 5.0
+        self.kp: float = 800.0
+
+
 actuators = {
     "mx64": lambda: MXActuator(Pendulum),
     "mx106": lambda: MXActuator(Pendulum),
     "linear": lambda: LinearActuator(Pendulum),
     "erob80_100": lambda: Erob(Pendulum, damping=2.0),
     "erob80_50": lambda: Erob(Pendulum, damping=1.0),
+    "xc330m288t": lambda: XC330M288T(Pendulum),
 }
