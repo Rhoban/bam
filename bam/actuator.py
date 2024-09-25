@@ -204,8 +204,8 @@ class XC330M288T(MXActuator):
         self.kp: float = 1100.0
 
         # This gain, if multiplied by a position error and firmware KP, gives duty cycle
-        # It was determined using an oscilloscope and MX actuators
-        self.error_gain = 0.00575504
+        # It was determined using an oscilloscope and XC actuators
+        self.error_gain = 0.002877778
 
         # Maximum allowable duty cycle, also determined with oscilloscope
         self.max_pwm = 1.0
@@ -223,7 +223,7 @@ class XC330M288T(MXActuator):
         self.model.kt = Parameter(1.6, 1.0, 3.0)
 
         # Motor resistance [Ohm]
-        self.model.R = Parameter(2.0, 1.0, 5.0)
+        self.model.R = Parameter(2.0, 1.0, 4.0)
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.001, 0.0001, 0.001)
