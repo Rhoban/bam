@@ -190,6 +190,43 @@ class MXActuator(Actuator):
         torque -= (self.model.kt.value**2) * dq / self.model.R.value
 
         return torque
+    
+class XC330M288T(MXActuator):
+    """
+    XC330M288T
+    """
+
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(testbench_class)
+
+        # Input voltage and (firmware) gain
+        self.vin: float = 5.1
+        self.kp: float = 1100.0
+
+        # This gain, if multiplied by a position error and firmware KP, gives duty cycle
+        # It was determined using an oscilloscope and MX actuators
+        self.error_gain = 0.00575504
+
+        # Maximum allowable duty cycle, also determined with oscilloscope
+        self.max_pwm = 1.0
+
+    def load_log(self, log: dict):
+        super().load_log(log)
+
+        self.kp = log["kp"]
+
+        if "vin" in log:
+            self.vin = log["vin"]
+
+    def initialize(self):
+        # Torque constant [Nm/A] or [V/(rad/s)]
+        self.model.kt = Parameter(1.6, 1.0, 3.0)
+
+        # Motor resistance [Ohm]
+        self.model.R = Parameter(2.0, 1.0, 5.0)
+
+        # Motor armature / apparent inertia [kg m^2]
+        self.model.armature = Parameter(0.001, 0.0001, 0.001)
 
 
 class LinearActuator(Actuator):
@@ -250,15 +287,6 @@ class LinearActuator(Actuator):
         torque -= (self.model.kt.value**2) * dq / self.model.R.value
 
         return torque
-
-
-class XC330M288T(Actuator):
-    def __init__(self, testbench_class: Testbench):
-        super().__init__(testbench_class)
-
-        self.vin: float = 5.0
-        self.kp: float = 800.0
-
 
 actuators = {
     "mx64": lambda: MXActuator(Pendulum),
