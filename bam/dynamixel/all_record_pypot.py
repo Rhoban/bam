@@ -8,15 +8,19 @@ arg_parser.add_argument("--mass", type=float, required=True)
 arg_parser.add_argument("--length", type=float, required=True)
 arg_parser.add_argument("--motor", type=str, required=True)
 arg_parser.add_argument("--port", type=str, default="/dev/ttyUSB0")
+arg_parser.add_argument("--id", type=int, required=True)
 arg_parser.add_argument("--logdir", type=str, required=True)
+arg_parser.add_argument("--vin", type=float, default=5.1)
 arg_parser.add_argument("--speak", action="store_true")
 args = arg_parser.parse_args()
 
-kps = [4, 8, 16, 32]
+kps = [130, 275, 550, 1100]
 trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
 
-command_base = f"python3 dynamixel/record.py --mass {args.mass} --length {args.length}"
-command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor}"
+command_base = (
+    f"python3 -m bam.dynamixel.record_pypot --mass {args.mass} --length {args.length}"
+)
+command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor} --id {args.id} --vin {args.vin}"
 
 
 for kp in kps:

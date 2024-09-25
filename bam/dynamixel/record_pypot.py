@@ -54,9 +54,9 @@ data = {
 def read_data(dxl, id):
     position = dxl.get_present_position([args.id])[0]
     position = np.deg2rad(position)
-    print(position)
 
     speed = dxl.get_present_velocity([args.id])[0]
+    speed = dxl.deg2rad(speed)
 
     load = 0  # TMP
 
