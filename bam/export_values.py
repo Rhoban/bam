@@ -1,4 +1,4 @@
-from .model import models
+from .model import models, load_model
 from .actuator import actuators
 import argparse
 
@@ -8,8 +8,9 @@ parser.add_argument("--kp_firmware", type=int, default=1100, help="KP_FIRMWARE v
 args = parser.parse_args()
 
 # TODO: Load model from JSON identified file
-model = models["m1"]()
-model.set_actuator(actuators["xc330m288t"]())
+model = load_model("params.json")
+# model = models["m1"]()
+# model.set_actuator(actuators["xc330m288t"]())
 
 viscous = model.friction_viscous.value
 frictionloss = model.friction_base.value
