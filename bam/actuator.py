@@ -227,7 +227,7 @@ class XC330M288T(MXActuator):
         self.model.R = Parameter(2.0, 1.0, 8.0)
 
         # Motor armature / apparent inertia [kg m^2]
-        self.model.armature = Parameter(0.001, 0.0001, 0.001)
+        self.model.armature = Parameter(0.001, 0.0001, 0.01)
 
         # self.model.max_friction_base = 10.0
         # self.model.max_load_friction = 1.0
