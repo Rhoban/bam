@@ -1,20 +1,21 @@
-# BAM: Better Actuator Model
+# BAM: Better Actuator Models
 
-This repository implements the method presented in [this article](TODO), 
-for the identification and simulation of extended friction models for servo actuators. The logs used 
-in the article for the identification of Dynamixel MX-64, Dynamixel MX-106, eRob80:50 and
-eRob80:100, as well as validation logs obtained on 2R arms are available [here](https://drive.google.com/drive/folders/1SwVCcpJko7ZBsmSTuu3G_ZipVQFGZ11N?usp=drive_link).
+This repository implements a method to identify extended friction models for servo actuators. The detail of the method is presented in this [article](TODO), and this [video](https://youtu.be/ghvk0O9uDrc) presents the motivation, the protocol, and the results of such identification.
+
+The data used in the article and the video for the identification of Dynamixel MX-64, Dynamixel MX-106, eRob80:50 and eRob80:100 is available [here](https://drive.google.com/drive/folders/1R9zjvlLI1D_dXz409zP7C_3O5N_DNVQa?usp=drive_link).
 
 
 ## Setup
 
-**TODO**: Picture of the setup
+To identify the model, you need to records logs on a pendulum test bench.
 
-When $\alpha = 0$, the pendulum is downward.
+Note that the pendulum is downward when $\alpha = 0$. 
+
+To augment the variety of logs, the pendulum length and the load mass can be changed.
 
 ## Recording raw data
 
-
+Files to record trajectories with Dynamixel or Erob servo actuators are available in the `dynamixel` and `erob` directories. To identify other actuators, you can use `bam/dynamixel/record.py` as a template.
 
 ### Dynamixel
 
@@ -82,17 +83,25 @@ Where:
 * `motor`: The name of the motor
 * `kp`: The proportional gain of the controller
 
-
-## Trajectories list
+### Trajectories list
 
 Available trajectories are:
 
 * `sin_time_square`: A sinusoidal trajectory, where the time is squared. This results in a progressively augmenting
   frequency.
+
+
 * `sin_sin`: Two sinus summed together, with different frequencies
+
+
 * `lift_and_drop`: The mass is lifted upward and then the torque is released, leaving it falling
+
+
 * `up_and_down`: The mass is lifted upward and then took down slowly
+
+
 * `nothing`: The torque is purely released, mostly for test purpose
+
 
 ## Post-processing
 
