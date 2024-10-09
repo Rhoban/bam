@@ -2,29 +2,53 @@
 
 This repository implements a method to identify extended friction models for servo actuators. The detail of the method is presented in this [article](TODO), and this [video](https://youtu.be/ghvk0O9uDrc) presents the motivation, the protocol, and the results of such identification.
 
-The data used in the article and the video for the identification of Dynamixel MX-64, Dynamixel MX-106, eRob80:50 and eRob80:100 is available [here](https://drive.google.com/drive/folders/1R9zjvlLI1D_dXz409zP7C_3O5N_DNVQa?usp=drive_link).
+A validation protocol is also proposed to validate the identified models on 2R arms.
 
+The data used in the article and the video for the identification of Dynamixel MX-64, Dynamixel MX-106, eRob80:50 and eRob80:100, as well as for the validation of the models on 2R arms, is available [here](https://drive.google.com/drive/folders/1SwVCcpJko7ZBsmSTuu3G_ZipVQFGZ11N?usp=drive_link).
+
+
+## Installation
+
+TODO
+
+# Identification
 
 ## Setup
 
+TODO: Add image
+
 To identify the model, you need to records logs on a pendulum test bench.
+
+An exemple of such a bench for a Dynamixel MX-106 is presented on the left.
 
 Note that the pendulum is downward when $\alpha = 0$. 
 
-To augment the variety of logs, the pendulum length and the load mass can be changed.
+To augment the variety of logs, several pendulum parameters can be changed, as:
+* load mass
+* pendulum length 
+* control law
 
 ## Recording raw data
 
 Files to record trajectories with Dynamixel or Erob servo actuators are available in the `dynamixel` and `erob` directories. To identify other actuators, you can use `bam/dynamixel/record.py` as a template.
 
+### Trajectories list
+
+Available trajectories are:
+
+* `sin_time_square`: A sinusoidal trajectory, where the time is squared. This results in a progressively augmenting frequency.
+* `sin_sin`: Two sinus summed together, with different frequencies
+* `lift_and_drop`: The mass is lifted upward and then the torque is released, leaving it falling
+* `up_and_down`: The mass is lifted upward and then took down slowly
+* `nothing`: The torque is purely released, mostly for test purpose
+
 ### Dynamixel
 
-You can use `record.py` to execute a trajectory and record it, here is an example of usage:
+You can use `bam/dynamixel/record.py` to execute a trajectory and record it, here is an example of usage:
 
 ```
 python -m bam.dynamixel.record \
     --port /dev/ttyUSB0 \
-    --offset 1.23 \
     --mass 0.567 \
     --length 0.105 \
     --logdir data_raw \
@@ -37,7 +61,6 @@ python -m bam.dynamixel.record \
 Where the arguments are:
 
 * `port`: The port where the Dynamixel is connected
-* `offset`: The angular offset to be used for the zero position
 * `mass`: The mass of the object attached to the pendulum
 * `length`: The length of the pendulum
 * `logdir`: The directory where the data will be saved
@@ -45,6 +68,27 @@ Where the arguments are:
 * `motor`: The name of the motor
 * `kp`: The proportional gain of the controller
 * `vin`: The input voltage (default: `15.0`)
+
+To record the data for a set of different kp and trajectories, you can modify and use `bam/dynamixel/all_record.py`. Here is an example of usage:
+
+```
+python -m bam.dynamixel.all_record \
+    --port /dev/ttyUSB0 \
+    --mass 0.567 \
+    --length 0.105 \
+    --logdir data_raw \
+    --motor some_name \
+    --speak
+```
+
+Where the arguments are:
+
+* `port`: The port where the Dynamixel is connected
+* `mass`: The mass of the object attached to the pendulum
+* `length`: The length of the pendulum
+* `logdir`: The directory where the data will be saved
+* `motor`: The name of the motor
+* `speak`: If present, the trejectory and kp will be spoken
 
 ### Erob (with etherban)
 
@@ -63,18 +107,21 @@ You can then use the `record.py` script as following:
 ```
 python -m bam.erob.record \
     --host 127.0.0.1 \
+    --offset 1.57 \
     --mass 2.0 \
     --arm_mass 1.0 \
     --length 0.105 \
     --logdir data_raw \
     --trajectory sin_time_square \
     --motor some_name \
-    --kp 8
+    --kp 8 \
+    --damping 0.1
 ```
 
 Where:
 
 * `host`: The host where the Etherban server is running (by default `localhost`)
+* `offset`: The angular offset to be used for the zero position
 * `mass`: The mass of the object attached to the pendulum
 * `arm_mass`: The mass of the arm
 * `length`: The length of the pendulum
@@ -82,25 +129,34 @@ Where:
 * `trajectory`: The trajectory to be executed (see below)
 * `motor`: The name of the motor
 * `kp`: The proportional gain of the controller
+* `damping`: The damping of the controller
 
-### Trajectories list
+To record the data for a set of different kp and trajectories, you can modify and use `bam/erob/all_record.py`. Here is an example of usage:
 
-Available trajectories are:
+```
+python -m bam.erob.all_record \
+    --host 127.0.0.1 \
+    --offset 1.57 \
+    --mass 2.0 \
+    --arm_mass 1.0 \
+    --length 0.105 \
+    --logdir data_raw \
+    --motor some_name \
+    --damping 0.1 \
+    --speak
+```
 
-* `sin_time_square`: A sinusoidal trajectory, where the time is squared. This results in a progressively augmenting
-  frequency.
+Where the arguments are:
 
-
-* `sin_sin`: Two sinus summed together, with different frequencies
-
-
-* `lift_and_drop`: The mass is lifted upward and then the torque is released, leaving it falling
-
-
-* `up_and_down`: The mass is lifted upward and then took down slowly
-
-
-* `nothing`: The torque is purely released, mostly for test purpose
+* `host`: The host where the Etherban server is running (by default `localhost`)
+* `offset`: The angular offset to be used for the zero position
+* `mass`: The mass of the object attached to the pendulum
+* `arm_mass`: The mass of the arm
+* `length`: The length of the pendulum
+* `logdir`: The directory where the data will be saved
+* `motor`: The name of the motor
+* `damping`: The damping of the controller
+* `speak`: If present, the trejectory and kp will be spoken
 
 
 ## Post-processing
@@ -119,7 +175,7 @@ The model fitting can be done with:
 
 ```
 python -m bam.fit \
-    --actuator mx \
+    --actuator mx106 \
     --logdir data_processed \
     --method cmaes \
     --output params.json \
@@ -137,6 +193,8 @@ The argument meaning is:
 
 ### Plotting
 
+TODO : Check if it works
+
 You can then use:
 
 ```
@@ -150,6 +208,8 @@ To plot simulated vs real data.
 
 ### Drive/Backdrive diagram
 
+TODO : Check if it works
+
 To draw some drive/backdrive diagrams, you can use for example:
 
 ```
@@ -157,3 +217,63 @@ python -m bam.drive_backdrive \
     --params params.json \
     --max_torque 90
 ```
+
+# Validation on 2R arms
+
+To validate the models, 2R arms composed of Dynamixel and Erob actuators are used. The MuJoCo URDFs of these 2 arms are available in the `2R` directory. If you want to use another 2R arms, the conversion process from a classic URDF to a MuJoCo URDF is detailed in the `2R/README.md`.
+
+## Recording raw data
+
+### Trajectories list
+
+4 trajectories are used for the validation:
+*  `circle`
+*  `square`
+* `square_wave`
+* `triangular_wave`
+
+TODO : Add images
+
+### Dynamixel
+
+You can use `record_2R.py` to execute a trajectory and record it, here is an example of usage:
+
+```
+python -m bam.dynamixel.record_2R \
+    --port /dev/ttyUSB0 \
+    --mass 0.567 \
+    --logdir data_2R_dyn \
+    --trajectory circle \
+    --kp 8 \
+    --speed 1.0
+```
+
+Where the arguments are:
+
+* `port`: The port where the Dynamixel is connected
+* `mass`: The mass of the object attached to the pendulum
+* `logdir`: The directory where the data will be saved
+* `trajectory`: The trajectory to be executed
+* `kp`: The proportional gain of the controller
+* `speed`: The speed at which the trajectory is executed
+  
+### Erob (with etherban)
+
+You can use `record_2R.py` to execute a trajectory and record it, here is an example of usage:
+
+
+TODO : Verify usage
+
+```
+python -m bam.erob.record_2R \
+    --host 
+
+```
+
+## Simulation
+
+TODO
+
+
+
+TODO: Add images and plot to the README (Motors ? Catcheye ? Results ?)

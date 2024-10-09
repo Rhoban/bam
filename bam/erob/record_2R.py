@@ -5,10 +5,11 @@ import time
 from placo_utils.visualization import robot_viz, point_viz
 from placo_utils.tf import tf
 from .etherban import Client
-from .trajectory_2r import SquareWave, TriangularWave, Square, Circle
+from .trajectory_2R import SquareWave, TriangularWave, Square, Circle
 import argparse
 
 args_parser = argparse.ArgumentParser()
+args_parser.add_argument("--host", type=str, default="127.0.0.1")
 args_parser.add_argument("--meshcat", action="store_true")
 args_parser.add_argument("--plot", action="store_true")
 args_parser.add_argument("--robot", action="store_true")
@@ -93,7 +94,7 @@ elif args.robot:
         print("Please set r1_offset and r2_offset")
         exit()
 
-    eth = Client("localhost")
+    eth = Client(args.host)
     # Initializing the system
     eth.run_background()
     eth.wait_stability(0)
