@@ -253,12 +253,12 @@ To validate the models, 2R arms composed of Dynamixel and Erob actuators are use
 ### Trajectories list
 
 4 trajectories are used for the validation:
-*  `circle`
-*  `square`
-* `square_wave`
+*  `circle` 
+*  `square` 
+* `square_wave` 
 * `triangular_wave`
-
-TODO : Add images
+  
+![2R Trajectories](https://github.com/user-attachments/assets/7b38212d-ae6e-43f3-86ae-624c702796af)
 
 ### Dynamixel
 
