@@ -8,3 +8,4 @@ wandb
 matplotlib
 pygame
 colorama
+placo
