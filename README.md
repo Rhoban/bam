@@ -368,6 +368,8 @@ Where the arguments are:
 * `vertical`: If present, the plot will be vertical.
 * `mae`: If present, the Mean Absolute Error will be computed for each trajectory and couple of model parameters.
 
+## Plotting
+
 To quickly plot logs for a given testbench, you can use the command:
 
 ```
@@ -381,6 +383,6 @@ If you want to obtain the MAE for each model for a set of logs and a given testb
 ```
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/3effdce3-7d70-48a5-835a-5b92af254910" height="240">
-  <img src="https://github.com/user-attachments/assets/5bfffcfa-c4ea-4644-aac4-6966c4254482" height="240">
+  <img src="https://github.com/user-attachments/assets/3effdce3-7d70-48a5-835a-5b92af254910" height="260">
+  <img src="https://github.com/user-attachments/assets/5bfffcfa-c4ea-4644-aac4-6966c4254482" height="260">
 </p>
