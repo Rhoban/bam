@@ -351,9 +351,9 @@ python -m 2R.sim \
     --log log.json \
     --params params/mx106/m4.json,params/mx64/m4.json \
     --testbench mx \
-    --render
-    --plot
-    --vertical
+    --render \
+    --plot \
+    --vertical \
     --mae
 ```
     
