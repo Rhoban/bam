@@ -1,36 +1,75 @@
 # BAM: Better Actuator Models
 
-This repository implements a method to identify extended friction models for servo actuators. The detail of the method is presented in this [article](TODO), and this [video](https://youtu.be/ghvk0O9uDrc) presents the motivation, the protocol, and the results of such identification.
+<img align="left" src="https://github.com/user-attachments/assets/be9176e3-2aa7-4476-9d2b-88ffca177eb1" height=410>
 
-A validation protocol is also proposed to validate the identified models on 2R arms.
+Accurate models of servo actuators are essential for the simulation of robotic systems. It is particularly important 
+while performing Reinforcement Learning (RL) on real robots, as the precision of the model impacts directly the 
+transferability of the learned policy.
 
-The data used in the article and the video for the identification of Dynamixel MX-64, Dynamixel MX-106, eRob80:50 and eRob80:100, as well as for the validation of the models on 2R arms, is available [here](https://drive.google.com/drive/folders/1SwVCcpJko7ZBsmSTuu3G_ZipVQFGZ11N?usp=drive_link).
+However, the friction model generally implemented in widely used simulators like MuJoCo or IsaacGym is the Coulomb-Viscous 
+friction model (M1). This model is too simplistic to accurately represent the behavior of servo actuators, which are subject 
+to more complex friction phenomena like Stribeck, load-dependence or quadratic effects.
 
+In this repository, we propose a method to identify extended friction models (M2 to M6) for servo actuators. 
+The detail of the method is presented in this [article](TODO), and this [video](https://youtu.be/ghvk0O9uDrc) presents the 
+motivation, the protocol, and the results of such identification. The improvement allowed by these models has been 
+demonstrated on tests on 2R arms, where the simulation error has been reduced by more than 50% compared to the Coulomb-Viscous 
+model (cf. figure on the left).
 
-## Installation
+<br>
 
-TODO
+<img align="right" src="https://github.com/user-attachments/assets/ef76a5d0-31dd-436a-b8a3-96d4dc61fe98" width=450>
+
+The method has been applied to the identification of the Dynamixel MX-64, Dynamixel MX-106, eRob80:50 and eRob80:100 actuators. The data collected on these actuators is available [here](https://drive.google.com/drive/folders/1SwVCcpJko7ZBsmSTuu3G_ZipVQFGZ11N?usp=drive_link). The MAE obtained by each proposed model during the identification is presented on the figure 
+on the right, showing that the proposed models outperform the Coulomb-Viscous model.
+
+<br>
+
+## Friction model
+
+The friction models used in this repository are:
+* M1: Coulomb-Viscous model
+* M2: Stribeck model
+* M3: Load-dependent model
+* M4: Stribeck load-dependent model
+* M5: Directional model
+* M6: Quadratic model
+
+For a detailled description of these models, please refer to the [article](TODO) or the [video](https://youtu.be/ghvk0O9uDrc).
+
+## Requirements
+
+To install the requirements, you can use the following command:
+
+```bash
+pip install -r requirements.txt
+
+```
 
 # Identification
 
 ## Setup
 
-TODO: Add image
+<img align="right" src=https://github.com/user-attachments/assets/2317aa80-5274-454c-b209-09f7759ff554 height=300>
 
-To identify the model, you need to records logs on a pendulum test bench.
 
-An exemple of such a bench for a Dynamixel MX-106 is presented on the left.
+To identify the model, you need to record logs on a pendulum test bench. 
+While building such a bench, you need to ensure that the pendulum is free 
+to move up to the horizontal position on both sides.
+Note that the pendulum is considered at an angle of 0 when it is downward.
 
-Note that the pendulum is downward when $\alpha = 0$. 
+An exemple of such a bench for a Dynamixel MX-106 is presented on the right.
 
-To augment the variety of logs, several pendulum parameters can be changed, as:
+To augment the variety of logs, several pendulum parameters can be changed, such as:
 * load mass
 * pendulum length 
 * control law
+  
+<br>
 
 ## Recording raw data
 
-Files to record trajectories with Dynamixel or Erob servo actuators are available in the `dynamixel` and `erob` directories. To identify other actuators, you can use `bam/dynamixel/record.py` as a template.
+Files to record trajectories with Dynamixel or eRob servo actuators are available in the `dynamixel` and `erob` directories. To identify other actuators, you can use `bam/dynamixel/record.py` as a template.
 
 ### Trajectories list
 
@@ -41,6 +80,11 @@ Available trajectories are:
 * `lift_and_drop`: The mass is lifted upward and then the torque is released, leaving it falling
 * `up_and_down`: The mass is lifted upward and then took down slowly
 * `nothing`: The torque is purely released, mostly for test purpose
+  
+<img width="49%" alt="Identif_AccSin2" src="https://github.com/user-attachments/assets/173d02be-f9bc-4562-bd24-8f06a8f1286f">
+<img width="49%" alt="Identif_SinSin2" src="https://github.com/user-attachments/assets/84901c28-8345-4c37-a248-5beb7cf3038c">
+<img width="49%" alt="Identif_LiftDrop2" src="https://github.com/user-attachments/assets/0a1ce588-9a40-4b9e-8b45-ff2a8363e120">
+<img width="49%" alt="Identif_UpDown2" src="https://github.com/user-attachments/assets/4cb3c4c0-3824-4b32-bb17-83528cfb77b0">
 
 ### Dynamixel
 
@@ -53,7 +97,7 @@ python -m bam.dynamixel.record \
     --length 0.105 \
     --logdir data_raw \
     --trajectory sin_time_square \
-    --motor some_name \
+    --motor mx106 \
     --kp 8 \
     --vin 15.0
 ```
@@ -77,20 +121,13 @@ python -m bam.dynamixel.all_record \
     --mass 0.567 \
     --length 0.105 \
     --logdir data_raw \
-    --motor some_name \
+    --motor mx106 \
     --speak
 ```
 
-Where the arguments are:
+Where the arguments are the same as above, with the addition of `speak` which allows the trajectory and kp to be spoken before execution.
 
-* `port`: The port where the Dynamixel is connected
-* `mass`: The mass of the object attached to the pendulum
-* `length`: The length of the pendulum
-* `logdir`: The directory where the data will be saved
-* `motor`: The name of the motor
-* `speak`: If present, the trejectory and kp will be spoken
-
-### Erob (with etherban)
+### ERob (with etherban)
 
 First, you need to have the Etherban server running. You also need to compile the `proto` files, by running:
 
@@ -113,12 +150,12 @@ python -m bam.erob.record \
     --length 0.105 \
     --logdir data_raw \
     --trajectory sin_time_square \
-    --motor some_name \
+    --motor erob100 \
     --kp 8 \
     --damping 0.1
 ```
 
-Where:
+Where the arguments are:
 
 * `host`: The host where the Etherban server is running (by default `localhost`)
 * `offset`: The angular offset to be used for the zero position
@@ -141,23 +178,12 @@ python -m bam.erob.all_record \
     --arm_mass 1.0 \
     --length 0.105 \
     --logdir data_raw \
-    --motor some_name \
+    --motor erob100 \
     --damping 0.1 \
     --speak
 ```
 
-Where the arguments are:
-
-* `host`: The host where the Etherban server is running (by default `localhost`)
-* `offset`: The angular offset to be used for the zero position
-* `mass`: The mass of the object attached to the pendulum
-* `arm_mass`: The mass of the arm
-* `length`: The length of the pendulum
-* `logdir`: The directory where the data will be saved
-* `motor`: The name of the motor
-* `damping`: The damping of the controller
-* `speak`: If present, the trejectory and kp will be spoken
-
+Where the arguments are the same as above, with the addition of `speak` which allows the trajectory and kp to be spoken before execution.
 
 ## Post-processing
 
@@ -171,68 +197,93 @@ This will process the data with linear interpolation to enforce a constant given
 
 ## Model fitting
 
+<img align="right" width="50%" src="https://github.com/user-attachments/assets/b127f39c-48d3-4242-80c8-59166b4d4dcd">
+
 The model fitting can be done with:
 
 ```
 python -m bam.fit \
     --actuator mx106 \
+    --model m6 \
     --logdir data_processed \
     --method cmaes \
-    --output params.json \
-    --trials 1000 \
-    --control
+    --output params/mx106/m1.json \
+    --trials 1000 
 ```
 
-The argument meaning is:
+Where the arguments are:
 * `actuator`: The actuator to be used
+* `model`: The model to be used
 * `logdir`: The directory where the processed data is stored
 * `method`: The method to be used for optimization. Available methods are `cmaes`, `random`, `nsgaii` (default: `cmaes`)
 * `output`: The file where the parameters will be saved (default: `params.json`)
 * `trials`: The number of trials to be executed (default: `100_000`)
-* `control`: If present, the voltage is computed given the current goal and error instead of used from the logs
 
-### Plotting
+## Plotting
 
-TODO : Check if it works
+<img align="right" width="50%" src="https://github.com/user-attachments/assets/dc9ec4d6-47e7-49fd-92bc-a27c0026279f">
 
-You can then use:
+To plot simulated vs real data, you can use:
 
 ```
 python -m bam.plot \
+    --actuator mx106 \
     --logdir data_processed \
-    --params params.json \
-    --control
+    --sim \
+    --params params/mx106/m6.json
 ```
 
-To plot simulated vs real data.
+Where the arguments are:
+* `actuator`: The actuator to be used
+* `logdir`: The directory where the processed data is stored
+* `sim`: If present, the simulated data will be plotted
+* `params`: The file where the parameters are stored (is necessary if `sim` is present)
 
-### Drive/Backdrive diagram
 
-TODO : Check if it works
+If you want to check your logs at each step of the data collection and processing, you can use the same command without the `--sim` flag.
+
+## Drive/Backdrive diagram
+
+<img align="left" height="150px" src="https://github.com/user-attachments/assets/01f10f9a-e2c3-47d7-8d37-dfe51aea17e9">
 
 To draw some drive/backdrive diagrams, you can use for example:
 
 ```
 python -m bam.drive_backdrive \
-    --params params.json \
-    --max_torque 90
+    --params params/erob100/m6.json \
+    --max_torque 120
 ```
+
+<br>
 
 # Validation on 2R arms
 
-To validate the models, 2R arms composed of Dynamixel and Erob actuators are used. The MuJoCo URDFs of these 2 arms are available in the `2R` directory. If you want to use another 2R arms, the conversion process from a classic URDF to a MuJoCo URDF is detailed in the `2R/README.md`.
+To validate the models, 2R arms composed of Dynamixel and eRob actuators are used. MuJoCo is used 
+to simulate these arms and the MuJoCo URDFs of these 2 arms are available in the `2R` directory. 
+If you want to use another 2R arm, the conversion process from a classic URDF to a MuJoCo 
+URDF is detailed in the `2R/README.md`.
 
+## Setup
+
+The arms used for the validation are composed of 2 segments with a load at the end. The Dynamixel arm uses Dynamixel MX-64 and MX-106, while the eRob arm uses eRob80:50 and eRob80:100:
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/976cbd93-14e0-4a3f-91ca-43dd6f755e31" height="400px">
+  <img src="https://github.com/user-attachments/assets/7cda5406-560e-4cd0-8b63-f78b1467fe5f" height="400px">
+</p>
+  
 ## Recording raw data
 
 ### Trajectories list
 
+<img align="right" src="https://github.com/user-attachments/assets/7b38212d-ae6e-43f3-86ae-624c702796af" height="160px">
+  
 4 trajectories are used for the validation:
-*  `circle`
-*  `square`
-* `square_wave`
+*  `circle` 
+*  `square` 
+* `square_wave` 
 * `triangular_wave`
 
-TODO : Add images
 
 ### Dynamixel
 
@@ -257,7 +308,7 @@ Where the arguments are:
 * `kp`: The proportional gain of the controller
 * `speed`: The speed at which the trajectory is executed
   
-### Erob (with etherban)
+### ERob (with etherban)
 
 You can use `record_2R.py` to execute a trajectory and record it, here is an example of usage:
 
