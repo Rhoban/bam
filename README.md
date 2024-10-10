@@ -115,14 +115,7 @@ python -m bam.dynamixel.all_record \
     --speak
 ```
 
-Where the arguments are:
-
-* `port`: The port where the Dynamixel is connected
-* `mass`: The mass of the object attached to the pendulum
-* `length`: The length of the pendulum
-* `logdir`: The directory where the data will be saved
-* `motor`: The name of the motor
-* `speak`: If present, the trejectory and kp will be spoken
+Where the arguments are the same as above, with the addition of `speak` which allows the trajectory and kp to be spoken before execution.
 
 ### Erob (with etherban)
 
@@ -152,7 +145,7 @@ python -m bam.erob.record \
     --damping 0.1
 ```
 
-Where:
+Where the arguments are:
 
 * `host`: The host where the Etherban server is running (by default `localhost`)
 * `offset`: The angular offset to be used for the zero position
@@ -180,18 +173,7 @@ python -m bam.erob.all_record \
     --speak
 ```
 
-Where the arguments are:
-
-* `host`: The host where the Etherban server is running (by default `localhost`)
-* `offset`: The angular offset to be used for the zero position
-* `mass`: The mass of the object attached to the pendulum
-* `arm_mass`: The mass of the arm
-* `length`: The length of the pendulum
-* `logdir`: The directory where the data will be saved
-* `motor`: The name of the motor
-* `damping`: The damping of the controller
-* `speak`: If present, the trejectory and kp will be spoken
-
+Where the arguments are the same as above, with the addition of `speak` which allows the trajectory and kp to be spoken before execution.
 
 ## Post-processing
 
