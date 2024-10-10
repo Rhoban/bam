@@ -69,7 +69,7 @@ To augment the variety of logs, several pendulum parameters can be changed, such
 
 ## Recording raw data
 
-Files to record trajectories with Dynamixel or Erob servo actuators are available in the `dynamixel` and `erob` directories. To identify other actuators, you can use `bam/dynamixel/record.py` as a template.
+Files to record trajectories with Dynamixel or eRob servo actuators are available in the `dynamixel` and `erob` directories. To identify other actuators, you can use `bam/dynamixel/record.py` as a template.
 
 ### Trajectories list
 
@@ -97,7 +97,7 @@ python -m bam.dynamixel.record \
     --length 0.105 \
     --logdir data_raw \
     --trajectory sin_time_square \
-    --motor some_name \
+    --motor mx106 \
     --kp 8 \
     --vin 15.0
 ```
@@ -121,13 +121,13 @@ python -m bam.dynamixel.all_record \
     --mass 0.567 \
     --length 0.105 \
     --logdir data_raw \
-    --motor some_name \
+    --motor mx106 \
     --speak
 ```
 
 Where the arguments are the same as above, with the addition of `speak` which allows the trajectory and kp to be spoken before execution.
 
-### Erob (with etherban)
+### ERob (with etherban)
 
 First, you need to have the Etherban server running. You also need to compile the `proto` files, by running:
 
@@ -150,7 +150,7 @@ python -m bam.erob.record \
     --length 0.105 \
     --logdir data_raw \
     --trajectory sin_time_square \
-    --motor some_name \
+    --motor erob100 \
     --kp 8 \
     --damping 0.1
 ```
@@ -178,7 +178,7 @@ python -m bam.erob.all_record \
     --arm_mass 1.0 \
     --length 0.105 \
     --logdir data_raw \
-    --motor some_name \
+    --motor erob100 \
     --damping 0.1 \
     --speak
 ```
@@ -197,63 +197,75 @@ This will process the data with linear interpolation to enforce a constant given
 
 ## Model fitting
 
+<img align="right" width="50%" src="https://github.com/user-attachments/assets/b127f39c-48d3-4242-80c8-59166b4d4dcd">
+
 The model fitting can be done with:
 
 ```
 python -m bam.fit \
     --actuator mx106 \
+    --model m6 \
     --logdir data_processed \
     --method cmaes \
-    --output params.json \
-    --trials 1000 \
-    --control
+    --output params/mx106/m1.json \
+    --trials 1000 
 ```
 
-The argument meaning is:
+Where the arguments are:
 * `actuator`: The actuator to be used
+* `model`: The model to be used
 * `logdir`: The directory where the processed data is stored
 * `method`: The method to be used for optimization. Available methods are `cmaes`, `random`, `nsgaii` (default: `cmaes`)
 * `output`: The file where the parameters will be saved (default: `params.json`)
 * `trials`: The number of trials to be executed (default: `100_000`)
-* `control`: If present, the voltage is computed given the current goal and error instead of used from the logs
 
-### Plotting
+## Plotting
 
-TODO : Check if it works
+<img align="right" width="50%" src="https://github.com/user-attachments/assets/dc9ec4d6-47e7-49fd-92bc-a27c0026279f">
 
-You can then use:
+To plot simulated vs real data, you can use:
 
 ```
 python -m bam.plot \
+    --actuator mx106 \
     --logdir data_processed \
-    --params params.json \
-    --control
+    --sim \
+    --params params/mx106/m6.json
 ```
 
-To plot simulated vs real data.
+Where the arguments are:
+* `actuator`: The actuator to be used
+* `logdir`: The directory where the processed data is stored
+* `sim`: If present, the simulated data will be plotted
+* `params`: The file where the parameters are stored (is necessary if `sim` is present)
 
-### Drive/Backdrive diagram
 
-TODO : Check if it works
+If you want to check your logs at each step of the data collection and processing, you can use the same command without the `--sim` flag.
+
+## Drive/Backdrive diagram
+
+<img align="left" height="150px" src="https://github.com/user-attachments/assets/01f10f9a-e2c3-47d7-8d37-dfe51aea17e9">
 
 To draw some drive/backdrive diagrams, you can use for example:
 
 ```
 python -m bam.drive_backdrive \
-    --params params.json \
-    --max_torque 90
+    --params params/erob100/m6.json \
+    --max_torque 120
 ```
+
+<br>
 
 # Validation on 2R arms
 
-To validate the models, 2R arms composed of Dynamixel and Erob actuators are used. MuJoCo is used 
+To validate the models, 2R arms composed of Dynamixel and eRob actuators are used. MuJoCo is used 
 to simulate these arms and the MuJoCo URDFs of these 2 arms are available in the `2R` directory. 
 If you want to use another 2R arm, the conversion process from a classic URDF to a MuJoCo 
 URDF is detailed in the `2R/README.md`.
 
 ## Setup
 
-The arms used for the validation are composed of 2 segments with a load at the end. The Dynamixel arm uses Dynamixel MX-64 and MX-106, while the eRob arm uses Erob80:50 and Erob80:100:
+The arms used for the validation are composed of 2 segments with a load at the end. The Dynamixel arm uses Dynamixel MX-64 and MX-106, while the eRob arm uses eRob80:50 and eRob80:100:
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/976cbd93-14e0-4a3f-91ca-43dd6f755e31" height="400px">
@@ -269,7 +281,8 @@ The arms used for the validation are composed of 2 segments with a load at the e
 *  `square` 
 * `square_wave` 
 * `triangular_wave`
-  
+
+<br>
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/7b38212d-ae6e-43f3-86ae-624c702796af" width="80%">
@@ -298,7 +311,7 @@ Where the arguments are:
 * `kp`: The proportional gain of the controller
 * `speed`: The speed at which the trajectory is executed
   
-### Erob (with etherban)
+### ERob (with etherban)
 
 You can use `record_2R.py` to execute a trajectory and record it, here is an example of usage:
 
