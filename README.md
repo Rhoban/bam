@@ -1,6 +1,6 @@
 # BAM: Better Actuator Models
 
-<img align="left" src="https://github.com/user-attachments/assets/be9176e3-2aa7-4476-9d2b-88ffca177eb1" height=410>
+<img align="left" src="https://github.com/user-attachments/assets/be9176e3-2aa7-4476-9d2b-88ffca177eb1" height=390>
 
 Accurate models of servo actuators are essential for the simulation of robotic systems. It is particularly important 
 while performing Reinforcement Learning (RL) on real robots, as the precision of the model impacts directly the 
@@ -10,13 +10,14 @@ However, the friction model generally implemented in widely used simulators like
 friction model (M1). This model is too simplistic to accurately represent the behavior of servo actuators, which are subject 
 to more complex friction phenomena like Stribeck, load-dependence or quadratic effects.
 
+<br>
+
 In this repository, we propose a method to identify extended friction models (M2 to M6) for servo actuators. 
 The detail of the method is presented in this [article](TODO), and this [video](https://youtu.be/ghvk0O9uDrc) presents the 
 motivation, the protocol, and the results of such identification. The improvement allowed by these models has been 
 demonstrated on tests on 2R arms, where the simulation error has been reduced by more than 50% compared to the Coulomb-Viscous 
 model (cf. figure on the left).
 
-<br>
 
 <img align="right" src="https://github.com/user-attachments/assets/ef76a5d0-31dd-436a-b8a3-96d4dc61fe98" width=450>
 
