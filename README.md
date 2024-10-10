@@ -276,17 +276,14 @@ The arms used for the validation are composed of 2 segments with a load at the e
 
 ### Trajectories list
 
+<img align="right" src="https://github.com/user-attachments/assets/7b38212d-ae6e-43f3-86ae-624c702796af" height="160px">
+  
 4 trajectories are used for the validation:
 *  `circle` 
 *  `square` 
 * `square_wave` 
 * `triangular_wave`
 
-<br>
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/7b38212d-ae6e-43f3-86ae-624c702796af" width="80%">
-</p>
 
 ### Dynamixel
 
