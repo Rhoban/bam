@@ -246,8 +246,20 @@ python -m bam.drive_backdrive \
 
 # Validation on 2R arms
 
-To validate the models, 2R arms composed of Dynamixel and Erob actuators are used. The MuJoCo URDFs of these 2 arms are available in the `2R` directory. If you want to use another 2R arms, the conversion process from a classic URDF to a MuJoCo URDF is detailed in the `2R/README.md`.
+To validate the models, 2R arms composed of Dynamixel and Erob actuators are used. MuJoCo is used 
+to simulate these arms and the MuJoCo URDFs of these 2 arms are available in the `2R` directory. 
+If you want to use another 2R arm, the conversion process from a classic URDF to a MuJoCo 
+URDF is detailed in the `2R/README.md`.
 
+## Setup
+
+The arms used for the validation are composed of 2 segments with a load at the end. The Dynamixel arm uses Dynamixel MX-64 and MX-106, while the eRob arm uses Erob80:50 and Erob80:100:
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/976cbd93-14e0-4a3f-91ca-43dd6f755e31" height="400px">
+  <img src="https://github.com/user-attachments/assets/7cda5406-560e-4cd0-8b63-f78b1467fe5f" height="400px">
+</p>
+  
 ## Recording raw data
 
 ### Trajectories list
@@ -258,7 +270,10 @@ To validate the models, 2R arms composed of Dynamixel and Erob actuators are use
 * `square_wave` 
 * `triangular_wave`
   
-![2R Trajectories](https://github.com/user-attachments/assets/7b38212d-ae6e-43f3-86ae-624c702796af)
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7b38212d-ae6e-43f3-86ae-624c702796af" width="80%">
+</p>
 
 ### Dynamixel
 
