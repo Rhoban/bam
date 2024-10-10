@@ -9,7 +9,7 @@ class Trajectory_2R:
 
     def __init__(self) -> None:    
         # Load the robot
-        self.robot = placo.RobotWrapper('2R/2r_mx_mix', placo.Flags.ignore_collisions)
+        self.robot = placo.RobotWrapper('2R/2r_mx', placo.Flags.ignore_collisions)
 
         # Set initial configuration
         self.robot.set_joint("R1", 1e-5)
