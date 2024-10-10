@@ -1,11 +1,31 @@
 # BAM: Better Actuator Models
 
-This repository implements a method to identify extended friction models for servo actuators. The detail of the method is presented in this [article](TODO), and this [video](https://youtu.be/ghvk0O9uDrc) presents the motivation, the protocol, and the results of such identification.
+<img align="left" src="https://github.com/user-attachments/assets/be9176e3-2aa7-4476-9d2b-88ffca177eb1" height=410>
 
-A validation protocol is also proposed to validate the identified models on 2R arms.
+Accurate models of servo actuators are essential for the simulation of robotic systems. It is particularly important 
+while performing Reinforcement Learning (RL) on real robots, as the precision of the model impacts directly the 
+transferability of the learned policy.
 
-The data used in the article and the video for the identification of Dynamixel MX-64, Dynamixel MX-106, eRob80:50 and eRob80:100, as well as for the validation of the models on 2R arms, is available [here](https://drive.google.com/drive/folders/1SwVCcpJko7ZBsmSTuu3G_ZipVQFGZ11N?usp=drive_link).
+However, the friction model generally implemented in widely used simulators like MuJoCo or IsaacGym is the Coulomb-Viscous 
+friction model (M1). This model is too simplistic to accurately represent the behavior of servo actuators, which are subject 
+to more complex friction phenomena like Stribeck, load-dependence or quadratic effects.
 
+In this repository, we propose a method to identify extended friction models (M2 to M6) for servo actuators. 
+The detail of the method is presented in this [article](TODO), and this [video](https://youtu.be/ghvk0O9uDrc) presents the 
+motivation, the protocol, and the results of such identification. The improvement allowed by these models has been 
+demonstrated on tests on 2R arms, where the simulation error has been reduced by more than 50% compared to the Coulomb-Viscous 
+model (cf. figure on the left).
+
+<br>
+
+<img align="right" src="https://github.com/user-attachments/assets/ef76a5d0-31dd-436a-b8a3-96d4dc61fe98" width=450>
+
+<br>
+
+The method has been applied to the identification of the Dynamixel MX-64, Dynamixel MX-106, eRob80:50 and eRob80:100 actuators. The data collected on these actuators is available [here](https://drive.google.com/drive/folders/1SwVCcpJko7ZBsmSTuu3G_ZipVQFGZ11N?usp=drive_link). The MAE obtained by each proposed model during the identification is presented on the figure 
+on the right, showing that the proposed models outperform the Coulomb-Viscous model.
+
+<br>
 
 ## Installation
 
@@ -15,7 +35,9 @@ TODO
 
 ## Setup
 
-TODO: Add image
+<img align="right" src=https://github.com/user-attachments/assets/2317aa80-5274-454c-b209-09f7759ff554 height=300>
+
+<br>
 
 To identify the model, you need to records logs on a pendulum test bench.
 
@@ -27,6 +49,8 @@ To augment the variety of logs, several pendulum parameters can be changed, as:
 * load mass
 * pendulum length 
 * control law
+
+<br>
 
 ## Recording raw data
 
