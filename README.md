@@ -25,6 +25,18 @@ on the right, showing that the proposed models outperform the Coulomb-Viscous mo
 
 <br>
 
+## Friction model
+
+The friction models used in this repository are:
+* M1: Coulomb-Viscous model
+* M2: Stribeck model
+* M3: Load-dependent model
+* M4: Stribeck load-dependent model
+* M5: Directional model
+* M6: Quadratic model
+
+For a detailled description of these models, please refer to the [article](TODO) or the [video](https://youtu.be/ghvk0O9uDrc).
+
 ## Requirements
 
 To install the requirements, you can use the following command:
