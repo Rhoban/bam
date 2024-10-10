@@ -344,6 +344,8 @@ Where the arguments are:
 
 ## Simulating 2R arms
 
+<img align="right" src="https://github.com/user-attachments/assets/0854f51d-97f3-4189-9d58-bd5f57c59c8a" width="50%">
+    
 To simulate the 2R arms, you can use:
 
 ```
@@ -356,7 +358,7 @@ python -m 2R.sim \
     --vertical \
     --mae
 ```
-    
+
 Where the arguments are:
 * `log`: The log file or several log files to be used. If a whole directory should be used, you can use `--log log_dir/*`.
 * `params`: Model parameters for the actuators in the format `params_m1,params_m2`. Several parameters can be used, separated by spaces.
@@ -365,3 +367,20 @@ Where the arguments are:
 * `plot`: If present, the measured and simulated positions will be plotted.
 * `vertical`: If present, the plot will be vertical.
 * `mae`: If present, the Mean Absolute Error will be computed for each trajectory and couple of model parameters.
+
+To quickly plot logs for a given testbench, you can use the command:
+
+```
+./2R/plot.sh testbench log_dir/*
+```
+
+If you want to obtain the MAE for each model for a set of logs and a given testbench, you can use:
+
+```
+./2R/mae.sh testbench log_dir/*
+```
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/3effdce3-7d70-48a5-835a-5b92af254910" height="240">
+  <img src="https://github.com/user-attachments/assets/5bfffcfa-c4ea-4644-aac4-6966c4254482" height="240">
+</p>
