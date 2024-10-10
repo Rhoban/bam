@@ -27,9 +27,14 @@ on the right, showing that the proposed models outperform the Coulomb-Viscous mo
 
 <br>
 
-## Installation
+## Requirements
 
-TODO
+To install the requirements, you can use the following command:
+
+```bash
+pip install -r requirements.txt
+
+```
 
 # Identification
 
@@ -37,19 +42,19 @@ TODO
 
 <img align="right" src=https://github.com/user-attachments/assets/2317aa80-5274-454c-b209-09f7759ff554 height=300>
 
-<br>
 
-To identify the model, you need to records logs on a pendulum test bench.
+To identify the model, you need to record logs on a pendulum test bench. 
+While building such a bench, you need to ensure that the pendulum is free 
+to move up to the horizontal position on both sides.
+Note that the pendulum is considered at an angle of 0 when it is downward.
 
-An exemple of such a bench for a Dynamixel MX-106 is presented on the left.
+An exemple of such a bench for a Dynamixel MX-106 is presented on the right.
 
-Note that the pendulum is downward when $\alpha = 0$. 
-
-To augment the variety of logs, several pendulum parameters can be changed, as:
+To augment the variety of logs, several pendulum parameters can be changed, such as:
 * load mass
 * pendulum length 
 * control law
-
+  
 <br>
 
 ## Recording raw data
