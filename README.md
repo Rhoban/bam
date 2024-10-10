@@ -37,16 +37,16 @@ The friction models used in this repository are:
 
 For a detailled description of these models, please refer to the [article](TODO) or the [video](https://youtu.be/ghvk0O9uDrc).
 
+# Identification
+
 ## Requirements
 
-To install the requirements, you can use the following command:
+To install the requirements for the identification part, you can use the following command:
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements_bam.txt
 
 ```
-
-# Identification
 
 ## Setup
 
@@ -105,10 +105,10 @@ python -m bam.dynamixel.record \
 Where the arguments are:
 
 * `port`: The port where the Dynamixel is connected
-* `mass`: The mass of the object attached to the pendulum
+* `mass`: The mass of the load
 * `length`: The length of the pendulum
 * `logdir`: The directory where the data will be saved
-* `trajectory`: The trajectory to be executed (see below)
+* `trajectory`: The trajectory to be executed
 * `motor`: The name of the motor
 * `kp`: The proportional gain of the controller
 * `vin`: The input voltage (default: `15.0`)
@@ -159,11 +159,11 @@ Where the arguments are:
 
 * `host`: The host where the Etherban server is running (by default `localhost`)
 * `offset`: The angular offset to be used for the zero position
-* `mass`: The mass of the object attached to the pendulum
+* `mass`: The mass of the load
 * `arm_mass`: The mass of the arm
 * `length`: The length of the pendulum
 * `logdir`: The directory where the data will be saved
-* `trajectory`: The trajectory to be executed (see below)
+* `trajectory`: The trajectory to be executed
 * `motor`: The name of the motor
 * `kp`: The proportional gain of the controller
 * `damping`: The damping of the controller
@@ -237,7 +237,7 @@ Where the arguments are:
 * `actuator`: The actuator to be used
 * `logdir`: The directory where the processed data is stored
 * `sim`: If present, the simulated data will be plotted
-* `params`: The file where the parameters are stored (is necessary if `sim` is present)
+* `params`: The file where the model parameters are stored (is necessary if `sim` is present)
 
 
 If you want to check your logs at each step of the data collection and processing, you can use the same command without the `--sim` flag.
@@ -250,7 +250,7 @@ To draw some drive/backdrive diagrams, you can use for example:
 
 ```
 python -m bam.drive_backdrive \
-    --params params/erob100/m6.json \
+    --params params/erob80_100/m6.json \
     --max_torque 120
 ```
 
@@ -262,6 +262,15 @@ To validate the models, 2R arms composed of Dynamixel and eRob actuators are use
 to simulate these arms and the MuJoCo URDFs of these 2 arms are available in the `2R` directory. 
 If you want to use another 2R arm, the conversion process from a classic URDF to a MuJoCo 
 URDF is detailed in the `2R/README.md`.
+
+## Requirements
+
+To install the requirements for the validation part, you can use the following command:
+
+```bash
+pip install -r requirements_2R.txt
+
+```
 
 ## Setup
 
@@ -302,7 +311,7 @@ python -m bam.dynamixel.record_2R \
 Where the arguments are:
 
 * `port`: The port where the Dynamixel is connected
-* `mass`: The mass of the object attached to the pendulum
+* `mass`: The mass of the load
 * `logdir`: The directory where the data will be saved
 * `trajectory`: The trajectory to be executed
 * `kp`: The proportional gain of the controller
@@ -312,19 +321,47 @@ Where the arguments are:
 
 You can use `record_2R.py` to execute a trajectory and record it, here is an example of usage:
 
-
-TODO : Verify usage
-
 ```
 python -m bam.erob.record_2R \
-    --host 
-
+    --host 127.0.0.1 \
+    --r1_offset 1.57 \
+    --r2_offset -0.72 \
+    --mass 2.0 \
+    --logdir data_2R_erob \
+    --trajectory circle \
+    --kp 8
 ```
 
-## Simulation
+Where the arguments are:
 
-TODO
+* `host`: The host where the Etherban server is running (by default `localhost`)
+* `r1_offset`: The angular offset to be used for the zero position of the first motor
+* `r2_offset`: The angular offset to be used for the zero position of the second motor
+* `mass`: The mass of the load
+* `logdir`: The directory where the data will be saved
+* `trajectory`: The trajectory to be executed
+* `kp`: The proportional gain of the controller
 
+## Simulating 2R arms
 
+To simulate the 2R arms, you can use:
 
-TODO: Add images and plot to the README (Motors ? Catcheye ? Results ?)
+```
+python -m 2R.sim \
+    --log log.json \
+    --params params/mx106/m4.json,params/mx64/m4.json \
+    --testbench mx \
+    --render
+    --plot
+    --vertical
+    --mae
+```
+    
+Where the arguments are:
+* `log`: The log file or several log files to be used. If a whole directory should be used, you can use `--log log_dir/*`.
+* `params`: Model parameters for the actuators in the format `params_m1,params_m2`. Several parameters can be used, separated by spaces.
+* `testbench`: The testbench to be used. Available testbenches are `mx` and `erob`.
+* `render`: If present, the simulation (MuJoCo) will be rendered.
+* `plot`: If present, the measured and simulated positions will be plotted.
+* `vertical`: If present, the plot will be vertical.
+* `mae`: If present, the Mean Absolute Error will be computed for each trajectory and couple of model parameters.
