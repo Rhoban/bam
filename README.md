@@ -70,6 +70,11 @@ Available trajectories are:
 * `lift_and_drop`: The mass is lifted upward and then the torque is released, leaving it falling
 * `up_and_down`: The mass is lifted upward and then took down slowly
 * `nothing`: The torque is purely released, mostly for test purpose
+  
+<img width="49%" alt="Identif_AccSin2" src="https://github.com/user-attachments/assets/173d02be-f9bc-4562-bd24-8f06a8f1286f">
+<img width="49%" alt="Identif_SinSin2" src="https://github.com/user-attachments/assets/84901c28-8345-4c37-a248-5beb7cf3038c">
+<img width="49%" alt="Identif_LiftDrop2" src="https://github.com/user-attachments/assets/0a1ce588-9a40-4b9e-8b45-ff2a8363e120">
+<img width="49%" alt="Identif_UpDown2" src="https://github.com/user-attachments/assets/4cb3c4c0-3824-4b32-bb17-83528cfb77b0">
 
 ### Dynamixel
 
