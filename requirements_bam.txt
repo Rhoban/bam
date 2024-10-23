@@ -1,6 +1,7 @@
 zmq
 protobuf==3.20
 numpy
+dynamixel_sdk
 openlch
 optuna
 cmaes
@@ -8,3 +9,4 @@ wandb
 matplotlib
 pygame
 colorama
+protobuf==5.28.2
