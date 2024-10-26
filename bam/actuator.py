@@ -261,13 +261,13 @@ class Sts3250(Actuator):
         super().__init__(testbench_class)
 
         # Position control gain
-        self.kp: float = 1.0  # Initial gain value, adjust as needed
+        self.kp: float = 32.0  # Initial gain value, adjust as needed
 
         # Maximum torque output [Nm]
-        self.max_torque: float = 3.0  # Adjust based on STS3250 specifications
+        self.max_torque: float = 4.9  # Adjust based on STS3250 specifications
 
         # Maximum speed [rad/s]
-        self.max_speed: float = 5.0  # Adjust based on STS3250 specifications
+        self.max_speed: float = 7.853  # Adjust based on STS3250 specifications
 
     def load_log(self, log: dict):
         super().load_log(log)
@@ -277,9 +277,11 @@ class Sts3250(Actuator):
 
     def initialize(self):
         # We don't have access to internal motor parameters, so we'll model overall behavior
-        self.model.stiffness = Parameter(64.1, 10.0, 1000.0)  # Position control stiffness
-        self.model.damping = Parameter(5.224, 0.1, 10.0)  # Damping coefficient
+        self.model.stiffness = Parameter(130.1, 1.0, 500.0)  # Position control stiffness
+        self.model.damping = Parameter(6, 0.1, 10.0)  # Damping coefficient
         self.model.inertia = Parameter(0.00961, 0.00001, 0.001)  # Apparent inertia
+        self.model.friction_base = Parameter(0.0485, 0.0, 0.5)
+        self.model.friction_viscous = Parameter(0.0358, 0.0, 0.5)
 
     def get_extra_inertia(self) -> float:
         return self.model.inertia.value
