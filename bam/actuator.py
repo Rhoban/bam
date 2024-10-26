@@ -252,9 +252,71 @@ class LinearActuator(Actuator):
         return torque
 
 
+class Sts3250(Actuator):
+    """
+    Represents an STS3250 position-controlled servo motor actuator
+    """
+
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(testbench_class)
+
+        # Position control gain
+        self.kp: float = 1.0  # Initial gain value, adjust as needed
+
+        # Maximum torque output [Nm]
+        self.max_torque: float = 3.0  # Adjust based on STS3250 specifications
+
+        # Maximum speed [rad/s]
+        self.max_speed: float = 5.0  # Adjust based on STS3250 specifications
+
+    def load_log(self, log: dict):
+        super().load_log(log)
+
+        if "kp" in log:
+            self.kp = log["kp"]
+
+    def initialize(self):
+        # We don't have access to internal motor parameters, so we'll model overall behavior
+        self.model.stiffness = Parameter(64.1, 10.0, 1000.0)  # Position control stiffness
+        self.model.damping = Parameter(5.224, 0.1, 10.0)  # Damping coefficient
+        self.model.inertia = Parameter(0.00961, 0.00001, 0.001)  # Apparent inertia
+
+    def get_extra_inertia(self) -> float:
+        return self.model.inertia.value
+
+    def control_unit(self) -> str:
+        return "position"
+
+    def compute_control(
+        self, position_error: float, q: float, dq: float
+    ) -> float | None:
+        # For a position-controlled servo, we return the target position
+        return q + position_error
+
+    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+        if control is None:
+            return 0.0
+
+        target_position = control
+
+        # Compute torque based on position error and velocity
+        position_error = target_position - q
+        torque = self.model.stiffness.value * position_error - self.model.damping.value * dq
+
+        # Limit torque based on maximum torque specification
+        torque = np.clip(torque, -self.max_torque, self.max_torque)
+
+        # Limit torque based on maximum speed
+        if abs(dq) > self.max_speed:
+            torque = 0.0
+
+        return torque
+
+
 actuators = {
     "mx64": lambda: MXActuator(Pendulum),
     "mx106": lambda: MXActuator(Pendulum),
     "erob80_100": lambda: Erob(Pendulum, damping=2.0),
     "erob80_50": lambda: Erob(Pendulum, damping=1.0),
+    "sts3250": lambda: Sts3250(Pendulum),
 }

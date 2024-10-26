@@ -33,9 +33,7 @@ class FeetechSTS3250:
         ## unimplemented
 
     def set_torque(self, enable: bool):
-        pass
-        # Enable torque
-        ## unimplemented, torque is always enabled
+        self.servo.set_torque_enable([(self.id, enable)])
 
     def set_goal_position(self, position: float):
         # convert to degrees
@@ -45,13 +43,21 @@ class FeetechSTS3250:
     def read_data(self):
         # Reading position, speed, load, voltage and temperature
 
-        data = self.servo.get_servo_info(self.id)
+        max_retries = 10
+        retry_count = 0
+        while retry_count < max_retries:
+            data = self.servo.get_servo_info(self.id)
+            if data['temperature'] != 0.0:
+                break
+            retry_count += 1
+        if retry_count == max_retries:
+            print(f"Warning: Failed to get non-zero data after {max_retries} attempts")
 
         # Position is in degrees (convert to radians)
         position = data["current_position"] / 180.0 * np.pi
 
-        # Speed is degrees per second (convert to rpm)
-        speed = data["speed"] / 6.0
+        # Speed is degrees per second (convert to rad/s)
+        speed = data["speed"] / 180.0 * np.pi 
 
         # Applied "load"
         load = 0  # unimplemented

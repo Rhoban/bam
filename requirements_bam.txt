@@ -9,4 +9,3 @@ wandb
 matplotlib
 pygame
 colorama
-protobuf==5.28.2
