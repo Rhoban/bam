@@ -1,1 +1,18 @@
-{"stiffness": 67.32087212525703, "damping": 2.3451295894765924, "inertia": 0.0009998250120449165, "friction_base": 0.19851639530453832, "friction_viscous": 0.03485439607770722, "friction_stribeck": 0.0439245002153065, "load_friction_motor": 9.0918406563577e-07, "load_friction_external": 0.19573364292934822, "load_friction_motor_stribeck": 0.029531012135343995, "load_friction_external_stribeck": 0.4179007617885853, "load_friction_motor_quad": 0.001512376494937079, "load_friction_external_quad": 0.00941737828184932, "dtheta_stribeck": 0.058658129687505375, "alpha": 1.592838833546467, "model": "m6", "actuator": "sts3250"}
+{
+    "damping": 2.6728113376774156, 
+    "stiffness": 69.35578881361153, 
+    "armature": 0.008535508409911005, 
+    "friction_base": 0.044006552505787506, 
+    "friction_stribeck": 0.06336597818111832, 
+    "load_friction_motor": 0.04099951656475163, 
+    "load_friction_external": 0.06168848398558106, 
+    "load_friction_motor_stribeck": 0.12089113404236514, 
+    "load_friction_external_stribeck": 0.236323803758428, 
+    "load_friction_motor_quad": 0.00837611337042117, 
+    "load_friction_external_quad": 0.0009462965444145883, 
+    "dtheta_stribeck": 0.0893280788508571, 
+    "alpha": 0.8734681483227246, 
+    "friction_viscous": 0.05819597600231913, 
+    "model": "m6", 
+    "actuator": "sts3250"
+}

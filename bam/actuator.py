@@ -277,14 +277,16 @@ class Sts3250(Actuator):
 
     def initialize(self):
         # We don't have access to internal motor parameters, so we'll model overall behavior
-        self.model.stiffness = Parameter(130.1, 1.0, 500.0)  # Position control stiffness
-        self.model.damping = Parameter(6, 0.1, 10.0)  # Damping coefficient
-        self.model.inertia = Parameter(0.00961, 0.00001, 0.001)  # Apparent inertia
-        self.model.friction_base = Parameter(0.0485, 0.0, 0.5)
-        self.model.friction_viscous = Parameter(0.0358, 0.0, 0.5)
+        # Torque constant [Nm/A] or [V/(rad/s)]
+        self.model.damping = Parameter(1.0, 0.1, 3.0)
+        self.model.stiffness = Parameter(10, 1.0, 120.0)  # Position control stiffness
+        self.model.armature = Parameter(0.005, 0.001, 0.05)
+        # self.model.inertia = Parameter(0.00961, 0.00001, 0.001)  # Apparent inertia
+        # self.model.friction_base = Parameter(0.0485, 0.0, 0.5)
+        # self.model.friction_viscous = Parameter(0.0358, 0.0, 0.5)
 
     def get_extra_inertia(self) -> float:
-        return self.model.inertia.value
+        return self.model.armature.value
 
     def control_unit(self) -> str:
         return "position"
