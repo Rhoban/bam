@@ -234,6 +234,51 @@ class XC330M288T(MXActuator):
         # self.model.max_viscous_friction = 30.0
 
 
+class STS3215(MXActuator):
+    """
+    Feetech STS3215 7.4v
+    """
+
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(testbench_class)
+
+        # Input voltage and (firmware) gain
+        self.vin: float = 7.4
+        self.kp: float = 32
+
+        # This gain, if multiplied by a position error and firmware KP, gives duty cycle
+        # It was determined using an oscilloscope and STS3215 actuators
+        # here, firmware_kp = kp
+        self.error_gain = 0.166
+
+        # Maximum allowable duty cycle, also determined with oscilloscope
+        self.max_pwm = 1.0 # TODO, but can we assume 1.0 ?
+
+    def load_log(self, log: dict):
+        super().load_log(log)
+
+        self.kp = log["kp"]
+
+        if "vin" in log:
+            self.vin = log["vin"]
+
+    def initialize(self):
+        # Torque constant [Nm/A] or [V/(rad/s)]
+        self.model.kt = Parameter(1.6, 0.1, 3.0)
+        # self.model.kt = 0.784532 # docs says 8 kg.cm / A
+
+        # Motor resistance [Ohm]
+        self.model.R = Parameter(2.0, 1.0, 8.0)
+        # self.model.R = 2.5 # docs says 2.5 ohm
+
+        # Motor armature / apparent inertia [kg m^2]
+        self.model.armature = Parameter(0.001, 0.0001, 0.01)
+
+        # self.model.max_friction_base = 10.0
+        # self.model.max_load_friction = 1.0
+        # self.model.max_viscous_friction = 30.0
+
+
 class LinearActuator(Actuator):
     """
     Represents a linear actuator
@@ -300,4 +345,5 @@ actuators = {
     "erob80_100": lambda: Erob(Pendulum, damping=2.0),
     "erob80_50": lambda: Erob(Pendulum, damping=1.0),
     "xc330m288t": lambda: XC330M288T(Pendulum),
+    "sts3215": lambda: STS3215(Pendulum),
 }

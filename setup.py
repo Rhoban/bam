@@ -27,7 +27,11 @@ setuptools.setup(
             "optuna",
             "wandb",
             "pygame"
-        ],  
+        ],
+        "feetech": [
+            "feetech-servo-sdk==1.0.0",
+            "tqdm==4.67.1"
+        ]
     },
     include_package_data=True,
     package_data={},

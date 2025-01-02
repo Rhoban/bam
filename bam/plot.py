@@ -89,6 +89,7 @@ for log in logs.logs:
                 sim_controls,
                 label=f"{model_name}_{dummy.actuator.control_unit()}",
             )
+
     # Shading the areas where torque is False
     ax3.fill_between(
         ts,
