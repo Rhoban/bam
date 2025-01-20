@@ -197,8 +197,6 @@ if __name__ == "__main__":
                 ax.legend()
                 ax.grid()
                 ax.set_aspect('equal',adjustable='box')
-                ax.set_xlim(-0.22, 0.22)
-                ax.set_ylim(-0.4, -0.2)
                 ax.set_title(f"{os.path.basename(log)}, {params}")
                 
 
