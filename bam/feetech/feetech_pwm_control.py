@@ -4,6 +4,7 @@ import numpy as np
 from threading import Thread
 
 
+# Must stay in degrees to match pypot default.
 class FeetechPWMControl:
     def __init__(self, id, kp=None):
         self.io = FeetechSTS3215IO(
@@ -50,7 +51,7 @@ class FeetechPWMControl:
             pwm = np.int16(pwm)
 
             pwm_magnitude = abs(pwm)
-            if pwm_magnitude >= 2**10:
+            if pwm_magnitude >= 2**10:  # cap to 10 bits
                 pwm_magnitude = (2**10) - 1
 
             direction_bit = 1 if pwm >= 0 else 0

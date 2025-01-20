@@ -249,10 +249,11 @@ class STS3215(MXActuator):
         # This gain, if multiplied by a position error and firmware KP, gives duty cycle
         # It was determined using an oscilloscope and STS3215 actuators
         # here, firmware_kp = kp
-        self.error_gain = 0.166
+        # self.error_gain = 0.166
+        self.error_gain = 0.1
 
         # Maximum allowable duty cycle, also determined with oscilloscope
-        self.max_pwm = 1.0 # TODO, but can we assume 1.0 ?
+        self.max_pwm = 1.0  # TODO, but can we assume 1.0 ?
 
     def load_log(self, log: dict):
         super().load_log(log)
@@ -264,18 +265,27 @@ class STS3215(MXActuator):
 
     def initialize(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.model.kt = Parameter(0.784532, 0.05, 2.5) # docs says 8 kg.cm / A
+        self.model.kt = Parameter(0.784532, 0.05, 2.5)  # docs says 8 kg.cm / A
 
         # Motor resistance [Ohm]
         self.model.R = Parameter(2.0, 0.1, 10.0)
         # self.model.R = 2.5 # docs says 2.5 ohm
 
         # Motor armature / apparent inertia [kg m^2]
-        self.model.armature = Parameter(0.01, 0.00001, 0.001)
+        self.model.armature = Parameter(0.01, 0.00001, 0.01)
 
         # self.model.max_friction_base = 10.0
         # self.model.max_load_friction = 1.0
         # self.model.max_viscous_friction = 30.0
+
+    def compute_control(
+        self, position_error: float, q: float, dq: float
+    ) -> float | None:
+
+        duty_cycle = np.rad2deg(position_error) * self.kp * 0.001
+        duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
+
+        return self.vin * duty_cycle
 
 
 class LinearActuator(Actuator):
