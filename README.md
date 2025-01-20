@@ -99,7 +99,10 @@ Available trajectories are:
 To post-process, you can use:
 
 ```
-python process.py --raw data_raw --logdir data_processed --dt 0.005
+python -m bam.process \
+    --raw data_raw \
+    --logdir data_processed \
+    --dt 0.005
 ```
 
 This will process the data with linear interpolation to enforce a constant given timestep.
