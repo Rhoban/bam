@@ -1,5 +1,3 @@
-
-from bam.feetech.feetech_pwm_control import FeetechPWMControl
 import json
 import datetime
 import os
@@ -7,6 +5,7 @@ import numpy as np
 import argparse
 import time
 from bam.trajectory import *
+from bam.feetech.feetech import FeetechMotorsBus, configure, convert_radians_to_steps, convert_steps_to_radians
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--mass", type=float, required=True)
@@ -21,7 +20,7 @@ arg_parser.add_argument("--id", type=int, required=True)
 args = arg_parser.parse_args()
 
 os.makedirs(args.logdir, exist_ok=True)
-TRAJ_OFFSET = 0
+TRAJ_OFFSET = np.deg2rad(180)
 
 if args.trajectory not in trajectories:
     raise ValueError(f"Unknown trajectory: {args.trajectory}")
@@ -29,8 +28,9 @@ if args.trajectory not in trajectories:
 motors = {
     "test": (1, "sts3215"),
 }
-
-motor = FeetechPWMControl(id=args.id)
+motors_bus = FeetechMotorsBus(port=args.port, motors=motors)
+motors_bus.connect()
+configure(motors_bus)
 
 trajectory = trajectories[args.trajectory]
 
@@ -39,11 +39,14 @@ while time.time() - start < 1.0:
     goal_position, torque_enable = trajectory(0)
     goal_position += TRAJ_OFFSET
     if torque_enable:
-        motor.goal_position = np.rad2deg(goal_position)
-        motor.enable_torque()
+        goal_position_steps = convert_radians_to_steps(goal_position, ["sts3215"])
+        motors_bus.write("Goal_Position", goal_position_steps, ["test"])
+        motors_bus.write("Torque_Enable", 1, ["test"])
     else:
-        motor.disable_torque()
-    motor.kp = args.kp
+        motors_bus.write("Torque_Enable", 0, ["test"])
+    motors_bus.write("P_Coefficient", [args.kp], ["test"])
+    motors_bus.write("I_Coefficient", [0], ["test"])
+    motors_bus.write("D_Coefficient", [0], ["test"])
 
 
 start = time.time()
@@ -60,16 +63,25 @@ data = {
 
 def read_data():
 
-    position = np.deg2rad(motor.io.get_present_position([motor.id])[0])
+    position_steps = motors_bus.read("Present_Position", ["test"])
+    position = convert_steps_to_radians(position_steps, ["sts3215"])[0]
 
-    speed = np.deg2rad(motor.io.get_present_speed([motor.id])[0])  # TODO convert
+    speed_steps = motors_bus.read("Present_Speed", ["test"])
+    speed = convert_steps_to_radians(speed_steps, ["sts3215"])[0]
+
 
     load = 0  # TMP
 
-    volts = motor.io.get_present_voltage([motor.id])[0] * 0.1
+    volts = motors_bus.read("Present_Voltage", ["test"])[0] * 0.1 # unit is 0.1v
 
-    temp = motor.io.get_present_temperature([motor.id])[0]
-
+    temp = motors_bus.read("Present_Temperature", ["test"])[0]
+    # aze =  {
+    #     "position": position,
+    #     "speed": speed,
+    #     "load": load,
+    #     "input_volts": volts,
+    #     "temp": temp,
+    # }
     return {
         "position": float(position),
         "speed": float(speed),
@@ -85,13 +97,14 @@ while time.time() - start < trajectory.duration:
     goal_position += TRAJ_OFFSET
     if new_torque_enable != torque_enable:
         if new_torque_enable:
-            motor.enable_torque()
+            motors_bus.write("Torque_Enable", 1, ["test"])
         else:
-            motor.disable_torque()
+            motors_bus.write("Torque_Enable", 0, ["test"])
         torque_enable = new_torque_enable
         time.sleep(0.001)
     if torque_enable:
-        motor.goal_position = np.rad2deg(goal_position)
+        goal_position_steps = convert_radians_to_steps(goal_position, ["sts3215"])
+        motors_bus.write("Goal_Position", goal_position_steps, ["test"])
         time.sleep(0.001)
 
     t0 = time.time() - start
@@ -112,16 +125,12 @@ while abs(goal_position) > TRAJ_OFFSET:
         goal_position = max(TRAJ_OFFSET, goal_position - max_variation)
     else:
         goal_position = min(TRAJ_OFFSET, goal_position + max_variation)
-
-    motor.goal_position = np.rad2deg(goal_position)
+    goal_position_steps = convert_radians_to_steps(goal_position, ["sts3215"])
+    motors_bus.write("Goal_Position", goal_position_steps, ["test"])
 
     time.sleep(return_dt)
 
-motor.goal_position = 0
-time.sleep(1)
-
-motor.disable_torque()
-
+motors_bus.write("Torque_Enable", 0, ["test"])
 
 # Format YYYY-MM-DD_HH:mm:ss"
 date = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%S")
