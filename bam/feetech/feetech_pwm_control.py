@@ -74,7 +74,7 @@ class FeetechPWMControl:
 
             pwm_magnitude = abs(self.pwm)
             if pwm_magnitude >= 2**10:  # cap to 10 bits
-                pwm_magnitude = (2**10) - 1
+                pwm_magnitude = (2**10) - 24
 
             direction_bit = 1 if self.pwm >= 0 else 0
             goal_time = (direction_bit << 10) | pwm_magnitude
