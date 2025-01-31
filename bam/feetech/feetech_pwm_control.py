@@ -69,38 +69,14 @@ class FeetechPWMControl:
             error = self.goal_position - self.present_position
 
             self.pwm = self.kp * error
-            # pwm *= 10
             self.pwm = np.int16(self.pwm)
+            self.pwm = np.clip(self.pwm, -1000, 1000)
 
             pwm_magnitude = abs(self.pwm)
-            if pwm_magnitude >= 2**10:  # cap to 10 bits
-                pwm_magnitude = (2**10) - 24
 
             direction_bit = 1 if self.pwm >= 0 else 0
             goal_time = (direction_bit << 10) | pwm_magnitude
-            # if direction_bit == 1:
-            #     goal_time = pwm_magnitude | (1 << 10)
-            # else:
-            #     goal_time = pwm_magnitude & ~(1 << 10)
-            # prev_calc = (direction_bit << 10) | pwm_magnitude
-            # bitwise_diff = prev_calc & ~goal_time
-            # diff = prev_calc - goal_time
-            # print(diff)
-            # print("goal time", '{0:011b}'.format(goal_time))            
-            # print("prev calc", '{0:011b}'.format(prev_calc))
-            # print("bitwise diff", bitwise_diff)
-            # goal_time = (direction_bit << 10) | pwm_magnitude
-            # print("goal time", '{0:011b}'.format(goal_time))
-            # print("goal time", '{0:011b}'.format((direction_bit << 10) | pwm_magnitude))
-            # print("diff", diff)
-            # print("pwm", self.pwm)   
-            # print("torque limit", self.io.get_torque_limit([self.id]))
-            # print("max torque limit", self.io.get_max_torque_limit([self.id]))
-            # print("overload torque", self.io.get_overload_torque([self.id]))
-            # print("protective torque", self.io.get_protective_torque([self.id]))
-            # print("protection current", self.io.get_protection_current([self.id]))
-            # print("present current", self.io.get_present_current([self.id]))
-            # print("=")
+
             self.io.set_goal_time({self.id: goal_time})
 
             if i % self.speed_decimation == 0:
