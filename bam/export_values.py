@@ -1,4 +1,5 @@
 from .model import models, load_model
+import numpy as np
 from .actuator import actuators
 import argparse
 
@@ -18,6 +19,10 @@ frictionloss = model.friction_base.value
 kt = model.kt.value
 R = model.R.value
 armature = model.armature.value
+
+# From feetech
+# R = 3.0
+# kt = 0.78
 
 forcerange = args.vin * kt / R
 kp = model.actuator.error_gain * args.kp_firmware * args.vin * kt / R

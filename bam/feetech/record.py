@@ -1,4 +1,3 @@
-
 from bam.feetech.feetech_pwm_control import FeetechPWMControl
 import json
 import datetime
@@ -21,7 +20,6 @@ arg_parser.add_argument("--id", type=int, required=True)
 args = arg_parser.parse_args()
 
 os.makedirs(args.logdir, exist_ok=True)
-TRAJ_OFFSET = 0
 
 if args.trajectory not in trajectories:
     raise ValueError(f"Unknown trajectory: {args.trajectory}")
@@ -37,7 +35,6 @@ trajectory = trajectories[args.trajectory]
 start = time.time()
 while time.time() - start < 1.0:
     goal_position, torque_enable = trajectory(0)
-    goal_position += TRAJ_OFFSET
     if torque_enable:
         motor.goal_position = np.rad2deg(goal_position)
         motor.enable_torque()
@@ -62,7 +59,8 @@ def read_data():
 
     position = np.deg2rad(motor.io.get_present_position([motor.id])[0])
 
-    speed = np.deg2rad(motor.io.get_present_speed([motor.id])[0])  # TODO convert
+    # speed = np.deg2rad(motor.io.get_present_speed([motor.id])[0])  # TODO convert
+    speed = motor.get_present_speed()
 
     load = 0  # TMP
 
@@ -82,7 +80,6 @@ def read_data():
 while time.time() - start < trajectory.duration:
     t = time.time() - start
     goal_position, new_torque_enable = trajectory(t)
-    goal_position += TRAJ_OFFSET
     if new_torque_enable != torque_enable:
         if new_torque_enable:
             motor.enable_torque()
@@ -107,11 +104,11 @@ while time.time() - start < trajectory.duration:
 goal_position = data["entries"][-1]["position"]
 return_dt = 0.01
 max_variation = return_dt * 1.0
-while abs(goal_position) > TRAJ_OFFSET:
-    if goal_position > TRAJ_OFFSET:
-        goal_position = max(TRAJ_OFFSET, goal_position - max_variation)
+while abs(goal_position) > 0:
+    if goal_position > 0:
+        goal_position = max(0, goal_position - max_variation)
     else:
-        goal_position = min(TRAJ_OFFSET, goal_position + max_variation)
+        goal_position = min(0, goal_position + max_variation)
 
     motor.goal_position = np.rad2deg(goal_position)
 

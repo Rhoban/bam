@@ -14,7 +14,11 @@ class Logs:
         for json_file in self.json_files:
             with open(json_file) as f:
                 data = json.load(f)
-                # if data["trajectory"] == "lift_and_drop":
+                # print(data.keys())
+                # exit()
+                # if data["trajectory"] == "lift_and_drop" or data["mass"] < 0.9:
+                # if data["kp"] != 32:
+                #     print(f"Skipping {json_file}")
                 #     continue
                 data["filename"] = json_file
                 if "arm_mass" not in data:
