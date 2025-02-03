@@ -1,5 +1,6 @@
 import numpy as np
 from .model import Model
+from typing import Union
 
 
 class Simulator:
@@ -18,7 +19,7 @@ class Simulator:
 
         self.model.reset()
 
-    def step(self, control: None | float, dt: float):
+    def step(self, control: Union[None, float], dt: float):
         """
         Steps the simulation for dt given the applied control
         """

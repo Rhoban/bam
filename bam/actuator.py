@@ -2,6 +2,7 @@ import numpy as np
 from .parameter import Parameter
 from .testbench import Testbench, Pendulum
 from . import message
+from typing import Union
 
 
 class Actuator:
@@ -33,13 +34,13 @@ class Actuator:
 
     def compute_control(
         self, position_error: float, q: float, dq: float
-    ) -> float | None:
+    ) -> Union[float, None]:
         """
         The control (e.g volts or amps) produced by the actuator, given the position error and current configruation
         """
         raise NotImplementedError
 
-    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+    def compute_torque(self, control: Union[float,  None], q: float, dq: float) -> float:
         """
         The torque [Nm] produced by the actuator, given the control signal and current configuration
         """
@@ -96,14 +97,14 @@ class Erob(Actuator):
 
     def compute_control(
         self, position_error: float, q: float, dq: float
-    ) -> float | None:
+    ) -> Union[float, None]:
         # Target velocity is assumed to be 0
         amps = position_error * self.kp + self.damping * np.sqrt(self.kp) * (0.0 - dq)
         amps = np.clip(amps, -self.max_amps, self.max_amps)
 
         return amps
 
-    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+    def compute_torque(self, control: Union[float, None], q: float, dq: float) -> float:
         # Computing the torque given the control signal
         # With eRob, control=None actually meany amps=0, and not a disconnection of the motor
         amps = control if control is not None else 0.0
@@ -170,13 +171,13 @@ class MXActuator(Actuator):
 
     def compute_control(
         self, position_error: float, q: float, dq: float
-    ) -> float | None:
+    ) -> Union[float, None]:
         duty_cycle = position_error * self.kp * self.error_gain
         duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
 
         return self.vin * duty_cycle
 
-    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+    def compute_torque(self, control: Union[float, None], q: float, dq: float) -> float:
         # Volts to None means that the motor is disconnected
         if control is None:
             return 0.0
@@ -282,7 +283,7 @@ class STS3215(MXActuator):
 
     def compute_control(
         self, position_error: float, q: float, dq: float
-    ) -> float | None:
+    ) -> Union[float, None]:
         duty_cycle = position_error * self.kp * self.error_gain
         duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
 
@@ -327,13 +328,13 @@ class LinearActuator(Actuator):
 
     def compute_control(
         self, position_error: float, q: float, dq: float
-    ) -> float | None:
+    ) -> Union[float, None]:
         duty_cycle = position_error * self.kp
         duty_cycle = np.clip(duty_cycle, -1.0, 1.0)
 
         return self.vin * duty_cycle
 
-    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+    def compute_torque(self, control: Union[float, None], q: float, dq: float) -> float:
         # Volts to None means that the motor is disconnected
         if control is None:
             return 0.0
