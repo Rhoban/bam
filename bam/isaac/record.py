@@ -20,8 +20,8 @@ from bam.isaac_identification_rig.identification_rig import IsaacIdentificationR
 # args = arg_parser.parse_args()
 
 class Args:
-    mass = 1.084
-    # mass = 0.546
+    # mass = 1.084
+    mass = 0.546
     length = 0.15
     # length = 0.1
     port = "/dev/ttyUSB0"
@@ -31,7 +31,7 @@ class Args:
     # trajectory = "lift_and_drop"
     trajectory = "sin_time_square"
     motor = "sts3215"
-    kp = 6.55
+    kp = 32
     vin = 7.4
     id = 0
 
@@ -64,7 +64,7 @@ while time.time() - start < 1.0:
         motor.enable_torque()
     else:
         motor.disable_torque()
-    motor.kp = args.kp
+    motor.kp = 6.55
 
 
 start = time.time()
@@ -134,8 +134,6 @@ while abs(goal_position) > 0:
         goal_position = max(0, goal_position - max_variation)
     else:
         goal_position = min(0, goal_position + max_variation)
-
-    print(goal_position)
     # motor.goal_position = np.rad2deg(goal_position)
     motor.set_goal_position(goal_position)
 
@@ -154,3 +152,5 @@ date = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%S")
 filename = f"{args.logdir}/{date}.json"
 
 json.dump(data, open(filename, "w"))
+
+print("done")

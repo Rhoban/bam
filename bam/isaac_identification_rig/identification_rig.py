@@ -10,13 +10,14 @@ from isaacgym import gymtorch
 
 import numpy as np
 
+MASS = "0_5"  # 0_5, 1
 LEVER_LENGTH = "0_150"  # 0_100, 0_150
-MASS = "1"  # 0_5, 1
 
 ARMATURE = 0.027
-MAX_EFFORT = 6.49
+MAX_EFFORT = 3.57
 KP = 6.55
-FRICTION = 0.083
+FRICTION = 0.045
+# FRICTION = 0.02
 DAMPING = 0.65
 
 
@@ -41,11 +42,15 @@ class IsaacIdentificationRig:
         self.dt = self.sim_params.dt * self.control_decimation
 
         # You can switch to PhysX or Flex depending on your installation
-        self.sim_params.physx.solver_type = 1
-        self.sim_params.physx.num_position_iterations = 4
-        self.sim_params.physx.num_velocity_iterations = 1
-        self.sim_params.physx.rest_offset = 0.0
-        self.sim_params.physx.contact_offset = 0.001
+        self.sim_params.physx.solver_type = 0 # 0: pgs, 1: tgs
+        # self.sim_params.physx.num_position_iterations = 4
+        # self.sim_params.physx.num_velocity_iterations = 1
+        # self.sim_params.physx.contact_offset = 0.02
+        # self.sim_params.physx.rest_offset = 0.0
+        # self.sim_params.physx.bounce_threshold_velocity = 0.2
+        # self.sim_params.physx.max_depenetration_velocity = 100.0
+        # self.sim_params.physx.default_buffer_size_multiplier = 5.0
+        # self.sim_params.physx.contact_collection = 1
         self.sim_params.physx.use_gpu = (
             True  # set to False if you don't have GPU support
         )
@@ -67,8 +72,8 @@ class IsaacIdentificationRig:
 
         # 7. Create (or load) assets and environments
         #    We'll just make one environment here as an example
-        envs = []
-        num_envs = 1
+        self.envs = []
+        self.num_envs = 1
 
         # The spacing below is how far apart multiple envs would be placed if you had more than one
         env_lower = gymapi.Vec3(-1.0, -1.0, 0.0)
@@ -76,15 +81,15 @@ class IsaacIdentificationRig:
 
         # Path where your URDF or mesh files exist
         asset_root = "./bam/isaac_identification_rig/assets"
-        # franka_asset_file = "urdf/franka_description/robots/franka_panda.urdf"
-        # asset_file = "awd/data/assets/mini2_bdx/mini2_bdx.urdf"
+        # asset_root = "./assets"
         asset_file = f"identification_rig_{LEVER_LENGTH}m_{MASS}kg/robot.urdf"
 
         # Setup asset options
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         asset_options.disable_gravity = False
-        asset_options.thickness = 0.01
+        asset_options.thickness = 0.00
+        asset_options.density = 0.000
         asset_options.angular_damping = 0.00
         asset_options.linear_damping = 0.0
         asset_options.max_angular_velocity = 1000.0
@@ -92,12 +97,14 @@ class IsaacIdentificationRig:
         asset_options.default_dof_drive_mode = 3
 
         # Load the asset
-        asset = self.gym.load_asset(self.sim, asset_root, asset_file, asset_options)
+        self.asset = self.gym.load_asset(
+            self.sim, asset_root, asset_file, asset_options
+        )
 
-        for i in range(num_envs):
+        for i in range(self.num_envs):
             # Create an environment
-            env = self.gym.create_env(self.sim, env_lower, env_upper, num_envs)
-            envs.append(env)
+            env = self.gym.create_env(self.sim, env_lower, env_upper, self.num_envs)
+            self.envs.append(env)
 
             # Create an actor (the robot)
             pose = gymapi.Transform()
@@ -107,34 +114,62 @@ class IsaacIdentificationRig:
 
             # Add the robot to the environment
             # The last two parameters: "franka" is the name for the actor, and i is the index
-            handle = self.gym.create_actor(env, asset, pose, "actor", i, 1)
+            self.handle = self.gym.create_actor(env, self.asset, pose, "actor", i, 1)
 
-            dof_props = self.gym.get_asset_dof_properties(asset)
+            dof_props = self.gym.get_asset_dof_properties(self.asset)
             dof_props["friction"] = FRICTION
             dof_props["armature"] = ARMATURE
-            dof_props["damping"] = DAMPING
+            # dof_props["damping"] = DAMPING
+            # print(dof_props)
+            # exit()
 
-            self.gym.set_actor_dof_properties(env, handle, dof_props)
+            self.gym.set_actor_dof_properties(env, self.handle, dof_props)
 
         self.dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
         self.dof_state = gymtorch.wrap_tensor(self.dof_state_tensor)
-        self.dofs_per_env = self.dof_state.shape[0] // num_envs
-        self.dof_pos = self.dof_state.view(num_envs, self.dofs_per_env, 2)[..., :1, 0]
-        self.dof_vel = self.dof_state.view(num_envs, self.dofs_per_env, 2)[..., :1, 1]
+        self.dofs_per_env = self.dof_state.shape[0] // self.num_envs
+        self.dof_pos = self.dof_state.view(self.num_envs, self.dofs_per_env, 2)[
+            ..., :1, 0
+        ]
+        self.dof_vel = self.dof_state.view(self.num_envs, self.dofs_per_env, 2)[
+            ..., :1, 1
+        ]
 
         self.kp = KP
+        self.kd = DAMPING
+        # self.kd = 0
         self.max_effort = MAX_EFFORT
         self.torque_enabled = True
         self.goal_position = 0
         Thread(target=self.run).start()
 
+    def set_friction(self, friction):
+
+        for i in range(self.num_envs):
+            env = self.envs[i]
+
+            dof_props = self.gym.get_asset_dof_properties(self.asset)
+            dof_props["friction"] = friction
+
+            self.gym.set_actor_dof_properties(env, self.handle, dof_props)
+        pass
+
+    def set_damping(self, damping):
+        self.kd = damping
+
+    def set_kp(self, kp):
+        self.kp = kp
+
     def run(self):
         self.ready = True
         while not self.gym.query_viewer_has_closed(self.viewer):
             for _ in range(self.control_decimation):
-                torques = self.kp * (self.goal_position - self.dof_pos)
+                torques = self.kp * (
+                    self.goal_position - self.dof_pos
+                )  # - (self.kd * self.dof_vel)
                 torques = np.clip(torques, -self.max_effort, self.max_effort)
                 torques *= self.torque_enabled
+                torques -= self.kd * self.dof_vel
                 self.gym.set_dof_actuation_force_tensor(
                     self.sim, gymtorch.unwrap_tensor(torques)
                 )
@@ -175,36 +210,19 @@ class IsaacIdentificationRig:
         return self.dof_vel[0][0].cpu().numpy()
 
 
-# class IsaacIdentificationRigService(rpyc.Service):
-#     exposed_isaac_identification_rig = IsaacIdentificationRig()
-
-#     def on_connect(self, conn):
-#         pass
-
-#     def on_disconnect(self, conn):
-#         pass
-
-
-# def main():
-#     t = ThreadedServer(
-#         IsaacIdentificationRigService,
-#         port=18861,
-#         # protocol_config={
-#         #     "allow_all_attrs": True,
-#         #     "allow_setattr": True,
-#         #     "allow_pickle": True
-#         #     # "allow_delattr": True,
-#         # },
-#     )
-#     t.start()
-
-
 if __name__ == "__main__":
     i = IsaacIdentificationRig()
     A = 0.5
     F = 1.5
+    s = time.time()
+    set = False
     while True:
         i.set_goal_position(A * np.sin(2 * np.pi * F * time.time()))
-        print(i.get_present_position())
-        print(i.get_present_velocity())
+        # print(i.get_present_position())
+        # print(i.get_present_velocity())
         time.sleep(0.01)
+        if time.time() - s > 5 and not set:
+            print("a")
+            i.set_friction(0.3)
+            set = True
+

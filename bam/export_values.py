@@ -16,6 +16,7 @@ model = load_model(args.params)
 
 viscous = model.friction_viscous.value
 frictionloss = model.friction_base.value
+# load_friction_base = model.load_friction_base.value
 kt = model.kt.value
 R = model.R.value
 armature = model.armature.value
@@ -32,4 +33,5 @@ print(f"Armature: {armature}")
 print(f"Force range: {forcerange}")
 print(f"Kp: {kp}")
 print(f"Friction loss: {frictionloss}")
+# print(f"Load friction base: {load_friction_base}")
 print(f"Damping: {damping}")
