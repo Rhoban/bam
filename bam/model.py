@@ -38,6 +38,9 @@ class Model:
         self.actuator = actuator
         self.actuator.set_model(self)
 
+        # Offset of the motor (testbench error)
+        self.q_offset = Parameter(0.0, -0.1, 0.1)
+
         # Base friction is always here, stribeck friction is added when not moving [Nm]
         self.friction_base = Parameter(0.05, 0.0, self.max_friction_base)
         if self.stribeck:
