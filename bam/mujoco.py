@@ -4,6 +4,19 @@ from .model import Model
 
 
 class MujocoController:
+    """
+    A MujocoController is a class allowing to apply the torque and update frictions
+    from the computed model during a simulation.
+
+    Args:
+        model (Model): model to use (can be loaded using load_model)
+        actuator (str): actuator to control
+                Note1: the actuated joint properties will be updated
+                Note2: this can be a list of actuators
+        mujoco_model (mujoco.MjModel): the mujoco model
+        mujoco_data (mujoco.MjData): the mujoco data
+    """
+
     def __init__(
         self,
         model: Model,
@@ -16,22 +29,18 @@ class MujocoController:
         self.mujoco_model = mujoco_model
         self.mujoco_data = mujoco_data
 
-        # Qpos indexes (qpos)
-        self.qpos_indexes = [
-            self.mujoco_model.joint(name).qposadr[0] for name in self.actuator
-        ]
-        # Dof indexes (dof_armature, qvel)
-        self.dof_indexes = [
-            self.mujoco_model.joint(name).dofadr[0] for name in self.actuator
-        ]
         # Actuator indexes (ctrl)
         self.act_indexes = [
             self.mujoco_model.actuator(name).id for name in self.actuator
         ]
         # Joint indexes (efc_id)
+        # Retrieved using the first element of the trnid
         self.joint_indexes = [
-            self.mujoco_model.joint(name).id for name in self.actuator
+            self.mujoco_model.actuator(name).trnid[0] for name in self.actuator
         ]
+        # Qpos indexes (qpos)
+        self.qpos_indexes = self.mujoco_model.jnt_qposadr[self.joint_indexes]
+        self.dof_indexes = self.mujoco_model.jnt_dofadr[self.joint_indexes]
 
         # Setting the armature
         self.mujoco_model.dof_armature[self.dof_indexes] = (
@@ -39,6 +48,15 @@ class MujocoController:
         )
 
     def update(self, q_target: float):
+        """
+        Update the controlled actuator(s) data:
+        - Torque to apply
+        - Friction parameters
+        - Damping
+
+        Args:
+            q_target (float): target position for the actuator(s)
+        """
         q_target = np.atleast_1d(q_target)
         assert len(q_target) == len(self.actuator), "Invalid target size"
 
