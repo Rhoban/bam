@@ -79,7 +79,7 @@
       <body name="first_segment_mix" pos="0 -0.02603 0.0548" quat="0.707107 -0.707107 0 0">
         <inertial pos="5.57459e-09 -0.138051 0.026169" quat="0.707647 0.706567 0 0" mass="0.211448"
           diaginertia="0.000602098 0.000561943 8.00351e-05" />
-        <joint name="R1" pos="0 0 0" axis="0 0 1" range="-1.91986 1.91986" />
+        <joint name="R1" class="mx106" pos="0 0 0" axis="0 0 1" range="-1.91986 1.91986" />
         <geom pos="-0.011 0 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
           rgba="0.690196 0.690196 0.690196 1" mesh="m2.5x6__list_khwhpz53lblddb__6" />
         <geom pos="-0.00777817 -0.00777817 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
@@ -143,7 +143,7 @@
         <body name="sw_segment_64" pos="0 -0.18 0.0025" quat="1 0 0 0">
           <inertial pos="0 -0.177175 0.0233766" quat="0.499985 0.500015 -0.500015 0.499985"
             mass="1.04661" diaginertia="0.00334693 0.00198375 0.00143404" />
-          <joint name="R2" pos="0 0 0" axis="0 0 1" range="-2.61799 2.61799" />
+          <joint name="R2" class="mx64" pos="0 0 0" axis="0 0 1" range="-2.61799 2.61799" />
           <geom pos="0 0.18 0.02077" quat="0 0 0 1" type="mesh" rgba="0.615686 0.811765 0.929412 1"
             mesh="sw_mx64_segment" />
           <geom pos="0.011 0 -0.005" quat="0.707107 0 -0.707107 0" type="mesh"
