@@ -23,14 +23,20 @@ class Simulator:
         """
         Steps the simulation for dt given the applied control
         """
-        bias_torque = self.model.actuator.testbench.compute_bias(self.q, self.dq)
-        motor_torque = self.model.actuator.compute_torque(control, torque_enable, self.q, self.dq)
+        bias_torque = self.model.actuator.testbench.compute_bias(
+            self.q + self.model.q_offset.value, self.dq
+        )
+        motor_torque = self.model.actuator.compute_torque(
+            control, torque_enable, self.q + self.model.q_offset.value, self.dq
+        )
         frictionloss, damping = self.model.compute_frictions(
             motor_torque, bias_torque, self.dq
         )
 
         inertia = (
-            self.model.actuator.testbench.compute_mass(self.q, self.dq)
+            self.model.actuator.testbench.compute_mass(
+                self.q + self.model.q_offset.value, self.dq
+            )
             + self.model.actuator.get_extra_inertia()
         )
         net_torque = motor_torque + bias_torque
@@ -62,7 +68,10 @@ class Simulator:
         reset_period_t = 0.0
         dt = log["dt"]
         first_entry = log["entries"][0]
-        self.reset(first_entry["position"], first_entry["speed"] if "speed" in first_entry else 0.0)
+        self.reset(
+            first_entry["position"],
+            first_entry["speed"] if "speed" in first_entry else 0.0,
+        )
         self.model.actuator.load_log(log)
 
         for entry in log["entries"]:

@@ -166,6 +166,9 @@ class MXActuator(Actuator):
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.001, 0.05)
 
+        # Offset of the motor (testbench error)
+        self.model.q_offset = Parameter(0.0, -0.1, 0.1)
+
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
 
