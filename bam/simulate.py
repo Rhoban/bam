@@ -1,4 +1,5 @@
 import numpy as np
+from copy import copy
 from .model import Model
 
 
@@ -12,8 +13,8 @@ class Simulator:
         """
         Resets the simulation to a given state
         """
-        self.q = q
-        self.dq = dq
+        self.q = copy(q)
+        self.dq = copy(dq)
         self.t = 0.0
 
         self.model.reset()
@@ -29,6 +30,7 @@ class Simulator:
         )
 
         inertia = (
+            self.model.actuator.testbench.compute_mass(self.q, self.dq)
             + self.model.actuator.get_extra_inertia()
         )
         net_torque = motor_torque + bias_torque
@@ -36,7 +38,7 @@ class Simulator:
         # Tau_stop is the torque required to stop the motor (reach a velocity of 0 after dt)
         tau_stop = (inertia / dt) * self.dq + net_torque
         static_friction = -np.sign(tau_stop) * np.min(
-            [np.abs(tau_stop), frictionloss + damping * np.abs(self.dq)]
+            [np.abs(tau_stop), frictionloss + damping * np.abs(self.dq)], axis=0
         )
         net_torque += static_friction
 
@@ -56,7 +58,6 @@ class Simulator:
         positions = []
         velocities = []
         controls = []
-        torque_enables = []
 
         reset_period_t = 0.0
         dt = log["dt"]
@@ -69,8 +70,8 @@ class Simulator:
             if reset_period is not None and reset_period_t > reset_period:
                 reset_period_t = 0.0
                 self.reset(entry["position"], entry["speed"])
-            positions.append(self.q)
-            velocities.append(self.dq)
+            positions.append(copy(self.q))
+            velocities.append(copy(self.dq))
 
             if simulate_control:
                 position_error = entry["goal_position"] - self.q
@@ -86,7 +87,7 @@ class Simulator:
                         position_error, self.q, self.dq
                     )
 
-            controls.append(control,)
+            controls.append(copy(control))
 
             self.step(control, entry["torque_enable"], dt)
 

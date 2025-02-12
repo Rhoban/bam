@@ -43,9 +43,11 @@ if not args.eval:
 logs = Logs(args.logdir)
 if not args.eval and args.validation_kp > 0:
     validation_logs = logs.split(args.validation_kp)
+    validation_batch = validation_logs.make_batch()
     print(f"{len(validation_logs.logs)} logs splitted for validation")
     if len(validation_logs.logs) == 0:
         raise ValueError("No logs for validation")
+logs_batch = logs.make_batch()
 
 
 def compute_score(model: Model, log: dict) -> float:
@@ -53,22 +55,22 @@ def compute_score(model: Model, log: dict) -> float:
     result = simulator.rollout_log(
         log, reset_period=args.reset_period, simulate_control=True
     )
-    positions = result[0]
+    positions = np.array(result[0])
     log_positions = np.array([entry["position"] for entry in log["entries"]])
 
     return np.mean(np.abs(positions - log_positions))
 
 
-def compute_scores(model: Model, compute_logs=None):
-    scores = 0
-    for log in compute_logs.logs:
-        # t0 = time.time()
-        scores += compute_score(model, log)
-        # t1 = time.time()
-        # elapsed = t1 - t0
-        # print(f"Durations: {elapsed:.6f} s")
+# def compute_scores(model: Model, compute_logs=None):
+#     scores = 0
+#     for log in compute_logs.logs:
+#         # t0 = time.time()
+#         scores += compute_score(model, log)
+#         # t1 = time.time()
+#         # elapsed = t1 - t0
+#         # print(f"Durations: {elapsed:.6f} s")
 
-    return scores / len(compute_logs.logs)
+#     return scores / len(compute_logs.logs)
 
 
 def make_model() -> Model:
@@ -94,7 +96,7 @@ def objective(trial):
         if parameter.optimize:
             parameter.value = trial.suggest_float(name, parameter.min, parameter.max)
 
-    return compute_scores(model, logs)
+    return compute_score(model, logs_batch)
 
 
 last_log = time.time()
@@ -140,7 +142,7 @@ def monitor(study, trial):
 
         if args.validation_kp > 0:
             val_model = load_model(params_json_filename)
-            val_best_value = compute_scores(val_model, validation_logs)
+            val_best_value = compute_score(val_model, validation_batch)
             wandb_log["optim/val_best_value"] = val_best_value
 
         print()
