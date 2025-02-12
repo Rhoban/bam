@@ -110,7 +110,7 @@ class IsaacIdentificationRig:
             pose = gymapi.Transform()
             pose.p.x = 0.0
             pose.p.y = 0.0
-            pose.p.z = 1.0
+            pose.p.z = 0.1
 
             # Add the robot to the environment
             # The last two parameters: "franka" is the name for the actor, and i is the index
@@ -127,6 +127,8 @@ class IsaacIdentificationRig:
 
         self.dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
         self.dof_state = gymtorch.wrap_tensor(self.dof_state_tensor)
+        self.mass_matrix_tensor = self.gym.acquire_mass_matrix_tensor(self.sim, "actor")
+        self.mass_matrix_state = gymtorch.wrap_tensor(self.mass_matrix_tensor)
         self.dofs_per_env = self.dof_state.shape[0] // self.num_envs
         self.dof_pos = self.dof_state.view(self.num_envs, self.dofs_per_env, 2)[
             ..., :1, 0
@@ -134,6 +136,11 @@ class IsaacIdentificationRig:
         self.dof_vel = self.dof_state.view(self.num_envs, self.dofs_per_env, 2)[
             ..., :1, 1
         ]
+        self.net_contact_force_tensor = self.gym.acquire_net_contact_force_tensor(self.sim)
+        self.net_contact_force = gymtorch.wrap_tensor(self.net_contact_force_tensor)
+        self.dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
+        self.dof_force = gymtorch.wrap_tensor(self.dof_force_tensor)
+
 
         self.kp = KP
         self.kd = DAMPING
@@ -181,11 +188,17 @@ class IsaacIdentificationRig:
             self.gym.refresh_dof_state_tensor(self.sim)
             self.gym.refresh_actor_root_state_tensor(self.sim)
             self.gym.refresh_rigid_body_state_tensor(self.sim)
+            self.gym.refresh_mass_matrix_tensors(self.sim)
+            # self.gym.refresh_dof_force_tensor(self.sim)
 
             self.gym.refresh_force_sensor_tensor(self.sim)
             self.gym.refresh_dof_force_tensor(self.sim)
             self.gym.refresh_net_contact_force_tensor(self.sim)
             self.gym.step_graphics(self.sim)
+            
+            print(self.dof_force.shape)
+            print(self.dof_force)
+            print("===")
 
             self.gym.draw_viewer(self.viewer, self.sim, True)
             self.gym.sync_frame_time(self.sim)
@@ -216,13 +229,14 @@ if __name__ == "__main__":
     F = 1.5
     s = time.time()
     set = False
+    i.disable_torque()
     while True:
-        i.set_goal_position(A * np.sin(2 * np.pi * F * time.time()))
+        # i.set_goal_position(A * np.sin(2 * np.pi * F * time.time()))
         # print(i.get_present_position())
         # print(i.get_present_velocity())
         time.sleep(0.01)
-        if time.time() - s > 5 and not set:
-            print("a")
-            i.set_friction(0.3)
-            set = True
+        # if time.time() - s > 5 and not set:
+        #     print("a")
+        #     i.set_friction(0.3)
+        #     set = True
 
