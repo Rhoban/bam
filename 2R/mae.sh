@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $# -le 2 ]; then
+if [ $# -lt 2 ]; then
     echo "Usage: plot.sh [testbench] [log1 [log2 ...]]"
     exit 1
 fi
