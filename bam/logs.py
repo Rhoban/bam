@@ -1,7 +1,9 @@
 import glob
+import numpy as np
 import copy
 import random
 import json
+from . import message
 
 
 class Logs:
@@ -51,3 +53,35 @@ class Logs:
         ]
 
         return other_logs
+
+    def make_batch(self) -> dict:
+        """
+        Make a batch log from all the logs. In a batch log, all entries are vectorized.
+        For example, batch["mass"] is a vector of all masses
+        batch["entries"][0]["position"] will be a vector of all positions
+        """
+        batch: dict = {"entries": []}
+
+        for key in self.logs[0]:
+            if key != "entries":
+                batch[key] = np.array([log[key] for log in self.logs])
+
+        entries_min_length = min([len(log["entries"]) for log in self.logs])
+        entries_max_length = max([len(log["entries"]) for log in self.logs])
+        if entries_max_length > entries_min_length + 1:
+            print(
+                message.yellow(
+                    f"WARNING: logs have significantly different lengths ({entries_min_length} to {entries_max_length})"
+                )
+            )
+
+        entry_keys = self.logs[0]["entries"][0].keys()
+        for k in range(entries_min_length):
+            batch["entries"].append(
+                {
+                    key: np.array([log["entries"][k][key] for log in self.logs])
+                    for key in entry_keys
+                }
+            )
+
+        return batch

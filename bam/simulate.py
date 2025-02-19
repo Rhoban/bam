@@ -1,4 +1,5 @@
 import numpy as np
+from copy import copy
 from .model import Model
 
 
@@ -12,24 +13,30 @@ class Simulator:
         """
         Resets the simulation to a given state
         """
-        self.q = q
-        self.dq = dq
+        self.q = copy(q)
+        self.dq = copy(dq)
         self.t = 0.0
 
         self.model.reset()
 
-    def step(self, control: None | float, dt: float):
+    def step(self, control: None | float, torque_enable: bool, dt: float):
         """
         Steps the simulation for dt given the applied control
         """
-        bias_torque = self.model.actuator.testbench.compute_bias(self.q + self.model.q_offset.value, self.dq)
-        motor_torque = self.model.actuator.compute_torque(control, self.q + self.model.q_offset.value, self.dq)
+        bias_torque = self.model.actuator.testbench.compute_bias(
+            self.q + self.model.q_offset.value, self.dq
+        )
+        motor_torque = self.model.actuator.compute_torque(
+            control, torque_enable, self.q + self.model.q_offset.value, self.dq
+        )
         frictionloss, damping = self.model.compute_frictions(
             motor_torque, bias_torque, self.dq
         )
 
         inertia = (
-            self.model.actuator.testbench.compute_mass(self.q + self.model.q_offset.value, self.dq)
+            self.model.actuator.testbench.compute_mass(
+                self.q + self.model.q_offset.value, self.dq
+            )
             + self.model.actuator.get_extra_inertia()
         )
         net_torque = motor_torque + bias_torque
@@ -37,7 +44,7 @@ class Simulator:
         # Tau_stop is the torque required to stop the motor (reach a velocity of 0 after dt)
         tau_stop = (inertia / dt) * self.dq + net_torque
         static_friction = -np.sign(tau_stop) * np.min(
-            [np.abs(tau_stop), frictionloss + damping * np.abs(self.dq)]
+            [np.abs(tau_stop), frictionloss + damping * np.abs(self.dq)], axis=0
         )
         net_torque += static_friction
 
@@ -56,12 +63,15 @@ class Simulator:
         """
         positions = []
         velocities = []
-        all_controls = []
+        controls = []
 
         reset_period_t = 0.0
         dt = log["dt"]
         first_entry = log["entries"][0]
-        self.reset(first_entry["position"], first_entry["speed"] if "speed" in first_entry else 0.0)
+        self.reset(
+            first_entry["position"],
+            first_entry["speed"] if "speed" in first_entry else 0.0,
+        )
         self.model.actuator.load_log(log)
 
         for entry in log["entries"]:
@@ -69,28 +79,25 @@ class Simulator:
             if reset_period is not None and reset_period_t > reset_period:
                 reset_period_t = 0.0
                 self.reset(entry["position"], entry["speed"])
-            positions.append(self.q)
-            velocities.append(self.dq)
+            positions.append(copy(self.q))
+            velocities.append(copy(self.dq))
 
-            if entry["torque_enable"]:
-                if simulate_control:
-                    position_error = entry["goal_position"] - self.q
+            if simulate_control:
+                position_error = entry["goal_position"] - self.q
+                control = self.model.actuator.compute_control(
+                    position_error, self.q, self.dq
+                )
+            else:
+                if "control" in entry:
+                    control = entry["control"]
+                else:
+                    position_error = entry["goal_position"] - entry["position"]
                     control = self.model.actuator.compute_control(
                         position_error, self.q, self.dq
                     )
-                else:
-                    if "control" in entry:
-                        control = entry["control"]
-                    else:
-                        position_error = entry["goal_position"] - entry["position"]
-                        control = self.model.actuator.compute_control(
-                            position_error, self.q, self.dq
-                        )
-            else:
-                control = None
 
-            all_controls.append(control)
+            controls.append(copy(control))
 
-            self.step(control, dt)
+            self.step(control, entry["torque_enable"], dt)
 
-        return positions, velocities, all_controls
+        return positions, velocities, controls

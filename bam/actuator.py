@@ -39,7 +39,9 @@ class Actuator:
         """
         raise NotImplementedError
 
-    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+    def compute_torque(
+        self, control: float | None, torque_enable: bool, q: float, dq: float
+    ) -> float:
         """
         The torque [Nm] produced by the actuator, given the control signal and current configuration
         """
@@ -103,10 +105,12 @@ class Erob(Actuator):
 
         return amps
 
-    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+    def compute_torque(
+        self, control: float | None, torque_enable: bool, q: float, dq: float
+    ) -> float:
         # Computing the torque given the control signal
         # With eRob, control=None actually meany amps=0, and not a disconnection of the motor
-        amps = control if control is not None else 0.0
+        amps = control * torque_enable
         torque = self.model.kt.value * amps
 
         # Computing the torque boundaries given the maximum voltage and the back EMF
@@ -176,11 +180,9 @@ class MXActuator(Actuator):
 
         return self.vin * duty_cycle
 
-    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
-        # Volts to None means that the motor is disconnected
-        if control is None:
-            return 0.0
-
+    def compute_torque(
+        self, control: float | None, torque_enable: bool, q: float, dq: float
+    ) -> float:
         volts = control
 
         # Torque produced
@@ -189,7 +191,7 @@ class MXActuator(Actuator):
         # Back EMF
         torque -= (self.model.kt.value**2) * dq / self.model.R.value
 
-        return torque
+        return torque * torque_enable
 
 
 class XC330M288T(MXActuator):
