@@ -38,6 +38,9 @@ class Model:
         self.actuator = actuator
         self.actuator.set_model(self)
 
+        # Offset of the motor (testbench error)
+        self.q_offset = Parameter(0.0, -0.1, 0.1)
+
         # Base friction is always here, stribeck friction is added when not moving [Nm]
         self.friction_base = Parameter(0.05, 0.0, self.max_friction_base)
         if self.stribeck:
@@ -116,18 +119,27 @@ class Model:
                         * stribeck_coeff
                     )
 
-                if self.quadratic and np.sign(external_torque) != np.sign(motor_torque):
-                    if abs(external_torque) < abs(motor_torque):
-                        gearbox_torque2 = (
-                            self.load_friction_external_quad.value
-                            * abs(external_torque) ** 2
-                        )
-                    else:
-                        gearbox_torque2 = (
-                            self.load_friction_motor_quad.value * abs(motor_torque) ** 2
-                        )
+                if self.quadratic:
+                    enable_quadratic = np.sign(external_torque) != np.sign(motor_torque)
+                    direction_motor = np.abs(external_torque) < np.abs(motor_torque)
+                    direction_external = np.abs(external_torque) > np.abs(motor_torque)
 
-                    frictionloss += gearbox_torque2 * stribeck_coeff
+                    gearbox_torque2_motor = (
+                        self.load_friction_external_quad.value
+                        * np.abs(external_torque) ** 2
+                    )
+                    gearbox_torque2_external = (
+                        self.load_friction_motor_quad.value * np.abs(motor_torque) ** 2
+                    )
+
+                    frictionloss += (
+                        stribeck_coeff
+                        * (
+                            direction_motor * gearbox_torque2_motor
+                            + direction_external * gearbox_torque2_external
+                        )
+                        * enable_quadratic
+                    )
 
         # Viscous friction
         damping = self.friction_viscous.value

@@ -11,7 +11,7 @@ friction model (M1). This model is too simplistic to accurately represent the be
 to more complex friction phenomena like Stribeck, load-dependence or quadratic effects.
 
 In this repository, we propose a method to identify extended friction models (M2 to M6) for servo actuators. 
-The detail of the method is presented in this [article](TODO), and this [video](https://youtu.be/ghvk0O9uDrc) presents the 
+The detail of the method is presented in this [article](https://arxiv.org/pdf/2410.08650v1), and this [video](https://youtu.be/V3KOj4TfM2Y) presents the 
 motivation, the protocol, and the results of such identification. The improvement allowed by these models has been 
 demonstrated on tests on 2R arms, where the simulation error has been reduced by more than 50% compared to the Coulomb-Viscous 
 model (cf. figure on the left).
