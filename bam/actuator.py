@@ -267,16 +267,16 @@ class STS3215(MXActuator):
 
     def initialize(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        # self.model.kt = Parameter(0.784532, 0.05, 2.5)  # docs says 8 kg.cm / A
-        self.model.kt = Parameter(0.784532, 0.5, 4)  # docs says 8 kg.cm / A
+        self.model.kt = Parameter(0.784532, 0.05, 2.5)  # docs says 8 kg.cm / A
+        # self.model.kt = Parameter(0.784532, 0.784531, 0.784533)  # docs says 8 kg.cm / A
 
         # Motor resistance [Ohm]
-        # self.model.R = Parameter(2.0, 0.1, 10.0)
-        self.model.R = Parameter(3, 1, 5)
+        self.model.R = Parameter(2.0, 0.1, 10.0)
+        # self.model.R = Parameter(3, 2.9, 3.1)
         # self.model.R = 2.5 # docs says 2.5 ohm, Greg says 1.5
 
         # Motor armature / apparent inertia [kg m^2]
-        self.model.armature = Parameter(0.0001, 0.00001, 0.05)
+        self.model.armature = Parameter(0.0001, 0.00001, 0.04)
 
         self.model.q_offset = Parameter(0, -0.2, 0.2)
 
