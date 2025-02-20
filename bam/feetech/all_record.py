@@ -16,7 +16,7 @@ args = arg_parser.parse_args()
 
 # kps = [130, 275, 550, 1100]
 kps = [4, 8, 16, 32]
-trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
+trajectories = ["brutal", "sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
 
 command_base = (
     f"python3 -m bam.feetech.record --mass {args.mass} --length {args.length}"

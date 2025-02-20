@@ -255,7 +255,7 @@ class STS3215(MXActuator):
         self.error_gain = 0.001 * np.rad2deg(1.0)
 
         # Maximum allowable duty cycle, also determined with oscilloscope
-        self.max_pwm = 1.0  # TODO, but can we assume 1.0 ?
+        self.max_pwm = 0.97  # TODO, but can we assume 1.0 ?
 
     def load_log(self, log: dict):
         super().load_log(log)
