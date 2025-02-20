@@ -73,9 +73,20 @@ class SinSin(Trajectory):
     duration = 6.0
 
     def __call__(self, t: float):
-        angle = np.sin(t) * np.pi / 2 + np.sin(5.0 * t) * 0.5 * np.sin(t*2.0)
+        angle = np.sin(t) * np.pi / 2 + np.sin(5.0 * t) * 0.5 * np.sin(t * 2.0)
 
         return angle, True
+
+
+class Brutal(Trajectory):
+    duration = 6.0
+
+    def __call__(self, t: float):
+
+        if t > self.duration / 4 and t < self.duration / 1.5:
+            return np.pi / 2, True
+        else:
+            return 0.0, True
 
 
 class Nothing(Trajectory):
@@ -91,12 +102,13 @@ trajectories = {
     "up_and_down": UpAndDown(),
     "sin_sin": SinSin(),
     "nothing": Nothing(),
+    "brutal": Brutal(),
 }
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
-    trajectory = LiftAndDrop()
+    trajectory = Brutal()
 
     ts = np.linspace(0.0, 5.0, 1000)
     xs = [trajectory(t)[0] for t in ts]

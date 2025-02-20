@@ -40,7 +40,9 @@ class Actuator:
         """
         raise NotImplementedError
 
-    def compute_torque(self, control: Union[float,  None], q: float, dq: float) -> float:
+    def compute_torque(
+        self, control: float | None, torque_enable: bool, q: float, dq: float
+    ) -> float:
         """
         The torque [Nm] produced by the actuator, given the control signal and current configuration
         """
@@ -104,10 +106,12 @@ class Erob(Actuator):
 
         return amps
 
-    def compute_torque(self, control: Union[float, None], q: float, dq: float) -> float:
+    def compute_torque(
+        self, control: float | None, torque_enable: bool, q: float, dq: float
+    ) -> float:
         # Computing the torque given the control signal
         # With eRob, control=None actually meany amps=0, and not a disconnection of the motor
-        amps = control if control is not None else 0.0
+        amps = control * torque_enable
         torque = self.model.kt.value * amps
 
         # Computing the torque boundaries given the maximum voltage and the back EMF
@@ -177,11 +181,9 @@ class MXActuator(Actuator):
 
         return self.vin * duty_cycle
 
-    def compute_torque(self, control: Union[float, None], q: float, dq: float) -> float:
-        # Volts to None means that the motor is disconnected
-        if control is None:
-            return 0.0
-
+    def compute_torque(
+        self, control: float | None, torque_enable: bool, q: float, dq: float
+    ) -> float:
         volts = control
 
         # Torque produced
@@ -190,7 +192,7 @@ class MXActuator(Actuator):
         # Back EMF
         torque -= (self.model.kt.value**2) * dq / self.model.R.value
 
-        return torque
+        return torque * torque_enable
 
 
 class XC330M288T(MXActuator):
@@ -254,7 +256,7 @@ class STS3215(MXActuator):
         self.error_gain = 0.001 * np.rad2deg(1.0)
 
         # Maximum allowable duty cycle, also determined with oscilloscope
-        self.max_pwm = 1.0  # TODO, but can we assume 1.0 ?
+        self.max_pwm = 0.97  # TODO, but can we assume 1.0 ?
 
     def load_log(self, log: dict):
         super().load_log(log)
@@ -276,6 +278,8 @@ class STS3215(MXActuator):
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.0001, 0.00001, 0.04)
+
+        self.model.q_offset = Parameter(0, -0.2, 0.2)
 
         # self.model.max_friction_base = 10.0
         # self.model.max_load_friction = 1.0

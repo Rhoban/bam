@@ -1,3 +1,10 @@
+#!/bin/bash
+
+if [ $# -lt 2 ]; then
+    echo "Usage: plot.sh [testbench] [log1 [log2 ...]]"
+    exit 1
+fi
+
 testbench=$1
 
 params=""
