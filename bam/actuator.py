@@ -278,6 +278,8 @@ class STS3215(MXActuator):
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.0001, 0.00001, 0.04)
 
+        self.model.q_offset = Parameter(0, -0.2, 0.2)
+
         # self.model.max_friction_base = 10.0
         # self.model.max_load_friction = 1.0
         # self.model.max_viscous_friction = 30.0
