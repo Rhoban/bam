@@ -5,16 +5,36 @@ from threading import Thread
 import mujoco.viewer
 import time
 
+from bam.model import load_model
+from bam.mujoco import MujocoController
+
 
 class MujocoIdentificationRig:
-    def __init__(self):
-        self.model = mujoco.MjModel.from_xml_path(
-            "bam/mujoco_identification_rig/assets/identification_rig_0_150m_1kg/scene.xml"
-        )
+    def __init__(self, bam=False, model_path=None):
+        self.bam = bam
+        if self.bam and model_path is None:
+            print("Bam mode requires model_path to be set")
+            exit()
+            
+        if self.bam:
+            self.model = mujoco.MjModel.from_xml_path(
+                "bam/mujoco_identification_rig/assets/identification_rig_0_150m_1kg/scene_motor.xml"
+            )
+        else:
+            self.model = mujoco.MjModel.from_xml_path(
+                "bam/mujoco_identification_rig/assets/identification_rig_0_150m_1kg/scene.xml"
+            )
         self.model.opt.timestep = 0.002
         self.control_decimation = 1
         self.data = mujoco.MjData(self.model)
         mujoco.mj_step(self.model, self.data)
+
+        if self.bam:
+            sts3215_model = load_model(model_path)
+            self.mujoco_controller = MujocoController(
+                sts3215_model, "sts3215", self.model, self.data
+            )
+
 
         # self.kp = self.data.
 
@@ -51,7 +71,10 @@ class MujocoIdentificationRig:
 
                 counter += 1
                 if counter % self.control_decimation == 0:
-                    self.data.ctrl = self.goal_position
+                    if self.bam:
+                        self.mujoco_controller.update(self.goal_position)
+                    else:
+                        self.data.ctrl = self.goal_position
 
                 viewer.sync()
 
@@ -64,7 +87,7 @@ class MujocoIdentificationRig:
 
 
 if __name__ == "__main__":
-    m = MujocoIdentificationRig()
+    m = MujocoIdentificationRig(bam=True, model_path="data/brutal_no_load_sts3215/params_m1.json")
     while True:
         m.set_goal_position(0.5 * np.sin(2 * np.pi * 1.5 * time.time()))
         print(m.get_present_velocity())
