@@ -25,7 +25,7 @@ class MujocoIdentificationRig:
                 "bam/mujoco_identification_rig/assets/identification_rig_0_150m_1kg/scene.xml"
             )
         self.model.opt.timestep = 0.002
-        self.control_decimation = 1
+        self.control_decimation = 10
         self.data = mujoco.MjData(self.model)
         mujoco.mj_step(self.model, self.data)
 

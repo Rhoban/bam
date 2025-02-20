@@ -29,8 +29,8 @@ class Args:
     # trajectory = "sin_sin"
     # trajectory = "up_and_down"
     # trajectory = "lift_and_drop"
-    # trajectory = "sin_time_square"
-    trajectory = "brutal"
+    trajectory = "sin_time_square"
+    # trajectory = "brutal"
     motor = "sts3215"
     kp = 32
     vin = 7.4
@@ -50,7 +50,7 @@ motors = {
 
 # motor = FeetechPWMControl(id=args.id)
 # motor = MujocoIdentificationRig()
-motor = MujocoIdentificationRig(bam=True, model_path="data/brutal_no_load_sts3215/params_m1.json")
+motor = MujocoIdentificationRig(bam=False, model_path="data/brutal_no_load_sts3215/params_m1.json")
 while not motor.ready:
     time.sleep(0.1)
 print("sim ready")
