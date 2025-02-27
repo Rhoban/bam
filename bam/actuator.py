@@ -251,8 +251,8 @@ class STS3215(MXActuator):
         # This gain, if multiplied by a position error and firmware KP, gives duty cycle
         # It was determined using an oscilloscope and STS3215 actuators
         # here, firmware_kp = kp
-        # self.error_gain = 0.166
-        self.error_gain = 0.001 * np.rad2deg(1.0)
+        self.error_gain = 0.166
+        # self.error_gain = 0.001 * np.rad2deg(1.0)
 
         # Maximum allowable duty cycle, also determined with oscilloscope
         self.max_pwm = 0.97  # TODO, but can we assume 1.0 ?

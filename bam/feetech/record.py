@@ -1,4 +1,6 @@
-from bam.feetech.feetech_pwm_control import FeetechPWMControl
+# from bam.feetech.feetech_pwm_control import FeetechPWMControl
+from pypot.feetech import FeetechSTS3215IO
+import rustypot
 import json
 import datetime
 import os
@@ -24,11 +26,16 @@ os.makedirs(args.logdir, exist_ok=True)
 if args.trajectory not in trajectories:
     raise ValueError(f"Unknown trajectory: {args.trajectory}")
 
-motors = {
-    "test": (1, "sts3215"),
-}
+# motors = {
+#     "test": (1, "sts3215"),
+# }
+ids = [1]
 
-motor = FeetechPWMControl(id=args.id)
+# motor = FeetechPWMControl(id=args.id)
+io = FeetechSTS3215IO("/dev/ttyACM0")
+io.set_mode({1: 0})
+# control = rustypot.feetech("/dev/ttyACM0", 1000000)
+# control.set_mode(ids, 0)
 
 trajectory = trajectories[args.trajectory]
 
@@ -36,11 +43,21 @@ start = time.time()
 while time.time() - start < 1.0:
     goal_position, torque_enable = trajectory(0)
     if torque_enable:
-        motor.goal_position = np.rad2deg(goal_position)
-        motor.enable_torque()
+        io.set_goal_position({1: np.rad2deg(goal_position)})
+        # control.write_goal_position(ids, [goal_position])
+        io.enable_torque([1])
+        # control.enable_torque(ids)
+        # motor.goal_position = np.rad2deg(goal_position)
+        # motor.enable_torque()
     else:
-        motor.disable_torque()
-    motor.kp = args.kp
+        io.disable_torque([1])
+        # control.disable_torque(ids)
+        # motor.disable_torque()
+    # control.set_kps(ids, [32])
+    io.set_P_coefficient({1: args.kp})
+    io.set_D_coefficient({1:0})
+
+    # motor.kp = args.kp
 
 
 start = time.time()
@@ -57,16 +74,23 @@ data = {
 
 def read_data():
 
-    position = np.deg2rad(motor.io.get_present_position([motor.id])[0])
+    # position = control.read_present_position(ids)[0]
+    position = np.deg2rad(io.get_present_position([1])[0])
+    # position = np.deg2rad(motor.io.get_present_position([motor.id])[0])
 
     # speed = np.deg2rad(motor.io.get_present_speed([motor.id])[0])  # TODO convert
-    speed = motor.get_present_speed()
+    # speed = motor.get_present_speed()
+    # speed = control.read_present_velocity(ids)[0]
+    speed = np.deg2rad(io.get_present_speed([1])[0])
+
 
     load = 0  # TMP
 
-    volts = motor.io.get_present_voltage([motor.id])[0] * 0.1
+    volts = io.get_present_voltage([1])[0] * 0.1
+    # volts = 0
 
-    temp = motor.io.get_present_temperature([motor.id])[0]
+    # temp = motor.io.get_present_temperature([motor.id])[0]
+    temp = 0
 
     return {
         "position": float(position),
@@ -82,13 +106,20 @@ while time.time() - start < trajectory.duration:
     goal_position, new_torque_enable = trajectory(t)
     if new_torque_enable != torque_enable:
         if new_torque_enable:
-            motor.enable_torque()
+            # control.enable_torque(ids)
+            # motor.enable_torque()
+            io.enable_torque([1])
         else:
-            motor.disable_torque()
+            # control.disable_torque(ids)
+            io.disable_torque([1])
+            # motor.disable_torque()
         torque_enable = new_torque_enable
         time.sleep(0.001)
     if torque_enable:
-        motor.goal_position = np.rad2deg(goal_position)
+        # control.write_goal_position(ids, [goal_position])
+        io.set_goal_position({1: np.rad2deg(goal_position)})
+
+        # motor.goal_position = np.rad2deg(goal_position)
         time.sleep(0.001)
 
     t0 = time.time() - start
@@ -110,14 +141,20 @@ while abs(goal_position) > 0:
     else:
         goal_position = min(0, goal_position + max_variation)
 
-    motor.goal_position = np.rad2deg(goal_position)
+    # control.write_goal_position(ids, [goal_position])
+    # motor.goal_position = np.rad2deg(goal_position)
+    io.set_goal_position({1: np.rad2deg(goal_position)})
 
     time.sleep(return_dt)
 
-motor.goal_position = 0
+# control.write_goal_position(ids, [0])
+io.set_goal_position({1: 0})
+# motor.goal_position = 0
 time.sleep(1)
 
-motor.disable_torque()
+# control.disable_torque(ids)
+io.disable_torque([1])
+# motor.disable_torque()
 
 
 # Format YYYY-MM-DD_HH:mm:ss"

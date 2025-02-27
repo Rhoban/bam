@@ -24,6 +24,7 @@ armature = model.armature.value
 # R = 3.0
 # kt = 0.78
 
+# print(kt, R)
 forcerange = args.vin * kt / R
 kp = model.actuator.error_gain * args.kp_firmware * args.vin * kt / R
 damping = viscous + kt**2 / R
