@@ -1,0 +1,51 @@
+<mujoco model="onshape">
+  <compiler angle="radian"/>
+  <asset>
+    <mesh name="motor_holder" file="motor_holder.stl"/>
+    <mesh name="wj-wk00-0123middlecase_56" file="wj-wk00-0123middlecase_56.stl"/>
+    <mesh name="drive_palonier" file="drive_palonier.stl"/>
+    <mesh name="wj-wk00-0124bottomcase_45" file="wj-wk00-0124bottomcase_45.stl"/>
+    <mesh name="wj-wk00-0122topcabinetcase_95" file="wj-wk00-0122topcabinetcase_95.stl"/>
+    <mesh name="passive_palonier" file="passive_palonier.stl"/>
+    <mesh name="right_sheet" file="right_sheet.stl"/>
+    <mesh name="axle" file="axle.stl"/>
+    <mesh name="weight" file="weight.stl"/>
+    <mesh name="spacer_2" file="spacer_2.stl"/>
+  </asset>
+  <default>
+    <geom contype="0" conaffinity="0"/>
+
+    <joint damping="0.60" frictionloss="0.0798" armature="0.0278"/>
+    <position kp="6.524" kv="0.0" forcerange="-3.558 3.558"/>
+  </default>
+  <worldbody>
+    <body pos="0 0 0.5">
+      <geom pos="0.00937659 -0.0321502 0.0193068" type="mesh" rgba="0.615686 0.811765 0.929412 1" mesh="motor_holder"/>
+      <geom pos="0.00937659 -0.0417502 0.0447418" quat="0 -0.707107 0 -0.707107" type="mesh"
+        rgba="0.247059 0.243137 0.243137 1" mesh="wj-wk00-0123middlecase_56"/>
+      <geom pos="0.00937659 -0.0417502 0.0447418" quat="0 -0.707107 0 -0.707107" type="mesh"
+        rgba="0.623529 0.666667 0.701961 1" mesh="drive_palonier"/>
+      <geom pos="0.00937659 -0.0417502 0.0447418" quat="0 -0.707107 0 -0.707107" type="mesh"
+        rgba="0.247059 0.243137 0.243137 1" mesh="wj-wk00-0124bottomcase_45"/>
+      <geom pos="0.00937659 -0.0417502 0.0447418" quat="0 -0.707107 0 -0.707107" type="mesh"
+        rgba="0.247059 0.243137 0.243137 1" mesh="wj-wk00-0122topcabinetcase_95"/>
+      <geom pos="0.00937659 -0.0446502 0.0447418" quat="0 -0.707107 0 -0.707107" type="mesh"
+        rgba="0.623529 0.666667 0.701961 1" mesh="passive_palonier"/>
+      <body name="right_sheet" pos="0.00937659 -0.0512002 0.0192418" quat="0.707107 -0.707107 0 0">
+        <inertial pos="0 0.148197 0.0165321" quat="0.493802 0.506122 -0.506122 0.493802" mass="1.22412"
+          diaginertia="0.0034049 0.00190902 0.00170168"/>
+        <joint name="sts3215" pos="0 0 0" axis="0 0 1" range="-1.74533 1.74533"/>
+        <geom pos="0 0 0.01905" quat="0.707107 0.707107 0 0" type="mesh" rgba="0.647059 0.647059 0.647059 1"
+          mesh="right_sheet"/>
+        <geom pos="0 0 0.017" quat="0.707107 0.707107 0 0" type="mesh" rgba="0.231373 0.380392 0.705882 1" mesh="axle"/>
+        <geom pos="0 0 0.0173" quat="0.707107 0.707107 0 0" type="mesh" rgba="0.972549 0.529412 0.00392157 1"
+          mesh="weight"/>
+        <geom pos="0 0 -0.00695" quat="0.707107 0.707107 0 0" type="mesh" rgba="0.768627 0.886275 0.952941 1"
+          mesh="spacer_2"/>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <position name="sts3215" joint="sts3215" inheritrange="1"/>
+  </actuator>
+</mujoco>

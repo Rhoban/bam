@@ -1,6 +1,7 @@
 import numpy as np
 from copy import copy
 from .model import Model
+from typing import Union
 
 
 class Simulator:
