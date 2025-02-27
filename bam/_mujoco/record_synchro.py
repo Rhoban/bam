@@ -27,7 +27,9 @@ class Args:
     vin = 7.4
     id = 0
     bam = False
-    model_path = "data/brutal_no_load_sts3215/params_m1.json"
+    # model_path = "data/brutal_no_load_sts3215/params_m1.json"
+    model_path = "data/new_position_sts3215/m1.json"
+    
 
 args = Args()
 
