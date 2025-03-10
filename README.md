@@ -35,7 +35,7 @@ The friction models used in this repository are:
 * M5: Directional model
 * M6: Quadratic model
 
-For a detailled description of these models, please refer to the [article](TODO) or the [video](https://youtu.be/ghvk0O9uDrc).
+For a detailled description of these models, please refer to the [article](https://arxiv.org/pdf/2410.08650v1) or the [video](https://youtu.be/5XPEEKDnQEM).
 
 # Identification
 
