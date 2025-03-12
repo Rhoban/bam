@@ -50,7 +50,7 @@ else:
 mj_model.opt.timestep = 0.002
 mj_data = mujoco.MjData(mj_model)
 mujoco.mj_step(mj_model, mj_data)
-control_decimation = 1
+control_decimation = 10
 
 if args.bam:
     sts3215_model = load_model(args.model_path)

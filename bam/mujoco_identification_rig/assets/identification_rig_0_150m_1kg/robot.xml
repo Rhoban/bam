@@ -16,7 +16,7 @@
     <geom contype="0" conaffinity="0"/>
 
     <joint damping="0.60" frictionloss="0.052" armature="0.028"/>
-    <position kp="17.8" kv="0.0" forcerange="-3.35 -3.35"/> 
+    <position kp="17.8" kv="0.0" forcerange="-3.35 3.35"/> 
     <!-- <joint damping="0.60" frictionloss="0.0798" armature="0.0278"/>
     <position kp="6.524" kv="0.0" forcerange="-3.558 3.558"/> -->
   </default>
