@@ -254,9 +254,115 @@ class LinearActuator(Actuator):
         return torque
 
 
+class Sts3250(Actuator):
+    """
+    Represents an STS3250 position-controlled servo motor actuator
+    """
+
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(testbench_class)
+
+        # Position control gain
+        self.kp: float = 32.0  # Initial gain value, adjust as needed
+
+        # Maximum torque output [Nm]
+        self.max_torque: float = 4.9  # Adjust based on STS3250 specifications
+
+        # Maximum speed [rad/s]
+        self.max_speed: float = 7.853  # Adjust based on STS3250 specifications
+
+
+        # pfb30: debug this
+        # This gain, if multiplied by a position error and firmware KP, gives duty cycle
+        # It was determined using an oscilloscope and MX actuators
+        self.error_gain: float = 0.158
+        # Maximum allowable duty cycle, also determined with oscilloscope
+        self.max_pwm: float = 1.0
+
+        self.vin: float = 5.1
+
+    def load_log(self, log: dict):
+        super().load_log(log)
+
+        if "kp" in log:
+            self.kp = log["kp"]
+
+    def initialize(self):
+        # We don't have access to internal motor parameters, so we'll model overall behavior
+        # Torque constant [Nm/A] or [V/(rad/s)]
+        self.model.kt = Parameter(1.0, 0.1, 3.0)
+
+        # Motor armature / apparent inertia [kg m^2]
+        self.model.armature = Parameter(0.005, 0.001, 0.05)
+
+        # Motor resistance [Ohm]
+        self.model.R = Parameter(2.0, 1.0, 8.0)
+
+
+    def get_extra_inertia(self) -> float:
+        return self.model.armature.value
+
+    def control_unit(self) -> str:
+        return "volts"
+
+    def compute_control(
+        self, position_error: float, q: float, dq: float
+    ) -> float | None:
+        duty_cycle = position_error * self.kp * self.error_gain
+        duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
+
+        return self.vin * duty_cycle
+
+    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+        # Volts to None means that the motor is disconnected
+        if control is None:
+            return 0.0
+
+        volts = control
+
+        # Torque produced
+        torque = self.model.kt.value * volts / self.model.R.value
+
+        # Back EMF
+        torque -= (self.model.kt.value**2) * dq / self.model.R.value
+
+        return torque
+    
+    """
+    def control_unit(self) -> str:
+        return "position"
+
+
+    def compute_control(
+        self, position_error: float, q: float, dq: float
+    ) -> float | None:
+        # For a position-controlled servo, we return the target position
+        return q + position_error
+
+    def compute_torque(self, control: float | None, q: float, dq: float) -> float:
+        if control is None:
+            return 0.0
+
+        target_position = control
+
+        # Compute torque based on position error and velocity
+        position_error = target_position - q
+        torque = self.kp * position_error - self.model.kt.value * dq
+
+        # Limit torque based on maximum torque specification
+        torque = np.clip(torque, -self.max_torque, self.max_torque)
+
+        # Limit torque based on maximum speed
+        if abs(dq) > self.max_speed:
+            torque = 0.0
+
+        return torque
+    """
+
 actuators = {
     "mx64": lambda: MXActuator(Pendulum),
     "mx106": lambda: MXActuator(Pendulum),
     "erob80_100": lambda: Erob(Pendulum, damping=2.0),
     "erob80_50": lambda: Erob(Pendulum, damping=1.0),
+    "sts3250": lambda: Sts3250(Pendulum),
 }
