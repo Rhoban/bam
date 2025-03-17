@@ -26,6 +26,6 @@ if model.name != "m1":
     print(yellow(f"WARNING: Model other than m1 can't be exported exactly to MuJoCo (model is {model.name})"))
 
 bright(f"Reading model of type {model.name} from {args.params}")
-bright("Parameters export for MuJoCo")
+bright(f"Parameters export for MuJoCo, actuator {model.actuator_name}")
 
 model.actuator.to_mujoco()
