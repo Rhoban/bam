@@ -1,4 +1,5 @@
 import numpy as np
+from bam.message import yellow, print_parameter, bright
 from bam.actuator import Actuator
 from bam.parameter import Parameter
 from bam.testbench import Testbench, Pendulum
@@ -66,3 +67,21 @@ class MXActuator(Actuator):
         torque -= (self.model.kt.value**2) * dq / self.model.R.value
 
         return torque * torque_enable
+    
+    def to_mujoco(self):
+        if self.vin == 0 or self.kp == 0:
+            print(yellow(f"WARNING: kp or vin are not set"))
+
+        kt = self.model.kt.value
+        R = self.model.R.value
+
+        kp = self.error_gain * self.kp * self.vin * kt / R
+        damping = self.model.friction_viscous.value + kt**2 / R
+
+        print_parameter("forcerange", self.vin * self.model.kt.value / R)
+        print_parameter("armature", self.model.armature.value)
+        print_parameter("kp", kp)
+        print_parameter("damping", damping)
+        print_parameter("frictionloss", self.model.friction_base.value)
+
+        print("")
