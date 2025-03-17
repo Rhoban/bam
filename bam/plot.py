@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from .model import load_model, DummyModel
-from .actuator import actuators
+from .actuators import actuators
 from . import simulate
 from . import logs
 

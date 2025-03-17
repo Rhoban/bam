@@ -1,6 +1,7 @@
 import numpy as np
 import json
-from .actuator import Actuator, actuators
+from .actuator import Actuator
+from .actuators import actuators
 from .parameter import Parameter
 
 

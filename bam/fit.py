@@ -15,7 +15,7 @@ from .logs import Logs
 from .model import models, Model, load_model
 from . import message
 from . import simulate
-from .actuator import actuators
+from .actuators import actuators
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--logdir", type=str, required=True)
