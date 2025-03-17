@@ -51,7 +51,7 @@ class Actuator:
         raise NotImplementedError
 
     def to_mujoco(self):
-        raise NotImplementedError
+        raise NotImplementedError("This actuator doesn't support to_mujoco")
 
 from .erob.actuator import ErobActuator
 from .dynamixel.actuator import MXActuator
