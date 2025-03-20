@@ -83,17 +83,15 @@ class Simulator:
             velocities.append(copy(self.dq))
 
             if simulate_control:
-                position_error = entry["goal_position"] - self.q
                 control = self.model.actuator.compute_control(
-                    position_error, self.q, self.dq
+                    entry["goal_position"], self.q, self.dq, dt
                 )
             else:
                 if "control" in entry:
                     control = entry["control"]
                 else:
-                    position_error = entry["goal_position"] - entry["position"]
                     control = self.model.actuator.compute_control(
-                        position_error, self.q, self.dq
+                        entry["goal_position"], entry["position"], self.dq, dt
                     )
 
             controls.append(copy(control))

@@ -64,7 +64,7 @@ class MujocoController:
         dq = self.mujoco_data.qvel[self.dof_indexes]
 
         # Computing the control signal
-        control = self.model.actuator.compute_control(q_target - q, q, dq)
+        control = self.model.actuator.compute_control(q_target, q, dq)
 
         # Computing the applied torque
         torque = self.model.actuator.compute_torque(control, True, q, dq)

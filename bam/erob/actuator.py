@@ -43,10 +43,10 @@ class ErobActuator(Actuator):
         return "amps"
 
     def compute_control(
-        self, position_error: float, q: float, dq: float
+        self, q_target: float, q: float, dq: float, dt: float
     ) -> float | None:
         # Target velocity is assumed to be 0
-        amps = position_error * self.kp + self.damping * np.sqrt(self.kp) * (0.0 - dq)
+        amps = (q_target - q) * self.kp + self.damping * np.sqrt(self.kp) * (0.0 - dq)
         amps = np.clip(amps, -self.max_amps, self.max_amps)
 
         return amps

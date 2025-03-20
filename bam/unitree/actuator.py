@@ -39,10 +39,10 @@ class UnitreeGo1Actuator(Actuator):
         return "N.m"
 
     def compute_control(
-        self, position_error: float, q: float, dq: float
+        self, q_target: float, q: float, dq: float, dt: float
     ) -> Union[float, None]:
         # Target velocity is assumed to be 0
-        torque = position_error * self.kp + self.damping * (0.0 - dq)
+        torque = (q_target - q) * self.kp + self.damping * (0.0 - dq)
         torque = np.clip(torque, -self.model.max_torque.value, self.model.max_torque.value)
 
         return torque

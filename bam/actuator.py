@@ -32,7 +32,7 @@ class Actuator:
         raise NotImplementedError
 
     def compute_control(
-        self, position_error: float, q: float, dq: float
+        self, q_target: float, q: float, dq: float, dt: float
     ) -> float | None:
         """
         The control (e.g volts or amps) produced by the actuator, given the position error and current configruation
@@ -97,13 +97,13 @@ class VoltageControlledActuator(Actuator):
         return "volts"
     
     def compute_control(
-        self, position_error: float, q: float, dq: float
+        self, q_target: float, q: float, dq: float, dt: float
     ) -> float | None:
         """
         Assumes the motor is using a kp controller
         This can be overloaded if more custom behaviour is used
         """
-        duty_cycle = position_error * self.kp * self.error_gain
+        duty_cycle = (q_target - q) * self.kp * self.error_gain
         duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
 
         return self.vin * duty_cycle
