@@ -29,6 +29,8 @@ class MujocoController:
         self.mujoco_model = mujoco_model
         self.mujoco_data = mujoco_data
 
+        self.last_ts = mujoco_data.time
+
         # Actuator indexes (ctrl)
         self.act_indexes = [
             self.mujoco_model.actuator(name).id for name in self.actuator
@@ -64,7 +66,9 @@ class MujocoController:
         dq = self.mujoco_data.qvel[self.dof_indexes]
 
         # Computing the control signal
-        control = self.model.actuator.compute_control(q_target, q, dq)
+        dt = self.mujoco_data.time - self.last_ts
+        self.last_ts = self.mujoco_data.time
+        control = self.model.actuator.compute_control(q_target, q, dq, dt)
 
         # Computing the applied torque
         torque = self.model.actuator.compute_torque(control, True, q, dq)
