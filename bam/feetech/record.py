@@ -55,7 +55,7 @@ while time.time() - start < 1.0:
         # motor.disable_torque()
     # control.set_kps(ids, [32])
     io.set_P_coefficient({1: args.kp})
-    io.set_D_coefficient({1:0})
+    io.set_D_coefficient({1: 0})
 
     # motor.kp = args.kp
 
@@ -72,6 +72,14 @@ data = {
 }
 
 
+def convert_load(raw_load):
+    sign = -1
+    if raw_load > 1023:
+        raw_load -= 1024
+        sign = 1
+    return sign * raw_load * 0.001
+
+
 def read_data():
 
     # position = control.read_present_position(ids)[0]
@@ -83,8 +91,7 @@ def read_data():
     # speed = control.read_present_velocity(ids)[0]
     speed = np.deg2rad(io.get_present_speed([1])[0])
 
-
-    load = 0  # TMP
+    load = convert_load(io.get_present_load([1])[0])
 
     volts = io.get_present_voltage([1])[0] * 0.1
     # volts = 0
