@@ -1,6 +1,7 @@
 import numpy as np
 import mujoco
-from .model import Model
+import json
+from .model import Model, load_model_from_dict
 
 
 class MujocoController:
@@ -110,3 +111,33 @@ class MujocoController:
         # Updating damping and frictionloss
         self.mujoco_model.dof_frictionloss[self.dof_indexes] = frictionloss
         self.mujoco_model.dof_damping[self.dof_indexes] = damping
+
+
+def load_config(path: str, kp: float, mujoco_model: mujoco.MjModel, mujoco_data: mujoco.MjData) -> tuple:
+    """
+    Loads a BAM configuration file and returns the list of controllers and the mapping dicts.
+
+    Args:
+        path (str): path to the configuration file
+
+    Returns:
+        list: list of controllers, dofs to model mapping, dofs to id mapping
+    """
+    controllers = {}
+    dofs_to_model = {}
+    dofs_to_ctrl_id = {}
+    with open(path) as f:
+        data = json.load(f)
+        for key, value in data.items(): 
+            dofs = value["dofs"]
+            for i, dof in enumerate(dofs):
+                dofs_to_model[dof] = key
+                dofs_to_ctrl_id[dof] = i
+
+            model = load_model_from_dict(value["model"])
+            model.actuator.kp = kp
+            controller = MujocoController(model, dofs, mujoco_model, mujoco_data)
+            controllers[key] = {"controller": controller,
+                                "dofs_state": [0.] * len(dofs)}
+            
+    return controllers, dofs_to_model, dofs_to_ctrl_id

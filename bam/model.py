@@ -175,11 +175,17 @@ class Model:
         """
         with open(json_file) as f:
             data = json.load(f)
-            parameters = self.get_parameters()
+            self.load_parameters_from_dict(data)
 
-            for name in parameters:
-                if name in data:
-                    parameters[name].value = data[name]
+    def load_parameters_from_dict(self, data: dict) -> list:
+        """
+        Load parameters from a given dict
+        """
+        parameters = self.get_parameters()
+
+        for name in parameters:
+            if name in data:
+                parameters[name].value = data[name]
 
 
 class DummyModel(Model):
@@ -218,8 +224,11 @@ models = {
 def load_model(json_file: str):
     with open(json_file) as f:
         data = json.load(f)
-        model = models[data["model"]]()
-        model.set_actuator(actuators[data["actuator"]]())
-        model.actuator_name = data["actuator"]
-        model.load_parameters(json_file)
-        return model
+        return load_model_from_dict(data)
+    
+def load_model_from_dict(data: dict):
+    model = models[data["model"]]()
+    model.set_actuator(actuators[data["actuator"]]())
+    model.actuator_name = data["actuator"]
+    model.load_parameters_from_dict(data)
+    return model
