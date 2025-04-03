@@ -49,6 +49,7 @@ class MujocoController:
         self.mujoco_model.dof_armature[self.dof_indexes] = (
             model.actuator.get_extra_inertia()
         )
+        mujoco.mj_setConst(self.mujoco_model, self.mujoco_data)
 
     def update(self, q_target: float):
         """
@@ -112,8 +113,21 @@ class MujocoController:
         self.mujoco_model.dof_frictionloss[self.dof_indexes] = frictionloss
         self.mujoco_model.dof_damping[self.dof_indexes] = damping
 
+        # print("Frictions: ")
+        # print(self.mujoco_model.dof_frictionloss)
+        # print(self.mujoco_model.dof_damping)
+        # print(self.mujoco_model.dof_armature)
 
-def load_config(path: str, mujoco_model: mujoco.MjModel, mujoco_data: mujoco.MjData, kp: float, vin: float, error_gain: float, max_pwm: float) -> tuple:
+
+def load_config(
+    path: str,
+    mujoco_model: mujoco.MjModel,
+    mujoco_data: mujoco.MjData,
+    kp: float,
+    vin: float,
+    error_gain: float,
+    max_pwm: float,
+) -> tuple:
     """
     Loads a BAM configuration file and returns the list of controllers and the mapping dicts.
 
@@ -134,7 +148,7 @@ def load_config(path: str, mujoco_model: mujoco.MjModel, mujoco_data: mujoco.MjD
     dofs_to_ctrl_id = {}
     with open(path) as f:
         data = json.load(f)
-        for key, value in data.items(): 
+        for key, value in data.items():
             dofs = value["dofs"]
             for i, dof in enumerate(dofs):
                 dofs_to_model[dof] = key
@@ -145,9 +159,11 @@ def load_config(path: str, mujoco_model: mujoco.MjModel, mujoco_data: mujoco.MjD
             model.actuator.vin = vin
             model.actuator.error_gain = error_gain
             model.actuator.max_pwm = max_pwm
-            
+
             controller = MujocoController(model, dofs, mujoco_model, mujoco_data)
-            controllers[key] = {"controller": controller,
-                                "dofs_state": [0.] * len(dofs)}
-            
+            controllers[key] = {
+                "controller": controller,
+                "dofs_state": [0.0] * len(dofs),
+            }
+
     return controllers, dofs_to_model, dofs_to_ctrl_id
