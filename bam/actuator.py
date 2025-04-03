@@ -131,7 +131,7 @@ class VoltageControlledActuator(Actuator):
         kt = self.model.kt.value
         R = self.model.R.value
 
-        kp = self.error_gain * self.kp * self.vin * kt / R
+        kp = self.error_gain * self.kp * self.vin * self.max_pwm * kt / R
         damping = self.model.friction_viscous.value + kt**2 / R
 
         print_parameter("forcerange", self.vin * self.model.kt.value / R)
