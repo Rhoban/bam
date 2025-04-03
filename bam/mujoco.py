@@ -113,11 +113,6 @@ class MujocoController:
         self.mujoco_model.dof_frictionloss[self.dof_indexes] = frictionloss
         self.mujoco_model.dof_damping[self.dof_indexes] = damping
 
-        # print("Frictions: ")
-        # print(self.mujoco_model.dof_frictionloss)
-        # print(self.mujoco_model.dof_damping)
-        # print(self.mujoco_model.dof_armature)
-
 
 def load_config(
     path: str,
