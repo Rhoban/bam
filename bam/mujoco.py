@@ -113,12 +113,18 @@ class MujocoController:
         self.mujoco_model.dof_damping[self.dof_indexes] = damping
 
 
-def load_config(path: str, kp: float, mujoco_model: mujoco.MjModel, mujoco_data: mujoco.MjData) -> tuple:
+def load_config(path: str, mujoco_model: mujoco.MjModel, mujoco_data: mujoco.MjData, kp: float, vin: float, error_gain: float, max_pwm: float) -> tuple:
     """
     Loads a BAM configuration file and returns the list of controllers and the mapping dicts.
 
     Args:
         path (str): path to the configuration file
+        mujoco_model (mujoco.MjModel): the mujoco model
+        mujoco_data (mujoco.MjData): the mujoco data
+        kp (float): the proportional gain
+        vin (float): the input voltage
+        error_gain (float): the error gain
+        max_pwm (float): the maximum pwm
 
     Returns:
         list: list of controllers, dofs to model mapping, dofs to id mapping
@@ -136,6 +142,10 @@ def load_config(path: str, kp: float, mujoco_model: mujoco.MjModel, mujoco_data:
 
             model = load_model_from_dict(value["model"])
             model.actuator.kp = kp
+            model.actuator.vin = vin
+            model.actuator.error_gain = error_gain
+            model.actuator.max_pwm = max_pwm
+            
             controller = MujocoController(model, dofs, mujoco_model, mujoco_data)
             controllers[key] = {"controller": controller,
                                 "dofs_state": [0.] * len(dofs)}
