@@ -119,9 +119,7 @@ def load_config(
     mujoco_model: mujoco.MjModel,
     mujoco_data: mujoco.MjData,
     kp: float,
-    vin: float,
-    error_gain: float,
-    max_pwm: float,
+    vin: float
 ) -> tuple:
     """
     Loads a BAM configuration file and returns the list of controllers and the mapping dicts.
@@ -132,8 +130,6 @@ def load_config(
         mujoco_data (mujoco.MjData): the mujoco data
         kp (float): the proportional gain
         vin (float): the input voltage
-        error_gain (float): the error gain
-        max_pwm (float): the maximum pwm
 
     Returns:
         list: list of controllers, dofs to model mapping, dofs to id mapping
@@ -152,8 +148,8 @@ def load_config(
             model = load_model_from_dict(value["model"])
             model.actuator.kp = kp
             model.actuator.vin = vin
-            model.actuator.error_gain = error_gain
-            model.actuator.max_pwm = max_pwm
+            model.actuator.error_gain = value["error_gain"]
+            model.actuator.max_pwm = value["max_pwm"]
 
             controller = MujocoController(model, dofs, mujoco_model, mujoco_data)
             controllers[key] = {

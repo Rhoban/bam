@@ -1,1 +1,16 @@
-{"kt": 1.587432589063179, "R": 2.4143487051532198, "armature": 0.011728935143844849, "friction_base": 0.07501958219691603, "friction_stribeck": 0.022233160228709636, "load_friction_motor": 0.3847995899952685, "load_friction_external": 1.6148277731274518e-11, "load_friction_motor_stribeck": 0.030123950049619153, "load_friction_external_stribeck": 0.1658962964406309, "dtheta_stribeck": 0.7461716797150073, "alpha": 1.2930393293009845, "friction_viscous": 0.014908872960620413, "model": "m5", "actuator": "mx64"}
+{
+    "kt": 1.587432589063179,
+    "R": 2.4143487051532198,
+    "armature": 0.011728935143844849,
+    "friction_base": 0.07501958219691603,
+    "friction_stribeck": 0.022233160228709636,
+    "load_friction_motor": 0.3847995899952685,
+    "load_friction_external": 1.6148277731274518e-11,
+    "load_friction_motor_stribeck": 0.030123950049619153,
+    "load_friction_external_stribeck": 0.1658962964406309,
+    "dtheta_stribeck": 0.7461716797150073,
+    "alpha": 1.2930393293009845,
+    "friction_viscous": 0.014908872960620413,
+    "model": "m5",
+    "actuator": "mx64"
+}
