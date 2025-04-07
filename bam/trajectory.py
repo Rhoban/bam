@@ -78,6 +78,17 @@ class SinSin(Trajectory):
         return angle, True
 
 
+class Brutal(Trajectory):
+    duration = 6.0
+
+    def __call__(self, t: float):
+
+        if t > self.duration / 4 and t < self.duration / 1.5:
+            return np.pi / 2, True
+        else:
+            return 0.0, True
+
+
 class Nothing(Trajectory):
     duration = 6.0
 
@@ -90,6 +101,7 @@ trajectories = {
     "sin_time_square": SinusTimeSquare(),
     "up_and_down": UpAndDown(),
     "sin_sin": SinSin(),
+    "brutal": Brutal(),
     "nothing": Nothing(),
 }
 
