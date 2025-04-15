@@ -60,30 +60,26 @@ class MujocoController:
     def get_q_target(self, name: str) -> float:
         return self.q_target[self.dof_to_q_target[name]]
     
+    def set_q_target(self, name: str, q_target: float):
+        self.q_target[self.dof_to_q_target[name]] = q_target
+    
     def reset(self, qpos):
         self.q_target = qpos[self.qpos_indexes]
 
-    def update(self, q_target: float):
+    def update(self):
         """
         Update the controlled actuator(s) data:
         - Torque to apply
         - Friction parameters
         - Damping
-
-        Args:
-            q_target (float): target position for the actuator(s)
         """
-        q_target = np.atleast_1d(q_target)
-        assert len(q_target) == len(self.actuator), "Invalid target size"
-        self.q_target = q_target
-
         q = self.mujoco_data.qpos[self.qpos_indexes]
         dq = self.mujoco_data.qvel[self.dof_indexes]
 
         # Computing the control signal
         dt = self.mujoco_data.time - self.last_ts
         self.last_ts = self.mujoco_data.time
-        control = self.model.actuator.compute_control(q_target, q, dq, dt)
+        control = self.model.actuator.compute_control(self.q_target, q, dq, dt)
 
         # Computing the applied torque
         torque = self.model.actuator.compute_torque(control, True, q, dq)
