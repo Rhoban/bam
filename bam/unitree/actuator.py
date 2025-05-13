@@ -5,6 +5,7 @@ from bam.actuator import Actuator
 from bam.parameter import Parameter
 from bam.testbench import Testbench, Pendulum
 
+
 class UnitreeGo1Actuator(Actuator):
     def __init__(self, testbench_class: Testbench, damping=0.3):
         super().__init__(testbench_class)
@@ -43,7 +44,9 @@ class UnitreeGo1Actuator(Actuator):
     ) -> Union[float, None]:
         # Target velocity is assumed to be 0
         torque = (q_target - q) * self.kp + self.damping * (0.0 - dq)
-        torque = np.clip(torque, -self.model.max_torque.value, self.model.max_torque.value)
+        torque = np.clip(
+            torque, -self.model.max_torque.value, self.model.max_torque.value
+        )
 
         return torque
 
@@ -56,3 +59,14 @@ class UnitreeGo1Actuator(Actuator):
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
+
+    def to_mujoco(self):
+        if self.kp == 0:
+            print(yellow(f"WARNING: kp is not set"))
+
+        print_parameter("armature", self.model.armature.value)
+        print_parameter("kp", self.kp)
+        print_parameter("damping", self.model.friction_viscous.value)
+        print_parameter("frictionloss", self.model.friction_base.value)
+
+        print("")
