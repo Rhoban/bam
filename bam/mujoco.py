@@ -30,6 +30,12 @@ class MujocoController:
         self.mujoco_model = mujoco_model
         self.mujoco_data = mujoco_data
 
+        self.dofs = []
+        self.q_target = np.zeros(len(self.actuator))
+        self.dof_to_q_target = {}
+        for i, name in enumerate(self.actuator):
+            self.dof_to_q_target[name] = i
+
         self.last_ts = mujoco_data.time
 
         # Actuator indexes (ctrl)
@@ -51,26 +57,29 @@ class MujocoController:
         )
         mujoco.mj_setConst(self.mujoco_model, self.mujoco_data)
 
-    def update(self, q_target: float):
+    def get_q_target(self, name: str) -> float:
+        return self.q_target[self.dof_to_q_target[name]]
+    
+    def set_q_target(self, name: str, q_target: float):
+        self.q_target[self.dof_to_q_target[name]] = q_target
+    
+    def reset(self, qpos):
+        self.q_target = qpos[self.qpos_indexes]
+
+    def update(self):
         """
         Update the controlled actuator(s) data:
         - Torque to apply
         - Friction parameters
         - Damping
-
-        Args:
-            q_target (float): target position for the actuator(s)
         """
-        q_target = np.atleast_1d(q_target)
-        assert len(q_target) == len(self.actuator), "Invalid target size"
-
         q = self.mujoco_data.qpos[self.qpos_indexes]
         dq = self.mujoco_data.qvel[self.dof_indexes]
 
         # Computing the control signal
         dt = self.mujoco_data.time - self.last_ts
         self.last_ts = self.mujoco_data.time
-        control = self.model.actuator.compute_control(q_target, q, dq, dt)
+        control = self.model.actuator.compute_control(self.q_target, q, dq, dt)
 
         # Computing the applied torque
         torque = self.model.actuator.compute_torque(control, True, q, dq)
@@ -113,15 +122,12 @@ class MujocoController:
         self.mujoco_model.dof_frictionloss[self.dof_indexes] = frictionloss
         self.mujoco_model.dof_damping[self.dof_indexes] = damping
 
-
 def load_config(
     path: str,
     mujoco_model: mujoco.MjModel,
     mujoco_data: mujoco.MjData,
     kp: float,
-    vin: float,
-    error_gain: float,
-    max_pwm: float,
+    vin: float
 ) -> tuple:
     """
     Loads a BAM configuration file and returns the list of controllers and the mapping dicts.
@@ -132,33 +138,26 @@ def load_config(
         mujoco_data (mujoco.MjData): the mujoco data
         kp (float): the proportional gain
         vin (float): the input voltage
-        error_gain (float): the error gain
-        max_pwm (float): the maximum pwm
 
     Returns:
         list: list of controllers, dofs to model mapping, dofs to id mapping
     """
-    controllers = {}
-    dofs_to_model = {}
-    dofs_to_ctrl_id = {}
+    bam_controllers = {}
+    dof_to_bam_controller = {}
     with open(path) as f:
         data = json.load(f)
         for key, value in data.items():
             dofs = value["dofs"]
-            for i, dof in enumerate(dofs):
-                dofs_to_model[dof] = key
-                dofs_to_ctrl_id[dof] = i
-
+            for dof in dofs:
+                dof_to_bam_controller[dof] = key
+                
             model = load_model_from_dict(value["model"])
             model.actuator.kp = kp
             model.actuator.vin = vin
-            model.actuator.error_gain = error_gain
-            model.actuator.max_pwm = max_pwm
+            model.actuator.error_gain = value["error_gain"]
+            model.actuator.max_pwm = value["max_pwm"]
 
-            controller = MujocoController(model, dofs, mujoco_model, mujoco_data)
-            controllers[key] = {
-                "controller": controller,
-                "dofs_state": [0.0] * len(dofs),
-            }
+            bam_controllers[key] = MujocoController(model, dofs, mujoco_model, mujoco_data)
+            bam_controllers[key].dofs = dofs
 
-    return controllers, dofs_to_model, dofs_to_ctrl_id
+    return bam_controllers, dof_to_bam_controller
