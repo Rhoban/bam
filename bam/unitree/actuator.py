@@ -43,7 +43,7 @@ class UnitreeGo1Actuator(Actuator):
         self, q_target: float, q: float, dq: float, dt: float
     ) -> Union[float, None]:
         # Target velocity is assumed to be 0
-        torque = (q_target - q) * self.kp + self.damping * (0.0 - dq)
+        torque = (q_target - q) * self.kp * self.model.ratio.value + self.damping * (0.0 - dq)
         torque = np.clip(
             torque, -self.model.max_torque.value, self.model.max_torque.value
         )
@@ -55,7 +55,7 @@ class UnitreeGo1Actuator(Actuator):
     ) -> float:
         torques = control * torque_enable
 
-        return torques * self.model.ratio.value
+        return torques
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
@@ -65,8 +65,9 @@ class UnitreeGo1Actuator(Actuator):
             print(yellow(f"WARNING: kp is not set"))
 
         print_parameter("armature", self.model.armature.value)
-        print_parameter("kp", self.kp)
+        print_parameter("kp", self.kp * self.model.ratio.value)
         print_parameter("damping", self.model.friction_viscous.value)
         print_parameter("frictionloss", self.model.friction_base.value)
+        print_parameter("forcerange", self.model.max_torque.value)
 
         print("")
