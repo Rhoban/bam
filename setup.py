@@ -17,7 +17,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     keywords="robot robotics",
-    install_requires=["numpy"],
+    install_requires=["numpy", "colorama"],
     extras_require={
         "dev": [
             "zmq",
