@@ -33,7 +33,10 @@ class MujocoSimulation2R:
         self.dt: float = self.model.opt.timestep
         self.frame: int = 0
 
-    def step(self) -> None:
+    def step(self, controllers: list = []) -> None:
+        for controller in controllers:
+            controller.update()
+
         self.t = self.frame * self.dt
         mujoco.mj_step(self.model, self.data)
         self.frame += 1
@@ -68,10 +71,13 @@ class MujocoSimulation2R:
         if self.robot is None:
             this_directory = os.path.dirname(os.path.realpath(__file__))
             self.robot = placo.RobotWrapper(
-                this_directory + f"/2r_{self.testbench}/robot.urdf", placo.Flags.ignore_collisions
+                this_directory + f"/2r_{self.testbench}/robot.urdf",
+                placo.Flags.ignore_collisions,
             )
             if self.testbench in ["mx"]:
-                self.robot.set_T_world_frame("base", tf.rotation_matrix(np.pi, [1, 0, 0]))
+                self.robot.set_T_world_frame(
+                    "base", tf.rotation_matrix(np.pi, [1, 0, 0])
+                )
 
         # Updating actuator KP
         if "," in params:
@@ -103,7 +109,11 @@ class MujocoSimulation2R:
         while running:
             entry = data["entries"][entry_index]
 
-            self.step()
+            if not replay:
+                self.step([r1, r2])
+            else:
+                self.step()
+
             if render:
                 self.render()
 
@@ -112,8 +122,8 @@ class MujocoSimulation2R:
                 self.data.joint("R1").qpos[0] = entry["r1"]["position"]
                 self.data.joint("R2").qpos[0] = entry["r2"]["position"]
             else:
-                r1.update(entry["r1"]["goal_position"])
-                r2.update(entry["r2"]["goal_position"])
+                r1.set_q_target("R1", entry["r1"]["goal_position"])
+                r2.set_q_target("R2", entry["r2"]["goal_position"])
 
             while running and (log_t0 + self.t >= entry["timestamp"]):
                 entry = data["entries"][entry_index]
@@ -189,16 +199,21 @@ if __name__ == "__main__":
             if args.plot:
                 for position in "position", "goal_position", "sim_position":
                     ax.plot(
-                        [entry["end_effector"][position][0] for entry in data["entries"]],
-                        [entry["end_effector"][position][2] for entry in data["entries"]],
+                        [
+                            entry["end_effector"][position][0]
+                            for entry in data["entries"]
+                        ],
+                        [
+                            entry["end_effector"][position][2]
+                            for entry in data["entries"]
+                        ],
                         label=position,
                         ls="--" if position == "goal_position" else "-",
                     )
                 ax.legend()
                 ax.grid()
-                ax.set_aspect('equal',adjustable='box')
+                ax.set_aspect("equal", adjustable="box")
                 ax.set_title(f"{os.path.basename(log)}, {params}")
-                
 
             if args.plot_joint:
                 for dof in "r1", "r2":
@@ -228,11 +243,10 @@ if __name__ == "__main__":
 
                     plt.title(f"{log}, {params}")
                     plt.show()
-        
+
         if args.plot:
             plt.tight_layout()
             plt.show()
-
 
     if args.mae:
         total_mae = {params: [] for params in args.params}
@@ -251,7 +265,6 @@ if __name__ == "__main__":
         plt.title("MAE per log")
         plt.tight_layout()
         plt.show()
-        
-        
+
         for params in total_mae:
             print(f"Total MAE for {params}: {np.mean(total_mae[params])}")
