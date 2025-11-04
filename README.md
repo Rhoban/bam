@@ -393,20 +393,7 @@ If you want to obtain the MAE for each model for a set of logs and a given testb
 
 # Citation
 
-If you use **BAM** in your scientific works, please cite the software as follows:
-
-```bibtex
-@software{BAM,
-  title = {{BAM: Better Actuator Models}},
-  author = {Duclusaud, Marc and Passault, Grégoire},
-  license = {Apache-2.0},
-  url = {https://github.com/Rhoban/bam},
-  version = {0.0.1},
-  year = {2024}
-}
-```
-
-If you build upon the friction models presented in our paper, please cite the publication:
+If you use BAM or the friction models provided in this repository for your scientific work, please cite the following publication:
 
 ```bibtex
 @inproceedings{duclusaud2025extended,
@@ -416,5 +403,18 @@ If you build upon the friction models presented in our paper, please cite the pu
   pages={12091--12097},
   year={2025},
   organization={IEEE}
+}
+```
+
+If you also wish to cite the software directly, you may use:
+
+```bibtex
+@software{BAM,
+  title = {{BAM: Better Actuator Models}},
+  author = {Duclusaud, Marc and Passault, Grégoire},
+  license = {Apache-2.0},
+  url = {https://github.com/Rhoban/bam},
+  version = {0.0.1},
+  year = {2024}
 }
 ```
