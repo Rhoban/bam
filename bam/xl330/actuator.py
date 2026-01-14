@@ -20,13 +20,15 @@ class XLActuator(VoltageControlledActuator):
     def __init__(self, testbench_class: Testbench):
         super().__init__(
             testbench_class,
+            
+            # Input voltage and (firmware) kP gain
             vin = 7.4,
-            kp = 32.0, # TODO
+            kp = 400,
             # This gain, if multiplied by a position error and firmware KP, gives duty cycle
             # It was determined using an oscilloscope and MX actuators
-            error_gain = 0.158, # TODO
+            error_gain = 0.002877778 # TODO re-find this. This was for the xc330m288t, is this the same for a xl330m288t ?
             # Maximum allowable duty cycle, also determined with oscilloscope   
-            max_pwm = 0.9625 # TODO
+            max_pwm = 1.0 # TODO re-find this. Same reasons
         )
 
     def initialize(self):
