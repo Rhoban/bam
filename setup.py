@@ -36,6 +36,9 @@ setuptools.setup(
             "wandb",
             "pygame"
         ],  
+        "xl330": [
+            "rustypot"
+        ]
     },
     include_package_data=True,
     package_data={},
