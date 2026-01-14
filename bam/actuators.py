@@ -9,6 +9,7 @@
 from .testbench import Pendulum
 from .erob.actuator import ErobActuator
 from .dynamixel.actuator import MXActuator
+from .xl330.actuator import XLActuator
 from .feetech.actuator import STS3215Actuator
 from .unitree.actuator import UnitreeGo1Actuator
 
@@ -16,6 +17,9 @@ actuators = {
     # Dynamixel MX series
     "mx64": lambda: MXActuator(Pendulum),
     "mx106": lambda: MXActuator(Pendulum),
+    
+    # Dynamixel XL series
+    "xl330": lambda: XLActuator(Pendulum),
     
     # eRob actuators with custom PD controller (mostly used in experiments to model
     # frictions)
