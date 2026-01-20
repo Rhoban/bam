@@ -12,7 +12,6 @@ import os
 import numpy as np
 import argparse
 import time
-# from .dynamixel import DynamixelActuatorV1
 from rustypot import Xl330PyController
 from bam.trajectory import *
 
@@ -29,7 +28,21 @@ args = arg_parser.parse_args()
 
 if args.trajectory not in trajectories:
     raise ValueError(f"Unknown trajectory: {args.trajectory}")
+    
+_RADS_PER_SEC_PER_COUNT = 0.229 * (2.0 * np.pi / 60.0)
 
+def convert_velocity(raw_signed: float) -> float:
+    return float(raw_signed) * _RADS_PER_SEC_PER_COUNT
+
+def convert_load(raw: float) -> float:
+    x = float(raw)
+    
+    if x > 2**15-1:
+        x -= 2**16
+        
+    y = np.clip(x / 1023.0, -1.0, 1.0)
+    
+    return y
 
 c = Xl330PyController(args.port, baudrate=1000000, timeout=0.01)
 ID = 1
@@ -41,11 +54,8 @@ start = time.time()
 while time.time() - start < 1.0:
     goal_position, torque_enable = trajectory(0)
     if torque_enable:
-        # dxl.set_goal_position(goal_position)
         c.write_goal_position(ID, goal_position)
-    # dxl.set_torque(torque_enable)
     c.write_torque_enable(ID, torque_enable)
-    # dxl.set_p_gain(args.kp)
     c.write_position_p_gain(ID, args.kp)
 
 start = time.time()
@@ -63,25 +73,21 @@ while time.time() - start < trajectory.duration:
     t = time.time() - start
     goal_position, new_torque_enable = trajectory(t)
     if new_torque_enable != torque_enable:
-        # dxl.set_torque(new_torque_enable)
         c.write_torque_enable(ID, new_torque_enable)
         torque_enable = new_torque_enable
         time.sleep(0.001)
     if torque_enable:
-        # dxl.set_goal_position(goal_position)
         c.write_goal_position(ID, goal_position)
         time.sleep(0.001)
 
     t0 = time.time() - start
-    # entry = dxl.read_data()
     
     entry = {}
-    # TODO check units for all this
-    entry["position"] = c.read_present_position(ID)[0]
-    entry["speed"] = c.read_present_velocity(ID)[0]
-    entry["load"] = c.read_present_pwm(ID)[0]
-    entry["input_volts"] = c.read_present_input_voltage(ID)[0]/10
-    entry["temp"] = c.read_present_temperature(ID)[0]
+    entry["position"] = c.read_present_position(ID)[0] # rad
+    entry["speed"] = convert_velocity(c.read_present_velocity(ID)[0]) # rad/s
+    entry["load"] = c.read_present_pwm(ID)[0] # [-1, 1]
+    entry["input_volts"] = c.read_present_input_voltage(ID)[0]/10. # V
+    entry["temp"] = c.read_present_temperature(ID)[0] # °C
     t1 = time.time() - start
 
     entry["timestamp"] = (t0 + t1) / 2.0
@@ -97,11 +103,9 @@ while abs(goal_position) > 0:
         goal_position = max(0, goal_position - max_variation)
     else:
         goal_position = min(0, goal_position + max_variation)
-    # dxl.set_goal_position(goal_position)
     c.write_goal_position(ID, goal_position)
     
     time.sleep(return_dt)
-# dxl.set_torque(False)
 c.write_torque_enable(ID, False)
 
 #Format YYYY-MM-DD_HH:mm:ss"

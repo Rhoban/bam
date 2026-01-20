@@ -26,20 +26,20 @@ class XLActuator(VoltageControlledActuator):
             kp = 400,
             # This gain, if multiplied by a position error and firmware KP, gives duty cycle
             # It was determined using an oscilloscope and MX actuators
-            error_gain = 0.002877778 # TODO re-find this. This was for the xc330m288t, is this the same for a xl330m288t ?
+            error_gain = 0.00246,
             # Maximum allowable duty cycle, also determined with oscilloscope   
-            max_pwm = 1.0 # TODO re-find this. Same reasons
+            max_pwm = 1.0 # Seems to be this
         )
 
     def initialize(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.model.kt = Parameter(1.6, 1.0, 3.0) # TODO
+        self.model.kt = Parameter(1.6, 0.3, 3.0) # TODO
 
         # Motor resistance [Ohm]
-        self.model.R = Parameter(2.0, 1.0, 5.0) # TODO
+        self.model.R = Parameter(2.0, 0.5, 5.0) # TODO
 
         # Motor armature / apparent inertia [kg m^2]
-        self.model.armature = Parameter(0.005, 0.001, 0.05) # TODO
+        self.model.armature = Parameter(0.005, 0.0001, 0.05) # TODO
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
