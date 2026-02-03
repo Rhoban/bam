@@ -12,6 +12,11 @@ from bam.actuator import VoltageControlledActuator
 from bam.parameter import Parameter
 from bam.testbench import Testbench, Pendulum
 
+ENCODER_COUNTS_PER_REV = 4096
+KP_DIVISOR = 256  # Empirically observed for XL330 (manual mentions 128)
+PWM_LIMIT = 885   # Default Present PWM limit for XL330
+
+
 class XLActuator(VoltageControlledActuator):
     """
     Represents a Dynamixel xl330 or xc330 actuator
@@ -24,9 +29,11 @@ class XLActuator(VoltageControlledActuator):
             # Input voltage and (firmware) kP gain
             vin = 7.4,
             kp = 400,
+            
             # This gain, if multiplied by a position error and firmware KP, gives duty cycle
-            # It was determined using an oscilloscope and MX actuators
-            error_gain = 0.00246,
+            # Matches XL330 scaling: duty = error_gain * kp * error_rad
+            # Using Kp divisor 256 (empirical) and default PWM limit 885
+            error_gain = (ENCODER_COUNTS_PER_REV / (2 * np.pi)) / (KP_DIVISOR * PWM_LIMIT),
             # Maximum allowable duty cycle, also determined with oscilloscope   
             max_pwm = 1.0 # Seems to be this
         )
