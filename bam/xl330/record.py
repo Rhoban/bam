@@ -30,17 +30,18 @@ if args.trajectory not in trajectories:
     raise ValueError(f"Unknown trajectory: {args.trajectory}")
     
 _RADS_PER_SEC_PER_COUNT = 0.229 * (2.0 * np.pi / 60.0)
+_PWM_LIMIT = 885  # XL330 Present PWM limit (counts)
 
 def convert_velocity(raw_signed: float) -> float:
     return float(raw_signed) * _RADS_PER_SEC_PER_COUNT
 
-def convert_load(raw: float) -> float:
+def convert_pwm_to_duty(raw: float) -> float:
     x = float(raw)
     
     if x > 2**15-1:
         x -= 2**16
         
-    y = np.clip(x / 1023.0, -1.0, 1.0)
+    y = np.clip(x / _PWM_LIMIT, -1.0, 1.0)
     
     return y
 
@@ -85,7 +86,7 @@ while time.time() - start < trajectory.duration:
     entry = {}
     entry["position"] = c.read_present_position(ID)[0] # rad
     entry["speed"] = convert_velocity(c.read_present_velocity(ID)[0]) # rad/s
-    entry["load"] = c.read_present_pwm(ID)[0] # [-1, 1]
+    entry["load"] = convert_pwm_to_duty(c.read_present_pwm(ID)[0]) # duty ratio in [-1, 1]
     entry["input_volts"] = c.read_present_input_voltage(ID)[0]/10. # V
     entry["temp"] = c.read_present_temperature(ID)[0] # °C
     t1 = time.time() - start
