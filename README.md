@@ -389,3 +389,32 @@ If you want to obtain the MAE for each model for a set of logs and a given testb
   <img src="https://github.com/user-attachments/assets/3effdce3-7d70-48a5-835a-5b92af254910" height="260">
   <img src="https://github.com/user-attachments/assets/5bfffcfa-c4ea-4644-aac4-6966c4254482" height="260">
 </p>
+
+
+# Citation
+
+If you use BAM or the friction models provided in this repository for your scientific work, please cite the following publication:
+
+```bibtex
+@inproceedings{duclusaud2025extended,
+  title={Extended Friction Models for the Physics Simulation of Servo Actuators},
+  author={Duclusaud, Marc and Passault, Gr{\'e}goire and Padois, Vincent and Ly, Olivier},
+  booktitle={2025 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={12091--12097},
+  year={2025},
+  organization={IEEE}
+}
+```
+
+If you also wish to cite the software directly, you may use:
+
+```bibtex
+@software{BAM,
+  title = {{BAM: Better Actuator Models}},
+  author = {Duclusaud, Marc and Passault, Grégoire},
+  license = {Apache-2.0},
+  url = {https://github.com/Rhoban/bam},
+  version = {0.0.1},
+  year = {2024}
+}
+```
