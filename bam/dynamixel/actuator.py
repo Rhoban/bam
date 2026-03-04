@@ -70,5 +70,7 @@ class XL320Actuator(VoltageControlledActuator):
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.0005, 0.0001, 0.01)
 
+        self.model.max_load_friction = 1.0
+
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
