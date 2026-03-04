@@ -17,6 +17,7 @@ arg_parser.add_argument("--length", type=float, required=True)
 arg_parser.add_argument("--motor", type=str, required=True)
 arg_parser.add_argument("--port", type=str, default="/dev/ttyUSB0")
 arg_parser.add_argument("--logdir", type=str, required=True)
+arg_parser.add_argument("--vin", type=float, default=15.0)
 arg_parser.add_argument("--speak", action="store_true")
 args = arg_parser.parse_args()
 
