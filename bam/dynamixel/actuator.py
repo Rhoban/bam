@@ -65,10 +65,10 @@ class XL320Actuator(VoltageControlledActuator):
         self.model.kt = Parameter(0.25, 0.7, 1.5)
 
         # Motor resistance [Ohm]
-        self.model.R = Parameter(5.0, 7.0, 15.0)
+        self.model.R = Parameter(5.0, 7.0, 30.0)
 
         # Motor armature / apparent inertia [kg m^2]
-        self.model.armature = Parameter(0.0005, 0.001, 0.01)
+        self.model.armature = Parameter(0.0005, 0.0001, 0.01)
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
