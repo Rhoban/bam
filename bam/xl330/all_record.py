@@ -20,7 +20,7 @@ arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--speak", action="store_true")
 args = arg_parser.parse_args()
 
-kps = [100, 200, 400, 800]
+kps = [100, 200, 300, 400, 500, 600]
 # kps = [800]
 trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
 

@@ -40,10 +40,11 @@ class XLActuator(VoltageControlledActuator):
 
     def initialize(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.model.kt = Parameter(1.6, 0.3, 3.0) # TODO
+        self.model.kt = Parameter(1.6, 0.1, 3.0) # TODO
 
         # Motor resistance [Ohm]
-        self.model.R = Parameter(2.0, 0.5, 5.0) # TODO
+        # self.model.R = Parameter(2.0, 0.5, 20.0) # TODO
+        self.model.R = Parameter(2.6, 2.0, 3.0) # Measured 2.6
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.0001, 0.05) # TODO
