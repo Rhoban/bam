@@ -14,18 +14,19 @@ import time
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--mass", type=float, required=True)
 arg_parser.add_argument("--length", type=float, required=True)
+arg_parser.add_argument("--vin", type=float, required=False, default=7.4)
 arg_parser.add_argument("--motor", type=str, required=True)
 arg_parser.add_argument("--port", type=str, default="/dev/ttyUSB0")
 arg_parser.add_argument("--logdir", type=str, required=True)
 arg_parser.add_argument("--speak", action="store_true")
 args = arg_parser.parse_args()
 
-kps = [100, 200, 300, 400, 500, 600]
-# kps = [800]
-trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
+kps = [100, 200, 300, 400, 500]#, 600]
+# trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
+trajectories = ["sin_time_square"]
 
 command_base = f"python3 xl330/record.py --mass {args.mass} --length {args.length}"
-command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor}"
+command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor} --vin {args.vin}"
 
 
 for kp in kps:
