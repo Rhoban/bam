@@ -8,13 +8,13 @@
 
 import numpy as np
 from bam.message import yellow, print_parameter, bright
-from bam.actuator import VoltageControlledActuator
+from bam.actuator import VoltageControlledActuator, CurrentControlledActuator
 from bam.parameter import Parameter
 from bam.testbench import Testbench, Pendulum
 
 ENCODER_COUNTS_PER_REV = 4096
 KP_DIVISOR = 256  # Empirically observed for XL330 (manual mentions 128)
-PWM_LIMIT = 885   # Default Present PWM limit for XL330
+PWM_LIMIT = 885  # Default Present PWM limit for XL330
 
 
 class XLActuator(VoltageControlledActuator):
@@ -25,29 +25,60 @@ class XLActuator(VoltageControlledActuator):
     def __init__(self, testbench_class: Testbench):
         super().__init__(
             testbench_class,
-            
-            # Input voltage and (firmware) kP gain
-            vin = 7.4,
-            kp = 400,
-            
+            # Input voltage and (firmware) kP gain
+            vin=7.4,
+            kp=400,
             # This gain, if multiplied by a position error and firmware KP, gives duty cycle
             # Matches XL330 scaling: duty = error_gain * kp * error_rad
             # Using Kp divisor 256 (empirical) and default PWM limit 885
-            error_gain = (ENCODER_COUNTS_PER_REV / (2 * np.pi)) / (KP_DIVISOR * PWM_LIMIT),
-            # Maximum allowable duty cycle, also determined with oscilloscope   
-            max_pwm = 1.0 # Seems to be this
+            error_gain=(ENCODER_COUNTS_PER_REV / (2 * np.pi))
+            / (KP_DIVISOR * PWM_LIMIT),
+            # Maximum allowable duty cycle, also determined with oscilloscope
+            max_pwm=1.0,  # Seems to be this
         )
 
     def initialize(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.model.kt = Parameter(1.6, 0.1, 3.0) # TODO
+        self.model.kt = Parameter(1.6, 0.1, 3.0)  # TODO
 
         # Motor resistance [Ohm]
         # self.model.R = Parameter(2.0, 0.5, 20.0) # TODO
-        self.model.R = Parameter(2.6, 2.0, 3.0) # Measured 2.6
+        self.model.R = Parameter(2.6, 2.0, 3.0)  # Measured 2.6
 
         # Motor armature / apparent inertia [kg m^2]
-        self.model.armature = Parameter(0.005, 0.0001, 0.05) # TODO
+        self.model.armature = Parameter(0.005, 0.0001, 0.05)  # TODO
+
+    def get_extra_inertia(self) -> float:
+        return self.model.armature.value
+
+
+class XLCurrentActuator(CurrentControlledActuator):
+    """
+    Represents a Dynamixel xl330 or xc330 actuator, controlled in current position mode
+    """
+
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(
+            testbench_class,
+            # Input voltage and (firmware) kP gain
+            vin=7.4,
+            kp=400,
+            error_gain=0.016 / np.pi,
+        )
+
+    def initialize(self):
+        # Torque constant [Nm/A] or [V/(rad/s)]
+        self.model.kt = Parameter(1.6, 0.1, 3.0)  # TODO
+
+        # Motor resistance [Ohm]
+        # self.model.R = Parameter(2.0, 0.5, 20.0) # TODO
+        self.model.R = Parameter(2.6, 2.0, 3.5)  # Measured 2.6
+
+        # Motor armature / apparent inertia [kg m^2]
+        self.model.armature = Parameter(0.005, 0.0001, 0.05)  # TODO
+
+        # Torque damping [Nm/(rad/s)]
+        self.model.viscous_damping_with_torque = Parameter(0.0, 0.0, 0.1)
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
