@@ -89,6 +89,7 @@ while time.time() - start < trajectory.duration:
     entry["load"] = convert_pwm_to_duty(c.read_present_pwm(ID)[0]) # duty ratio in [-1, 1]
     entry["input_volts"] = c.read_present_input_voltage(ID)[0]/10. # V
     entry["temp"] = c.read_present_temperature(ID)[0] # °C
+    entry["goal_current"] = c.read_goal_current(ID)[0] # °mA
     t1 = time.time() - start
 
     entry["timestamp"] = (t0 + t1) / 2.0
