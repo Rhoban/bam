@@ -183,6 +183,10 @@ class CurrentControlledActuator(DCMotorActuator):
     def initialize(self):
         super().initialize()
 
+        # Current limit, used to avoid heating
+        self.model.current_limit = Parameter(1.5, 0, 3)
+
+        # Models some damping only present when torque is active
         self.model.viscous_damping_with_torque = Parameter(0.0, 0.0, 0.1)
 
     def compute_control(
@@ -202,6 +206,11 @@ class CurrentControlledActuator(DCMotorActuator):
             -self.vin - self.model.kt.value * dq
         )
         current = np.clip(current, current_limit_high, current_limit_low)
+
+        # Maximum current allowed by the user to avoid heating
+        current = np.clip(
+            current, -self.model.current_limit.value, self.model.current_limit.value
+        )
 
         return current
 
@@ -229,7 +238,9 @@ class CurrentControlledActuator(DCMotorActuator):
             self.model.friction_viscous.value
             + self.model.viscous_damping_with_torque.value
         )
+        
         forcerange = self.vin * self.model.kt.value / self.model.R.value
+        forcerange = min(forcerange, self.model.current_limit.value * self.model.kt.value)
 
         print_parameter("forcerange", forcerange)
         print_parameter("armature", self.model.armature.value)
