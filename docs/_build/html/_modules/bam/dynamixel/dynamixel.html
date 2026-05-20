@@ -1,0 +1,807 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bam.dynamixel.dynamixel &#8212; BAM  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bam.css?v=74b060d2" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+
+    <script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/bam/dynamixel/dynamixel';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">BAM  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../presentation/index.html">
+    Presentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../identification/index.html">
+    Identification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../usage/index.html">
+    Usage
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/Rhoban/bam" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../presentation/index.html">
+    Presentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../identification/index.html">
+    Identification
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../usage/index.html">
+    Usage
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/Rhoban/bam" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">bam.dynamixel.dynamixel</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for bam.dynamixel.dynamixel</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2025 Marc Duclusaud &amp; Grégoire Passault</span>
+
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at:</span>
+
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dynamixel_sdk</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Control table – Protocol V1 (MX / AX series)</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Torque enable</span>
+<span class="n">ADDR_TORQUE_ENABLE</span> <span class="o">=</span> <span class="mi">24</span>
+<span class="c1"># P Gain</span>
+<span class="n">ADDR_P_GAIN</span> <span class="o">=</span> <span class="mi">28</span>
+<span class="c1"># Goal position</span>
+<span class="n">ADDR_GOAL_POSITION</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="c1"># Present position (2 bytes)</span>
+<span class="n">ADDR_PRESENT_POSITION</span> <span class="o">=</span> <span class="mi">36</span>
+<span class="c1"># Present speed (2 bytes)</span>
+<span class="n">ADDR_PRESENT_SPEED</span> <span class="o">=</span> <span class="mi">38</span>
+<span class="c1"># Present load (2 bytes)</span>
+<span class="n">ADDR_PRESENT_LOAD</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="c1"># Present voltage (1 byte)</span>
+<span class="n">ADDR_PRESENT_VOLTAGE</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="c1"># Present temperature (1 byte)</span>
+<span class="n">ADDR_PRESENT_TEMPERATURE</span> <span class="o">=</span> <span class="mi">43</span>
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Control table – XL-320 (Protocol V2 only)</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># --- EEPROM ---</span>
+<span class="n">XL320_ADDR_CW_ANGLE_LIMIT</span> <span class="o">=</span> <span class="mi">6</span>       <span class="c1"># 2 bytes</span>
+<span class="n">XL320_ADDR_CCW_ANGLE_LIMIT</span> <span class="o">=</span> <span class="mi">8</span>      <span class="c1"># 2 bytes</span>
+<span class="n">XL320_ADDR_CONTROL_MODE</span> <span class="o">=</span> <span class="mi">11</span>        <span class="c1"># 1 byte  (1=Wheel, 2=Joint)</span>
+<span class="n">XL320_ADDR_MAX_TORQUE</span> <span class="o">=</span> <span class="mi">15</span>          <span class="c1"># 2 bytes</span>
+<span class="c1"># --- RAM ---</span>
+<span class="n">XL320_ADDR_TORQUE_ENABLE</span> <span class="o">=</span> <span class="mi">24</span>       <span class="c1"># 1 byte</span>
+<span class="n">XL320_ADDR_LED</span> <span class="o">=</span> <span class="mi">25</span>                 <span class="c1"># 1 byte  (RGB bitmask: R=1, G=2, B=4)</span>
+<span class="n">XL320_ADDR_D_GAIN</span> <span class="o">=</span> <span class="mi">27</span>              <span class="c1"># 1 byte</span>
+<span class="n">XL320_ADDR_I_GAIN</span> <span class="o">=</span> <span class="mi">28</span>              <span class="c1"># 1 byte</span>
+<span class="n">XL320_ADDR_P_GAIN</span> <span class="o">=</span> <span class="mi">29</span>              <span class="c1"># 1 byte</span>
+<span class="n">XL320_ADDR_GOAL_POSITION</span> <span class="o">=</span> <span class="mi">30</span>       <span class="c1"># 2 bytes  (0–1023, 0.29°/step, range 0–300°)</span>
+<span class="n">XL320_ADDR_MOVING_SPEED</span> <span class="o">=</span> <span class="mi">32</span>        <span class="c1"># 2 bytes  (0–1023 CCW, 1024–2047 CW, 0.111 rpm/step)</span>
+<span class="n">XL320_ADDR_TORQUE_LIMIT</span> <span class="o">=</span> <span class="mi">35</span>        <span class="c1"># 2 bytes</span>
+<span class="n">XL320_ADDR_PRESENT_POSITION</span> <span class="o">=</span> <span class="mi">37</span>    <span class="c1"># 2 bytes</span>
+<span class="n">XL320_ADDR_PRESENT_SPEED</span> <span class="o">=</span> <span class="mi">39</span>       <span class="c1"># 2 bytes</span>
+<span class="n">XL320_ADDR_PRESENT_LOAD</span> <span class="o">=</span> <span class="mi">41</span>        <span class="c1"># 2 bytes</span>
+<span class="n">XL320_ADDR_PRESENT_VOLTAGE</span> <span class="o">=</span> <span class="mi">45</span>     <span class="c1"># 1 byte</span>
+<span class="n">XL320_ADDR_PRESENT_TEMPERATURE</span> <span class="o">=</span> <span class="mi">46</span> <span class="c1"># 1 byte</span>
+<span class="n">XL320_ADDR_MOVING</span> <span class="o">=</span> <span class="mi">49</span>              <span class="c1"># 1 byte  (0=stopped, 1=moving)</span>
+<span class="n">XL320_ADDR_HW_ERROR_STATUS</span> <span class="o">=</span> <span class="mi">50</span>     <span class="c1"># 1 byte</span>
+
+<span class="c1"># XL-320 position resolution</span>
+<span class="n">XL320_RESOLUTION</span> <span class="o">=</span> <span class="mi">1023</span>             <span class="c1"># 10-bit</span>
+<span class="n">XL320_RANGE_DEG</span> <span class="o">=</span> <span class="mf">300.0</span>             <span class="c1"># degrees</span>
+<span class="n">XL320_CENTER</span> <span class="o">=</span> <span class="mi">512</span>                  <span class="c1"># raw value for 0 rad (150°)</span>
+
+
+<div class="viewcode-block" id="DynamixelActuatorV1">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelActuatorV1">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DynamixelActuatorV1</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;setserial </span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2"> low_latency&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Failed to set low latency mode (you can try: sudo apt install setserial)&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span> <span class="o">=</span> <span class="n">PortHandler</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span> <span class="o">=</span> <span class="n">PacketHandler</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="o">.</span><span class="n">openPort</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="o">.</span><span class="n">setBaudRate</span><span class="p">(</span><span class="mi">1000000</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DynamixelActuatorV1.set_p_gain">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelActuatorV1.set_p_gain">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_p_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gain</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="c1"># Set P gain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write2ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ADDR_P_GAIN</span><span class="p">,</span> <span class="n">gain</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelActuatorV1.set_torque">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelActuatorV1.set_torque">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_torque</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="c1"># Enable torque</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write1ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ADDR_TORQUE_ENABLE</span><span class="p">,</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">enable</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelActuatorV1.set_goal_position">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelActuatorV1.set_goal_position">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_goal_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="c1"># Position is a 12-bit value</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">4096</span> <span class="o">*</span> <span class="p">(</span><span class="n">position</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">))</span>
+
+        <span class="c1"># Set goal position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write2ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ADDR_GOAL_POSITION</span><span class="p">,</span> <span class="n">position</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelActuatorV1.read_data">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelActuatorV1.read_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Reading position, speed, load, voltage and temperature</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">readTxRx</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ADDR_PRESENT_POSITION</span><span class="p">,</span> <span class="mi">8</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Position is a 12-bit value</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">((</span><span class="n">position</span> <span class="o">/</span> <span class="mi">4096</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="c1"># Speed is a 10-bit value, units are 0.11 rpm per step</span>
+        <span class="n">speed</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">speed</span> <span class="o">&gt;</span> <span class="mi">1024</span><span class="p">:</span>
+            <span class="n">speed</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">speed</span> <span class="o">-</span> <span class="mi">1024</span><span class="p">)</span>
+        <span class="n">speed</span> <span class="o">=</span> <span class="n">speed</span> <span class="o">*</span> <span class="mf">0.11</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">60.0</span>
+
+        <span class="c1"># Applied &quot;load&quot;</span>
+        <span class="n">load</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">load</span> <span class="o">&gt;</span> <span class="mi">1024</span><span class="p">:</span>
+            <span class="n">load</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">load</span> <span class="o">-</span> <span class="mi">1024</span><span class="p">)</span>
+
+        <span class="c1"># Voltage is a byte value, units are 0.1 V</span>
+        <span class="n">volts</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">/</span> <span class="mf">10.0</span>
+
+        <span class="c1"># Temperature are °C</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;position&quot;</span><span class="p">:</span> <span class="n">position</span><span class="p">,</span>
+            <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">,</span>
+            <span class="s2">&quot;load&quot;</span><span class="p">:</span> <span class="n">load</span><span class="p">,</span>
+            <span class="s2">&quot;input_volts&quot;</span><span class="p">:</span> <span class="n">volts</span><span class="p">,</span>
+            <span class="s2">&quot;temp&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="DynamixelXL320">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DynamixelXL320</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Controller for the XL-320 servo motor.</span>
+
+<span class="sd">    The XL-320 uses **Protocol 2.0 only** and has a 10-bit position encoder</span>
+<span class="sd">    covering a 300° range (0 to 1023 raw, centre = 512 ≡ 0 rad).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        port: Serial port, e.g. ``&quot;/dev/ttyUSB0&quot;``.</span>
+<span class="sd">        id:   DYNAMIXEL ID (default 1).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;setserial </span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2"> low_latency&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;Failed to set low latency mode &quot;</span>
+                <span class="s2">&quot;(you can try: sudo apt install setserial)&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span> <span class="o">=</span> <span class="n">PortHandler</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span> <span class="o">=</span> <span class="n">PacketHandler</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>  <span class="c1"># Protocol 2.0 mandatory</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="o">.</span><span class="n">openPort</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="o">.</span><span class="n">setBaudRate</span><span class="p">(</span><span class="mi">1000000</span><span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Helpers</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rad_to_raw</span><span class="p">(</span><span class="n">position</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert radians to XL-320 raw position (0–1023, centre = 0 rad).&quot;&quot;&quot;</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">position</span> <span class="o">*</span> <span class="p">(</span><span class="n">XL320_RESOLUTION</span> <span class="o">/</span> <span class="p">(</span><span class="n">XL320_RANGE_DEG</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">))</span> <span class="o">+</span> <span class="n">XL320_CENTER</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">XL320_RESOLUTION</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_raw_to_rad</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert XL-320 raw position to radians.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">raw</span> <span class="o">-</span> <span class="n">XL320_CENTER</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">XL320_RANGE_DEG</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">XL320_RESOLUTION</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Write commands</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="DynamixelXL320.set_torque">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320.set_torque">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_torque</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enable or disable motor torque.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write1ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">XL320_ADDR_TORQUE_ENABLE</span><span class="p">,</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">enable</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelXL320.set_p_gain">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320.set_p_gain">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_p_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gain</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the proportional (P) gain (0–254).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write1ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">XL320_ADDR_P_GAIN</span><span class="p">,</span> <span class="n">gain</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelXL320.set_i_gain">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320.set_i_gain">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_i_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gain</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the integral (I) gain (0–254).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write1ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">XL320_ADDR_I_GAIN</span><span class="p">,</span> <span class="n">gain</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelXL320.set_d_gain">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320.set_d_gain">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_d_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gain</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the derivative (D) gain (0–254).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write1ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">XL320_ADDR_D_GAIN</span><span class="p">,</span> <span class="n">gain</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelXL320.set_pid_gains">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320.set_pid_gains">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_pid_gains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set P, I and D gains in one call (values 0–254 each).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_p_gain</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_i_gain</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_d_gain</span><span class="p">(</span><span class="n">d</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelXL320.set_goal_position">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320.set_goal_position">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_goal_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set goal position.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            position: Target angle in radians. Acceptable range:</span>
+<span class="sd">                      ``[-150°, +150°]`` → ``[-2.618, +2.618]`` rad.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rad_to_raw</span><span class="p">(</span><span class="n">position</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write2ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">XL320_ADDR_GOAL_POSITION</span><span class="p">,</span> <span class="n">raw</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelXL320.set_moving_speed">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320.set_moving_speed">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_moving_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">speed_rpm</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set moving speed in Joint Mode.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            speed_rpm: Speed in RPM (0 = maximum, 114 = approx. max).</span>
+<span class="sd">                       The sign is ignored; always positive in joint mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">speed_rpm</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.111</span><span class="p">)</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1023</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write2ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">XL320_ADDR_MOVING_SPEED</span><span class="p">,</span> <span class="n">raw</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamixelXL320.set_led">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320.set_led">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_led</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the LED colour using a RGB bitmask.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            color: Bitmask – Red=1, Green=2, Blue=4 (combinations allowed, 0=off).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">write1ByteTxOnly</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">XL320_ADDR_LED</span><span class="p">,</span> <span class="n">color</span> <span class="o">&amp;</span> <span class="mh">0x07</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Read feedback</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="DynamixelXL320.read_data">
+<a class="viewcode-back" href="../../../api/hardware.html#bam.dynamixel.dynamixel.DynamixelXL320.read_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read present position, speed, load, input voltage and temperature.</span>
+
+<span class="sd">        Returns a dict with keys:</span>
+<span class="sd">        ``position`` (rad), ``speed`` (rad/s), ``load`` (signed, 0.1 % units),</span>
+<span class="sd">        ``input_volts`` (V), ``temp`` (°C).</span>
+
+<span class="sd">        Note: addresses 37–42 are contiguous; 43–44 are unused; 45–46 are</span>
+<span class="sd">        voltage and temperature.  Two separate reads are performed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Read position (2 B), speed (2 B), load (2 B) → 6 bytes from addr 37</span>
+        <span class="n">data_psl</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">readTxRx</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">XL320_ADDR_PRESENT_POSITION</span><span class="p">,</span> <span class="mi">6</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># Present position – 10-bit, 0.29°/step, centre = 512</span>
+        <span class="n">position_raw</span> <span class="o">=</span> <span class="p">(</span><span class="n">data_psl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">data_psl</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_to_rad</span><span class="p">(</span><span class="n">position_raw</span><span class="p">)</span>
+
+        <span class="c1"># Present speed – 11-bit value, bit 10 = direction (0=CCW, 1=CW)</span>
+        <span class="c1"># Unit: 0.111 rpm/step</span>
+        <span class="n">speed_raw</span> <span class="o">=</span> <span class="p">(</span><span class="n">data_psl</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">data_psl</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">speed_raw</span> <span class="o">&gt;</span> <span class="mi">1023</span><span class="p">:</span>
+            <span class="n">speed</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">speed_raw</span> <span class="o">-</span> <span class="mi">1024</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">speed</span> <span class="o">=</span> <span class="n">speed_raw</span>
+        <span class="n">speed</span> <span class="o">=</span> <span class="n">speed</span> <span class="o">*</span> <span class="mf">0.111</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">60.0</span>  <span class="c1"># rad/s</span>
+
+        <span class="c1"># Present load – 11-bit, bit 10 = direction, unit 0.1 %</span>
+        <span class="n">load_raw</span> <span class="o">=</span> <span class="p">(</span><span class="n">data_psl</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">data_psl</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">load_raw</span> <span class="o">&gt;</span> <span class="mi">1023</span><span class="p">:</span>
+            <span class="n">load</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">load_raw</span> <span class="o">-</span> <span class="mi">1024</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">load</span> <span class="o">=</span> <span class="n">load_raw</span>
+
+        <span class="c1"># Read voltage (1 B) and temperature (1 B) → 2 bytes from addr 45</span>
+        <span class="n">data_vt</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">packetHandler</span><span class="o">.</span><span class="n">readTxRx</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portHandler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">XL320_ADDR_PRESENT_VOLTAGE</span><span class="p">,</span> <span class="mi">2</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Voltage: unit is 0.1 V</span>
+        <span class="n">volts</span> <span class="o">=</span> <span class="n">data_vt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">10.0</span>
+
+        <span class="c1"># Temperature in °C</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">data_vt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;position&quot;</span><span class="p">:</span> <span class="n">position</span><span class="p">,</span>
+            <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">,</span>
+            <span class="s2">&quot;load&quot;</span><span class="p">:</span> <span class="n">load</span><span class="p">,</span>
+            <span class="s2">&quot;input_volts&quot;</span><span class="p">:</span> <span class="n">volts</span><span class="p">,</span>
+            <span class="s2">&quot;temp&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, BAM Contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.18.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
