@@ -1,3 +1,0 @@
-placo
-mujoco
-pandas

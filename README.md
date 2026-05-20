@@ -13,7 +13,7 @@ to more complex friction phenomena like Stribeck, load-dependence or quadratic e
 In this repository, we propose a method to identify extended friction models (M2 to M6) for servo actuators. 
 The detail of the method is presented in this [article](https://arxiv.org/pdf/2410.08650v1), and this [video](https://youtu.be/5XPEEKDnQEM) presents the 
 motivation, the protocol, and the results of such identification. The improvement allowed by these models has been 
-demonstrated on tests on 2R arms, where the simulation error has been reduced by more than 50% compared to the Coulomb-Viscous 
+demonstrated on experimental validation scenarios, where the simulation error has been reduced by more than 50% compared to the Coulomb-Viscous 
 model (cf. figure on the left).
 
 <br>
@@ -24,6 +24,40 @@ The method has been applied to the identification of the Dynamixel MX-64, Dynami
 on the right, showing that the proposed models outperform the Coulomb-Viscous model.
 
 <br>
+
+## Installation (uv)
+
+We recommend using `uv` for faster installation.
+
+```bash
+uv venv .venv
+source .venv/bin/activate
+uv pip install -e .
+uv pip install -r requirements_bam.txt
+```
+
+If you need optional development dependencies from `setup.py` extras:
+
+```bash
+uv pip install -e ".[dev]"
+```
+
+## Documentation (local, placo-style)
+
+Build the documentation once:
+
+```bash
+cd docs
+uv pip install -r requirements.txt
+make html
+```
+
+Run the local watcher (rebuild on changes) and serve on `http://127.0.0.1:8080`:
+
+```bash
+cd docs
+./watch.sh
+```
 
 ## Friction model
 
@@ -258,138 +292,6 @@ python -m bam.drive_backdrive \
 ```
 
 <br>
-
-# Validation on 2R arms
-
-To validate the models, 2R arms composed of Dynamixel and eRob actuators are used. MuJoCo is used 
-to simulate these arms and the MuJoCo URDFs of these 2 arms are available in the `2R` directory. 
-If you want to use another 2R arm, the conversion process from a classic URDF to a MuJoCo 
-URDF is detailed in the `2R/README.md`.
-
-## Requirements
-
-To install the requirements for the validation part, you can use the following command:
-
-```bash
-pip install -r requirements_2R.txt
-
-```
-
-## Setup
-
-The arms used for the validation are composed of 2 segments with a load at the end. The Dynamixel arm uses Dynamixel MX-64 and MX-106, while the eRob arm uses eRob80:50 and eRob80:100:
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/976cbd93-14e0-4a3f-91ca-43dd6f755e31" height="400px">
-  <img src="https://github.com/user-attachments/assets/7cda5406-560e-4cd0-8b63-f78b1467fe5f" height="400px">
-</p>
-  
-## Recording raw data
-
-### Trajectories list
-
-<img align="right" src="https://github.com/user-attachments/assets/7b38212d-ae6e-43f3-86ae-624c702796af" height="160px">
-  
-4 trajectories are used for the validation:
-*  `circle` 
-*  `square` 
-* `square_wave` 
-* `triangular_wave`
-
-
-### Dynamixel
-
-You can use `record_2R.py` to execute a trajectory and record it, here is an example of usage:
-
-```
-python -m bam.dynamixel.record_2R \
-    --port /dev/ttyUSB0 \
-    --mass 0.567 \
-    --logdir data_2R_dyn \
-    --trajectory circle \
-    --kp 8 \
-    --speed 1.0
-```
-
-Where the arguments are:
-
-* `port`: The port where the Dynamixel is connected
-* `mass`: The mass of the load
-* `logdir`: The directory where the data will be saved
-* `trajectory`: The trajectory to be executed
-* `kp`: The proportional gain of the controller
-* `speed`: The speed at which the trajectory is executed
-  
-### ERob (with etherban)
-
-You can use `record_2R.py` to execute a trajectory and record it, here is an example of usage:
-
-```
-python -m bam.erob.record_2R \
-    --host 127.0.0.1 \
-    --r1_offset 1.57 \
-    --r2_offset -0.72 \
-    --mass 2.0 \
-    --logdir data_2R_erob \
-    --trajectory circle \
-    --kp 8
-```
-
-Where the arguments are:
-
-* `host`: The host where the Etherban server is running (by default `localhost`)
-* `r1_offset`: The angular offset to be used for the zero position of the first motor
-* `r2_offset`: The angular offset to be used for the zero position of the second motor
-* `mass`: The mass of the load
-* `logdir`: The directory where the data will be saved
-* `trajectory`: The trajectory to be executed
-* `kp`: The proportional gain of the controller
-
-## Simulating 2R arms
-
-<img align="right" src="https://github.com/user-attachments/assets/0854f51d-97f3-4189-9d58-bd5f57c59c8a" width="50%">
-    
-To simulate the 2R arms, you can use:
-
-```
-python -m 2R.sim \
-    --log log.json \
-    --params params/mx106/m4.json,params/mx64/m4.json \
-    --testbench mx \
-    --render \
-    --plot \
-    --vertical \
-    --mae
-```
-
-Where the arguments are:
-* `log`: The log file or several log files to be used. If a whole directory should be used, you can use `--log log_dir/*`.
-* `params`: Model parameters for the actuators in the format `params_m1,params_m2`. Several parameters can be used, separated by spaces.
-* `testbench`: The testbench to be used. Available testbenches are `mx` and `erob`.
-* `render`: If present, the simulation (MuJoCo) will be rendered.
-* `plot`: If present, the measured and simulated positions will be plotted.
-* `vertical`: If present, the plot will be vertical.
-* `mae`: If present, the Mean Absolute Error will be computed for each trajectory and couple of model parameters.
-
-## Plotting
-
-To quickly plot logs for a given testbench, you can use the command:
-
-```
-./2R/plot.sh testbench log_dir/*
-```
-
-If you want to obtain the MAE for each model for a set of logs and a given testbench, you can use:
-
-```
-./2R/mae.sh testbench log_dir/*
-```
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/3effdce3-7d70-48a5-835a-5b92af254910" height="260">
-  <img src="https://github.com/user-attachments/assets/5bfffcfa-c4ea-4644-aac4-6966c4254482" height="260">
-</p>
-
 
 # Citation
 
