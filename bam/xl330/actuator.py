@@ -63,7 +63,7 @@ class XLCurrentActuator(CurrentControlledActuator):
             # Input voltage and (firmware) kP gain
             vin=7.4,
             kp=400,
-            error_gain=2 * 0.016 / np.pi,
+            error_gain=0.01,
         )
 
     def initialize(self):
@@ -78,7 +78,7 @@ class XLCurrentActuator(CurrentControlledActuator):
         self.model.armature = Parameter(0.005, 0.0001, 0.05)  # TODO
 
         # Current limit, used to avoid heating
-        self.model.current_limit = Parameter(1.5, 1.7, 1.8)
+        self.model.current_limit = Parameter(1.5, 1.0, 3.0)
 
         # Torque damping [Nm/(rad/s)]
         self.model.viscous_damping_with_torque = Parameter(0.0, 0.0, 0.1)
