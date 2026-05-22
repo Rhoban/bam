@@ -205,22 +205,22 @@ This will process the data with linear interpolation to enforce a constant given
 The model fitting can be done with:
 
 ```
-python -m bam.fit \
-    --actuator mx106 \
-    --model m6 \
-    --logdir data_processed \
-    --method cmaes \
-    --output params/mx106/m1.json \
-    --trials 1000 
+python3 -m bam.fit \
+    --actuator xm430 \
+    --logdir /tmp/bam_xm430 \
+    --model m3 \
+    --trials 3000
 ```
+
+The output JSON files will be saved in the `--logdir` directory (e.g. `/tmp/bam_xm430`).
 
 Where the arguments are:
 * `actuator`: The actuator to be used
 * `model`: The model to be used
-* `logdir`: The directory where the processed data is stored
+* `logdir`: The directory where the processed data is stored (output JSON files are also saved here)
 * `method`: The method to be used for optimization. Available methods are `cmaes`, `random`, `nsgaii` (default: `cmaes`)
 * `output`: The file where the parameters will be saved (default: `params.json`)
-* `trials`: The number of trials to be executed (default: `100_000`)
+* `trials`: The number of trials to be executed (recommended: **3000 or more**; default: `100_000`)
 
 ## Plotting
 
@@ -236,12 +236,21 @@ python -m bam.plot \
     --params params/mx106/m6.json
 ```
 
+`--logdir` should point to the **processed** log folder (output of `bam.process`). When `--sim` is enabled, the model simulation is overlaid on the real log data for comparison. `--params` accepts multiple JSON files separated by spaces, allowing several models to be compared at once:
+
+```
+python -m bam.plot \
+    --actuator mx106 \
+    --logdir data_processed \
+    --sim \
+    --params params/mx106/m1.json params/mx106/m3.json params/mx106/m6.json
+```
+
 Where the arguments are:
 * `actuator`: The actuator to be used
-* `logdir`: The directory where the processed data is stored
-* `sim`: If present, the simulated data will be plotted
-* `params`: The file where the model parameters are stored (is necessary if `sim` is present)
-
+* `logdir`: The directory where the **processed** data is stored
+* `sim`: If present, the simulated data will be overlaid on the real log data
+* `params`: One or more model parameter JSON files (required if `--sim` is present); multiple files can be provided to compare models side by side
 
 If you want to check your logs at each step of the data collection and processing, you can use the same command without the `--sim` flag.
 
