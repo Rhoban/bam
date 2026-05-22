@@ -127,6 +127,44 @@ python -m bam.dynamixel.all_record \
 
 Where the arguments are the same as above, with the addition of `speak` which allows the trajectory and kp to be spoken before execution.
 
+### XM430-W350
+
+The XM430-W350 is supported via Protocol 2.0 at 57,600 bps (factory default). Set `--motor xm430` to use it.
+
+Single trajectory recording:
+
+```bash
+python3 -m bam.dynamixel.record \
+    --motor xm430 \
+    --port /dev/ttyUSB0 \
+    --baudrate 57600 \
+    --id 1 \
+    --mass 0.1475 \
+    --length 0.150 \
+    --vin 12.0 \
+    --kp 800 \
+    --logdir /tmp/bam_xm430 \
+    --trajectory lift_and_drop
+```
+
+Full sweep (kp × 4 × trajectory × 4 = 16 logs):
+
+```bash
+python3 -m bam.dynamixel.all_record \
+    --motor xm430 \
+    --port /dev/ttyUSB0 \
+    --baudrate 57600 \
+    --id 1 \
+    --mass 0.1475 \
+    --length 0.150 \
+    --vin 12.0 \
+    --logdir /tmp/bam_xm430
+```
+
+Default kp sweep: `400, 800, 1200, 1600`. Custom: `--kps "200,400,800,1600"`.
+
+For a detailed guide including hardware specs, control table, physical model, and fitting procedure, see [XM430_BAM_Guide.md](XM430_BAM_Guide.md).
+
 ### ERob (with etherban)
 
 First, you need to have the Etherban server running. You also need to compile the `proto` files, by running:
