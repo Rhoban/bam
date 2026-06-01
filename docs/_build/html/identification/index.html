@@ -49,7 +49,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Friction Models (M1-M6)" href="models.html" />
+    <link rel="next" title="Theoretical Framework" href="theory.html" />
     <link rel="prev" title="Presentation" href="../presentation/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -341,6 +341,7 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Theoretical Framework</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Friction Models (M1-M6)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">Identification Pipeline</a></li>
 </ul>
@@ -405,9 +406,23 @@
 <p>This section describes the end-to-end identification pipeline.</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Theoretical Framework</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#pendulum-test-bench-dynamics">Pendulum test bench dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#friction-as-a-torque-budget">Friction as a torque budget</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#drive-backdrive-interpretation">Drive/backdrive interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#servo-model-friction-model-coupling">Servo model + friction model coupling</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Friction Models (M1-M6)</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="models.html#generic-decomposition">Generic decomposition</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models.html#implementation-reference">Implementation reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#notation">Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#model-m1-coulomb-viscous">Model M1: Coulomb-Viscous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#model-m2-stribeck">Model M2: Stribeck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#model-m3-load-dependent">Model M3: Load-dependent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#model-m4-stribeck-load-dependent">Model M4: Stribeck + load-dependent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#model-m5-directional-load-dependent">Model M5: Directional load-dependent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#model-m6-quadratic-directional">Model M6: Quadratic directional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#modeling-hierarchy">Modeling hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#implementation-in-bam">Implementation in BAM</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">Identification Pipeline</a><ul>
@@ -442,11 +457,11 @@
       </div>
     </a>
     <a class="right-next"
-       href="models.html"
+       href="theory.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Friction Models (M1-M6)</p>
+        <p class="prev-next-title">Theoretical Framework</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

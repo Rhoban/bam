@@ -45,6 +45,7 @@
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'presentation/index';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -398,21 +399,72 @@
                   
   <section id="presentation">
 <h1>Presentation<a class="headerlink" href="#presentation" title="Link to this heading">#</a></h1>
-<p>BAM (Better Actuator Models) targets accurate actuator behavior in simulation by identifying friction models beyond Coulomb-Viscous baselines.</p>
-<section id="scope-of-this-release">
-<h2>Scope of this release<a class="headerlink" href="#scope-of-this-release" title="Link to this heading">#</a></h2>
+<p>BAM (Better Actuator Models) aims at making servo-actuator simulation more
+faithful by identifying friction models that go beyond the usual
+Coulomb-Viscous approximation.</p>
+<p>The motivation is straightforward: in robotics, inaccurate actuator models are
+one of the main sources of the sim-to-real gap. When friction is simplified too
+aggressively, the simulated system can behave differently from the real one,
+especially around low-speed motion, static equilibrium, and backdrivability
+limits.</p>
+<p>This matters in particular for reinforcement learning and other low-gain
+control settings. Those regimes rely heavily on accurate contact-free dynamics
+and on the correct interplay between motor torque, gravity torque, and friction.
+If the actuator model is too coarse, policies trained in simulation may not
+transfer well to hardware.</p>
+<p>From that perspective, BAM follows a simple idea: start from trajectories
+recorded on a pendulum test bench, identify a physically interpretable friction
+model, and reuse the result directly in simulation engines.</p>
+<section id="reference-paper">
+<h2>Reference paper<a class="headerlink" href="#reference-paper" title="Link to this heading">#</a></h2>
+<p>This documentation follows the modeling and identification approach introduced
+in the paper “Extended Friction Models for the Physics Simulation of Servo
+Actuators” by Marc Duclusaud, Gregoire Passault, Vincent Padois, and Olivier
+Ly (arXiv:2410.08650).</p>
+</section>
+<section id="scientific-motivation">
+<h2>Scientific motivation<a class="headerlink" href="#scientific-motivation" title="Link to this heading">#</a></h2>
+<p>The paper argues that friction is not just a nuisance term. On geared servos, it
+contains meaningful structure: static friction, velocity dependence, load
+dependence, directional efficiency, and sometimes quadratic effects.</p>
+<p>The core hypothesis is that capturing those effects explicitly, then
+identifying the corresponding parameters from real trajectories, yields a much
+better simulation model than a single Coulomb-Viscous law.</p>
+<p>The approach keeps two strong constraints:</p>
 <ul class="simple">
-<li><p>Single-actuator identification workflow</p></li>
-<li><p>Parameter export and simulation integration helpers</p></li>
-<li><p>No legacy multi-joint benchmark assets or scripts</p></li>
+<li><p>Physical interpretability: parameters remain meaningful, including viscous
+damping, static friction, load sensitivity, and directional asymmetry.</p></li>
+<li><p>Integrability: the model can be used in simple rollout simulators and in
+physics engines by updating equivalent friction terms online.</p></li>
 </ul>
+</section>
+<section id="modeling-overview">
+<h2>Modeling overview<a class="headerlink" href="#modeling-overview" title="Link to this heading">#</a></h2>
+<p>The reference setup is a single-axis pendulum test bench. If <span class="math notranslate nohighlight">\(\theta\)</span> is
+the actuator angle, the dynamics are written as:</p>
+<div class="math notranslate nohighlight">
+\[au_m + \tau_e(\theta) + \tau_f = J\ddot{\theta}\]</div>
+<p>with:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\tau_m\)</span>: motor torque</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_e(\theta) = mgl\sin(\theta)\)</span>: external torque induced by gravity</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_f\)</span>: friction torque</p></li>
+<li><p><span class="math notranslate nohighlight">\(J\)</span>: apparent inertia</p></li>
+</ul>
+<p>Instead of directly using a discontinuous friction force, BAM uses the paper’s
+friction-budget viewpoint. Each model defines a maximum resistive torque
+<span class="math notranslate nohighlight">\(\tau_{fm}\)</span> from state and load variables. The friction applied by the
+simulator is then the stopping torque clipped in <span class="math notranslate nohighlight">\([-\tau_{fm}, \tau_{fm}]\)</span>.</p>
+<p>This formulation is numerically robust and captures static regions where friction
+keeps the system at equilibrium.</p>
 </section>
 <section id="what-you-will-find-in-this-documentation">
 <h2>What you will find in this documentation<a class="headerlink" href="#what-you-will-find-in-this-documentation" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Identification pipeline and model definitions</p></li>
+<li><p>A presentation of the problem, the motivation, and the modeling view</p></li>
+<li><p>The identification pipeline and the friction models M1 to M6</p></li>
 <li><p>Usage guidance for MuJoCo CPU and MuJoCo Warp via mjlab GPU</p></li>
-<li><p>API reference for BAM modules</p></li>
+<li><p>An API reference for BAM modules</p></li>
 </ul>
 </section>
 </section>
@@ -464,7 +516,9 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope-of-this-release">Scope of this release</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-paper">Reference paper</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scientific-motivation">Scientific motivation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modeling-overview">Modeling overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-you-will-find-in-this-documentation">What you will find in this documentation</a></li>
 </ul>
   </nav></div>

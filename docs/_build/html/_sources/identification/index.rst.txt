@@ -6,5 +6,6 @@ This section describes the end-to-end identification pipeline.
 .. toctree::
    :maxdepth: 2
 
+   theory
    models
    pipeline

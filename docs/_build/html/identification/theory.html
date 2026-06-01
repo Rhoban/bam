@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Friction Models (M1-M6) &#8212; BAM  documentation</title>
+    <title>Theoretical Framework &#8212; BAM  documentation</title>
   
   
   
@@ -46,12 +46,12 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'identification/models';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'identification/theory';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Identification Pipeline" href="pipeline.html" />
-    <link rel="prev" title="Theoretical Framework" href="theory.html" />
+    <link rel="next" title="Friction Models (M1-M6)" href="models.html" />
+    <link rel="prev" title="Identification" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -342,8 +342,8 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="theory.html">Theoretical Framework</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Friction Models (M1-M6)</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Theoretical Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Friction Models (M1-M6)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">Identification Pipeline</a></li>
 </ul>
 </div>
@@ -388,7 +388,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">Identification</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Friction Models (M1-M6)</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Theoretical Framework</span></li>
   </ul>
 </nav>
 </div>
@@ -405,110 +405,71 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="friction-models-m1-m6">
-<h1>Friction Models (M1-M6)<a class="headerlink" href="#friction-models-m1-m6" title="Link to this heading">#</a></h1>
-<p>BAM supports six friction models of increasing expressiveness, denoted
-<span class="math notranslate nohighlight">\(\mathcal{M}_1\)</span> to <span class="math notranslate nohighlight">\(\mathcal{M}_6\)</span>.</p>
-<p>They are ordered from the simplest Coulomb-Viscous approximation to a richer
-directional and quadratic formulation that better captures gearbox behavior.</p>
+  <section id="theoretical-framework">
+<h1>Theoretical Framework<a class="headerlink" href="#theoretical-framework" title="Link to this heading">#</a></h1>
+<p>This page summarizes the theoretical backbone used in BAM, following the
+formulation presented in arXiv:2410.08650.</p>
+<section id="pendulum-test-bench-dynamics">
+<h2>Pendulum test bench dynamics<a class="headerlink" href="#pendulum-test-bench-dynamics" title="Link to this heading">#</a></h2>
+<p>For a single-axis pendulum test bench:</p>
+<div class="math notranslate nohighlight">
+\[\tau_m + \tau_e(\theta) + \tau_f = J\ddot{\theta}\]</div>
+<p>where:</p>
 <ul class="simple">
-<li><p>M1: Coulomb-Viscous</p></li>
-<li><p>M2: Stribeck</p></li>
-<li><p>M3: Load-dependent</p></li>
-<li><p>M4: Stribeck + load-dependent</p></li>
-<li><p>M5: Directional load-dependent</p></li>
-<li><p>M6: Quadratic directional variant</p></li>
+<li><p><span class="math notranslate nohighlight">\(\theta\)</span> is the joint position</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_m\)</span> is the actuator torque</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_e(\theta) = mgl\sin(\theta)\)</span> is the gravity torque</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_f\)</span> is the friction torque</p></li>
+<li><p><span class="math notranslate nohighlight">\(J\)</span> is the apparent inertia (load + actuator side)</p></li>
 </ul>
-<section id="notation">
-<h2>Notation<a class="headerlink" href="#notation" title="Link to this heading">#</a></h2>
-<p>In the equations below:</p>
+</section>
+<section id="friction-as-a-torque-budget">
+<h2>Friction as a torque budget<a class="headerlink" href="#friction-as-a-torque-budget" title="Link to this heading">#</a></h2>
+<p>The Coulomb-Viscous form is typically written as a force opposed to velocity.
+In BAM, friction is handled through a maximum available resistive torque
+<span class="math notranslate nohighlight">\(\tau_{fm}\)</span>.</p>
+<p>For a discrete simulator with time step <span class="math notranslate nohighlight">\(\Delta t\)</span>, stopping at next step
+requires:</p>
+<div class="math notranslate nohighlight">
+\[\dot{\theta}_{k+1} = 0\]</div>
+<p>which yields the stopping torque:</p>
+<div class="math notranslate nohighlight">
+\[\tau_{f,stop} = -\left(\frac{J}{\Delta t}\dot{\theta} + \tau_m + \tau_e\right)\]</div>
+<p>The applied friction is then clipped:</p>
+<div class="math notranslate nohighlight">
+\[\tau_f = \mathrm{clip}(\tau_{f,stop}, -\tau_{fm}, \tau_{fm})\]</div>
+<p>Each model <span class="math notranslate nohighlight">\(\mathcal{M}_i\)</span> defines <span class="math notranslate nohighlight">\(\tau_{fm}\)</span> with a different level
+of expressiveness.</p>
+</section>
+<section id="drive-backdrive-interpretation">
+<h2>Drive/backdrive interpretation<a class="headerlink" href="#drive-backdrive-interpretation" title="Link to this heading">#</a></h2>
+<p>For fixed <span class="math notranslate nohighlight">\(\tau_m\)</span>, one can characterize static, drive, and backdrive
+regions in the <span class="math notranslate nohighlight">\((\tau_m,\tau_e)\)</span> space. This viewpoint is useful to reason
+about load-dependent and directional effects:</p>
 <ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(\dot{\theta}\)</span> is joint velocity</p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau_m\)</span> is motor torque</p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau_e\)</span> is external/load torque</p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau_{fm}\)</span> is the maximum resistive friction torque (friction budget)</p></li>
+<li><p>Drive region: motion follows motor torque direction</p></li>
+<li><p>Backdrive region: motion follows external torque direction</p></li>
+<li><p>Static region: friction can balance torques and keep equilibrium</p></li>
 </ul>
-<p>The simulation then applies friction by clipping the stopping torque in
-<span class="math notranslate nohighlight">\([-\tau_{fm},\tau_{fm}]\)</span>.</p>
+<p>Extended models reshape these region boundaries by changing
+<span class="math notranslate nohighlight">\(\tau_{fm}(\tau_m,\tau_e,\dot{\theta})\)</span>.</p>
 </section>
-<section id="model-m1-coulomb-viscous">
-<h2>Model M1: Coulomb-Viscous<a class="headerlink" href="#model-m1-coulomb-viscous" title="Link to this heading">#</a></h2>
-<div class="math notranslate nohighlight">
-\[\mathcal{M}_1:\quad
-\tau_{fm} = K_v|\dot{\theta}| + K_c\]</div>
-<p>This is the baseline model used in most physics simulators.
-It keeps only viscous damping and a constant Coulomb term.</p>
-</section>
-<section id="model-m2-stribeck">
-<h2>Model M2: Stribeck<a class="headerlink" href="#model-m2-stribeck" title="Link to this heading">#</a></h2>
-<div class="math notranslate nohighlight">
-\[\mathcal{M}_2:\quad
-\tau_{fm} = K_v|\dot{\theta}| + K_c +
-\exp\left(-\left|\frac{\dot{\theta}}{\dot{\theta}_s}\right|^{\alpha}\right)K_{cs}\]</div>
-<p>This adds higher friction near zero speed and smooth transition to sliding.
-It models the fact that static friction is usually stronger than sliding friction.</p>
-</section>
-<section id="model-m3-load-dependent">
-<h2>Model M3: Load-dependent<a class="headerlink" href="#model-m3-load-dependent" title="Link to this heading">#</a></h2>
-<div class="math notranslate nohighlight">
-\[\mathcal{M}_3:\quad
-\tau_{fm} = K_v|\dot{\theta}| + K_c + K_l|\tau_m - \tau_e|\]</div>
-<p>This captures the increase of friction with transmitted gearbox load.
-It is useful when the apparent resistance depends on how hard the transmission is loaded.</p>
-</section>
-<section id="model-m4-stribeck-load-dependent">
-<h2>Model M4: Stribeck + load-dependent<a class="headerlink" href="#model-m4-stribeck-load-dependent" title="Link to this heading">#</a></h2>
-<div class="math notranslate nohighlight">
-\[\mathcal{M}_4:\quad
-\tau_{fm} = K_v|\dot{\theta}| + K_c + K_l|\tau_m-\tau_e|
-+ \exp\left(-\left|\frac{\dot{\theta}}{\dot{\theta}_s}\right|^{\alpha}\right)
-\left(K_{cs} + K_{ls}|\tau_m-\tau_e|\right)\]</div>
-<p>This combines presliding dynamics with load dependence.
-It adds Stribeck smoothing on top of a load-sensitive friction budget.</p>
-</section>
-<section id="model-m5-directional-load-dependent">
-<h2>Model M5: Directional load-dependent<a class="headerlink" href="#model-m5-directional-load-dependent" title="Link to this heading">#</a></h2>
-<div class="math notranslate nohighlight">
-\[\mathcal{M}_5:\quad
-\tau_{fm} = K_v|\dot{\theta}| + K_c + |K_m\tau_m - K_e\tau_e|
-+ \exp\left(-\left|\frac{\dot{\theta}}{\dot{\theta}_s}\right|^{\alpha}\right)
-\left(K_{cs} + |K_{ms}\tau_m - K_{es}\tau_e|\right)\]</div>
-<p>This separates motor-side and external-side contributions, which helps model
-directional efficiency/backdrivability asymmetry.
-It is appropriate when the gearbox behaves differently depending on the torque direction.</p>
-</section>
-<section id="model-m6-quadratic-directional">
-<h2>Model M6: Quadratic directional<a class="headerlink" href="#model-m6-quadratic-directional" title="Link to this heading">#</a></h2>
-<div class="math notranslate nohighlight">
-\[\mathcal{M}_6:\quad
-\tau_{fm} = K_v|\dot{\theta}| + K_c + |K_m\tau_m - K_e\tau_e|
-+ \exp\left(-\left|\frac{\dot{\theta}}{\dot{\theta}_s}\right|^{\alpha}\right)
-\left(K_{cs} + |K_{ms}\tau_m - K_{es}\tau_e| + Q\right)\]</div>
-<p>with piecewise quadratic contribution:</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}Q =
-\begin{cases}
-K_{eq}\tau_e^2 &amp; \text{if } |\tau_m| &gt; |\tau_e| \\
-K_{mq}\tau_m^2 &amp; \text{otherwise}
-\end{cases}\end{split}\]</div>
-<p>This is useful for actuators where harmonic-drive-like effects create nonlinear
-load-friction coupling.
-It extends the directional model with a quadratic load term.</p>
-</section>
-<section id="modeling-hierarchy">
-<h2>Modeling hierarchy<a class="headerlink" href="#modeling-hierarchy" title="Link to this heading">#</a></h2>
-<p>The sequence <span class="math notranslate nohighlight">\(\mathcal{M}_1 \rightarrow \mathcal{M}_6\)</span> reflects increasing
-expressiveness and parameter count. In practice, BAM fits all candidates and
-selects the best trade-off from validation error.</p>
-</section>
-<section id="implementation-in-bam">
-<h2>Implementation in BAM<a class="headerlink" href="#implementation-in-bam" title="Link to this heading">#</a></h2>
-<p>Model behaviors are implemented in <a class="reference internal" href="../api/core.html#module-bam.model" title="bam.model"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bam.model</span></code></a>, notably:</p>
+<section id="servo-model-friction-model-coupling">
+<h2>Servo model + friction model coupling<a class="headerlink" href="#servo-model-friction-model-coupling" title="Link to this heading">#</a></h2>
+<p>In BAM, simulation combines:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="../api/core.html#bam.model.Model" title="bam.model.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">bam.model.Model</span></code></a></p></li>
-<li><p><a class="reference internal" href="../api/core.html#bam.model.load_model" title="bam.model.load_model"><code class="xref py py-func docutils literal notranslate"><span class="pre">bam.model.load_model()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../api/core.html#bam.model.load_model_from_dict" title="bam.model.load_model_from_dict"><code class="xref py py-func docutils literal notranslate"><span class="pre">bam.model.load_model_from_dict()</span></code></a></p></li>
+<li><p>a servo model <span class="math notranslate nohighlight">\(\mathcal{S}\)</span> that maps state and target to motor torque</p></li>
+<li><p>a friction model <span class="math notranslate nohighlight">\(\mathcal{M}\)</span> that computes the friction budget</p></li>
 </ul>
+<p>At each step:</p>
+<ol class="arabic simple">
+<li><p>compute <span class="math notranslate nohighlight">\(\tau_m\)</span> from control law and motor model</p></li>
+<li><p>compute <span class="math notranslate nohighlight">\(\tau_{fm}\)</span> from chosen friction model</p></li>
+<li><p>compute <span class="math notranslate nohighlight">\(\tau_f\)</span> by clipping <span class="math notranslate nohighlight">\(\tau_{f,stop}\)</span></p></li>
+<li><p>integrate acceleration from bench dynamics</p></li>
+</ol>
+<p>This makes the framework both identifiable from logs and directly usable in
+simulation.</p>
 </section>
 </section>
 
@@ -523,20 +484,20 @@ selects the best trade-off from validation error.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="theory.html"
+       href="index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Theoretical Framework</p>
+        <p class="prev-next-title">Identification</p>
       </div>
     </a>
     <a class="right-next"
-       href="pipeline.html"
+       href="models.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Identification Pipeline</p>
+        <p class="prev-next-title">Friction Models (M1-M6)</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -559,22 +520,17 @@ selects the best trade-off from validation error.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notation">Notation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-m1-coulomb-viscous">Model M1: Coulomb-Viscous</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-m2-stribeck">Model M2: Stribeck</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-m3-load-dependent">Model M3: Load-dependent</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-m4-stribeck-load-dependent">Model M4: Stribeck + load-dependent</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-m5-directional-load-dependent">Model M5: Directional load-dependent</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-m6-quadratic-directional">Model M6: Quadratic directional</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modeling-hierarchy">Modeling hierarchy</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementation-in-bam">Implementation in BAM</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pendulum-test-bench-dynamics">Pendulum test bench dynamics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#friction-as-a-torque-budget">Friction as a torque budget</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#drive-backdrive-interpretation">Drive/backdrive interpretation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#servo-model-friction-model-coupling">Servo model + friction model coupling</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/identification/models.rst.txt">
+    <a href="../_sources/identification/theory.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
