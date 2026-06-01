@@ -1,8 +1,0 @@
-/* Minimal custom style for BAM docs */
-.bd-page-width {
-  max-width: 92rem;
-}
-
-h1, h2 {
-  letter-spacing: 0.01em;
-}

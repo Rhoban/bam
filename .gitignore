@@ -7,3 +7,4 @@ params.json
 build/
 dist/
 bam.egg-info/
+docs/_build/
