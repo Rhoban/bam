@@ -46,6 +46,7 @@ todo_include_todos = True
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_css_files = ["bam.css"]
+html_logo = "_static/BAM_logo.png"
 
 html_theme_options = {
     "show_nav_level": 2,
