@@ -25,7 +25,7 @@ kps = [4, 8, 16, 32]
 trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
 
 command_base = f"python3 dynamixel/record.py --mass {args.mass} --length {args.length}"
-command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor}"
+command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor} --vin {args.vin}"
 
 
 for kp in kps:
