@@ -62,10 +62,10 @@ class XL320Actuator(VoltageControlledActuator):
 
     def initialize(self):
         # Torque constant [Nm/A] or [V/(rad/s)]
-        self.model.kt = Parameter(0.25, 0.7, 1.5)
+        self.model.kt = Parameter(0.7, 0.25, 1.5)
 
         # Motor resistance [Ohm]
-        self.model.R = Parameter(5.0, 7.0, 40.0)
+        self.model.R = Parameter(5.0, 3.0, 40.0)
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.0005, 0.0001, 0.01)
