@@ -51,7 +51,7 @@ class Actuator:
         self, control: float | None, torque_enable: bool, q: float, dq: float
     ) -> float:
         """
-        The torque [Nm] produced by the actuator, given the control signal and current configuration
+        The torque [Nm] produced by the actuator, given the control signal and currentself.model configuration
         """
         raise NotImplementedError
 
@@ -65,8 +65,13 @@ class Actuator:
         raise NotImplementedError("This actuator doesn't support to_mujoco")
 
 
-class VoltageControlledActuator(Actuator):
-    def __init__(self, testbench_class: Testbench, vin: float, kp: float, error_gain: float, max_pwm: float = 1.0):
+class DCMotorActuator(Actuator):
+    def __init__(
+        self,
+        testbench_class: Testbench,
+        vin: float,
+        kp: float,
+    ):
         super().__init__(testbench_class)
 
         # Input voltage
@@ -74,14 +79,6 @@ class VoltageControlledActuator(Actuator):
 
         # Proportional gain
         self.kp = kp
-
-        # Error gain is such that
-        # duty_cycle = error_gain * kp * angular_error
-        # results in the target duty_cycle (between 0 and 1)
-        self.error_gain = error_gain
-
-        # Maximum PWM allowed by the controller, typically close to 1.0
-        self.max_pwm = max_pwm
 
     def load_log(self, log: dict):
         super().load_log(log)
@@ -101,9 +98,29 @@ class VoltageControlledActuator(Actuator):
         # Motor resistance [Ohm]
         self.model.R = Parameter(1.0, 0.0, 10.0)
 
+
+class VoltageControlledActuator(DCMotorActuator):
+    def __init__(
+        self,
+        testbench_class: Testbench,
+        vin: float,
+        kp: float,
+        error_gain: float,
+        max_pwm: float = 1.0,
+    ):
+        super().__init__(testbench_class, vin, kp)
+
+        # Error gain is such that
+        # duty_cycle = error_gain * kp * angular_error
+        # results in the target duty_cycle (between 0 and 1)
+        self.error_gain = error_gain
+
+        # Maximum PWM allowed by the controller, typically close to 1.0
+        self.max_pwm = max_pwm
+
     def control_unit(self) -> str:
         return "volts"
-    
+
     def compute_control(
         self, q_target: float, q: float, dq: float, dt: float
     ) -> float | None:
@@ -115,7 +132,7 @@ class VoltageControlledActuator(Actuator):
         duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
 
         return self.vin * duty_cycle
-    
+
     def compute_torque(
         self, control: float | None, torque_enable: bool, q: float, dq: float
     ) -> float:
@@ -150,3 +167,85 @@ class VoltageControlledActuator(Actuator):
 
         print("")
 
+
+class CurrentControlledActuator(DCMotorActuator):
+    def __init__(
+        self, testbench_class: Testbench, vin: float, kp: float, error_gain: float
+    ):
+        super().__init__(testbench_class, vin, kp)
+        # Error gain is such that
+        # desired current (amps) = error_gain * kp * angular_error
+        self.error_gain = error_gain
+
+    def control_unit(self) -> str:
+        return "amps"
+
+    def initialize(self):
+        super().initialize()
+
+        # Current limit, used to avoid heating
+        self.model.current_limit = Parameter(1.5, 0, 3)
+
+        # Models some damping only present when torque is active
+        self.model.viscous_damping_with_torque = Parameter(0.0, 0.0, 0.1)
+
+    def compute_control(
+        self, q_target: float, q: float, dq: float, dt: float
+    ) -> float | None:
+        """
+        Assumes the motor is using a kp controller
+        """
+        # Target current using simple P controller
+        current = (q_target - q) * self.kp * self.error_gain
+
+        # Maximum allowable current due to voltage limits
+        current_limit_low = (1 / self.model.R.value) * (
+            self.vin - self.model.kt.value * dq
+        )
+        current_limit_high = (1 / self.model.R.value) * (
+            -self.vin - self.model.kt.value * dq
+        )
+        current = np.clip(current, current_limit_high, current_limit_low)
+
+        # Maximum current allowed by the user to avoid heating
+        current = np.clip(
+            current, -self.model.current_limit.value, self.model.current_limit.value
+        )
+
+        return current
+
+    def compute_torque(
+        self, control: float | None, torque_enable: bool, q: float, dq: float
+    ) -> float:
+        """
+        Computes the torque from DC motor equation
+        """
+        torque = (
+            self.model.kt.value * control
+            - self.model.viscous_damping_with_torque.value * dq
+        )
+
+        return torque * torque_enable
+
+    def to_mujoco(self):
+        if self.vin == 0 or self.kp == 0:
+            print(yellow(f"WARNING: kp or vin are not set"))
+
+        kt = self.model.kt.value
+
+        kp = self.error_gain * self.kp * kt
+        damping = (
+            self.model.friction_viscous.value
+            + self.model.viscous_damping_with_torque.value
+        )
+        
+        forcerange = self.vin * self.model.kt.value / self.model.R.value
+        forcerange = min(forcerange, self.model.current_limit.value * self.model.kt.value)
+
+        print_parameter("forcerange", forcerange)
+        print_parameter("armature", self.model.armature.value)
+        print_parameter("kp", kp)
+        print_parameter("damping", damping)
+        print_parameter("frictionloss", self.model.friction_base.value)
+
+        print("")
