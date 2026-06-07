@@ -78,8 +78,8 @@ class Model:
 
         if self.stribeck:
             # Stribeck velocity [rad/s] and curvature
-            self.dtheta_stribeck = Parameter(0.2, 0.01, 3.0)
-            self.alpha = Parameter(1.35, 0.5, 3.0)
+            self.dtheta_stribeck = Parameter(0.2, 0.01, 5.0)
+            self.alpha = Parameter(1.35, 0.5, 15.0)
 
         # Viscous friction [Nm/(rad/s)]
         self.friction_viscous = Parameter(0.1, 0.0, self.max_viscous_friction)

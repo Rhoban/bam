@@ -43,7 +43,7 @@ class XLActuator(VoltageControlledActuator):
 
         # Motor resistance [Ohm]
         # self.model.R = Parameter(2.0, 0.5, 20.0) # TODO
-        self.model.R = Parameter(2.6, 2.0, 3.0)  # Measured 2.6
+        self.model.R = Parameter(2.6, 2.0, 5.0)  # Measured 2.6
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.0001, 0.05)  # TODO
@@ -61,7 +61,7 @@ class XLCurrentActuator(CurrentControlledActuator):
         super().__init__(
             testbench_class,
             # Input voltage and (firmware) kP gain
-            vin=7.4,
+            vin=7.5,
             kp=400,
             error_gain=0.01,
         )
@@ -72,7 +72,7 @@ class XLCurrentActuator(CurrentControlledActuator):
 
         # Motor resistance [Ohm]
         # self.model.R = Parameter(2.0, 0.5, 20.0) # TODO
-        self.model.R = Parameter(2.6, 2.0, 3.5)  # Measured 2.6
+        self.model.R = Parameter(2.6, 2.0, 5.0)  # Measured 2.6
 
         # Motor armature / apparent inertia [kg m^2]
         self.model.armature = Parameter(0.005, 0.0001, 0.05)  # TODO
