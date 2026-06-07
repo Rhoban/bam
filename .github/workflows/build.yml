@@ -1,0 +1,27 @@
+name: Build wheel on push to doc branch
+
+on:
+  push:
+    branches:
+      - doc
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Build the wheel
+        run: uv build
+
+      - name: Save the wheel (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: bam-wheel-files
+          path: dist/
