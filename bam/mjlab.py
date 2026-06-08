@@ -33,7 +33,7 @@ import mujoco
 import mujoco_warp as mjwarp
 import torch
 
-from mjlab.actuator.actuator import Actuator, ActuatorCfg, ActuatorCmd
+from mjlab.actuator.actuator import Actuator, ActuatorCfg, ActuatorCmd, CommandField
 from mjlab.utils.spec import create_motor_actuator
 
 from .actuator import VoltageControlledActuator
@@ -229,6 +229,10 @@ class BamActuator(Actuator):
 
     def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
         super().reset(env_ids)
+
+    @property
+    def command_field(self) -> CommandField:
+        return "position"
 
     # ─────────────────────────────────────────────────────────────────────────
     # Gain scaling (for domain randomization)

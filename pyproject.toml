@@ -13,7 +13,6 @@ dependencies = [
     "cmaes",
     "wandb",
     "matplotlib",
-    "pygame",
     "scipy",
     "colorama",
     "rustypot>=1.5.0",

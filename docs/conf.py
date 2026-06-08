@@ -23,7 +23,6 @@ sys.path.insert(0, os.path.abspath(".."))
 autodoc_mock_imports = [
     "mujoco",
     "matplotlib",
-    "pygame",
     "serial",
     "dynamixel_sdk",
     "pypot",
