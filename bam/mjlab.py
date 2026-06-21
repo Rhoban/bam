@@ -54,16 +54,27 @@ class BamActuatorCfg(ActuatorCfg):
     Using a JSON path (instead of a ``Model`` object) makes this config fully
     serializable by tyro and safely copyable across processes.
 
-    Args:
-        json_path: Path to a BAM params JSON file (output of ``bam.fit``).
-        target_names_expr: Tuple of regex patterns to match actuated joint names.
-        vin: Supply voltage override [V]. ``None`` → uses the value in the JSON.
-        kp_fw: Firmware P-gain override. ``None`` → uses the value in the JSON.
+    :param json_path: Path to a BAM params JSON file (output of ``bam.fit``).
+    :param target_names_expr: Tuple of regex patterns to match actuated joint names.
+    :param vin: Supply voltage override [V]. ``None`` → uses the value in the JSON.
+    :param kp_fw: Firmware P-gain override. ``None`` → uses the value in the JSON.
+    :param vin_range: If set, a per-env battery voltage is sampled uniformly from this 
+        range at startup and held constant across resets. Takes precedence over ``vin``.
+    :param vin_drop_gain_range: If set, a per-env internal-resistance gain [V/Nm] is sampled uniformly
+        from this range at startup. Models the voltage drop V_drop = gain * Σ|τ| due to
+        battery + cable resistance. Gain should be approximately resistance / Kt.
+        Held constant across resets.
+    :param vin_min: Hard lower bound on the effective supply voltage [V] after applying the
+        voltage drop. Ensures ``vin`` never falls below this value regardless of the load.
+        ``None`` → no lower bound.
     """
 
     json_path: str
     vin: float | None = None
     kp_fw: float | None = None
+    vin_range: tuple[float, float] | None = None
+    vin_drop_gain_range: tuple[float, float] | None = None
+    vin_min: float | None = None
 
     def build(
         self,
@@ -121,6 +132,10 @@ class BamActuator(Actuator):
         self._device: str = "cpu"
         self._dof_ids: torch.Tensor | None = None
 
+        self.vin_tensor: torch.Tensor | None = None
+        self.vin_drop_gain: torch.Tensor | None = None
+        self._prev_motor_torque: torch.Tensor | None = None
+
         self.kp_scale: torch.Tensor | None = None
         self.kd_scale: torch.Tensor | None = None
         self.default_kp_scale: torch.Tensor | None = None
@@ -138,11 +153,13 @@ class BamActuator(Actuator):
         """
         bam = self._bam_model
         act = bam.actuator
-        vin = act.vin  # already overridden in __init__ if cfg.vin was set
         kt = bam.kt.value
         R = bam.R.value
         armature = act.get_extra_inertia()
-        force_limit = vin * kt / R
+        # Use upper bound of vin_range for force_limit so MuJoCo's forcerange
+        # is always a safe ceiling regardless of per-env voltage.
+        vin_for_limit = max(self.cfg.vin_range) if self.cfg.vin_range is not None else act.vin
+        force_limit = vin_for_limit * kt / R
 
         target_set = set(target_names)
         converted: set[str] = set()
@@ -208,6 +225,7 @@ class BamActuator(Actuator):
         self._dof_ids = torch.tensor(dof_ids, dtype=torch.long, device=device)
 
         num_envs = data.nworld
+        num_joints = len(self._dof_ids)
         self.kp_scale = torch.ones(num_envs, 1, dtype=torch.float32, device=device)
         self.kd_scale = torch.ones(num_envs, 1, dtype=torch.float32, device=device)
         self.default_kp_scale = self.kp_scale.clone()
@@ -215,13 +233,35 @@ class BamActuator(Actuator):
 
         bam = self._bam_model
         act = bam.actuator
-        vin = act.vin
-        force_limit = vin * bam.kt.value / bam.R.value
+
+        # vin_tensor: (N, 1) — per-env battery voltage, constant across resets
+        if self.cfg.vin_range is not None:
+            self.vin_tensor = torch.empty(num_envs, 1, dtype=torch.float32, device=device).uniform_(
+                *self.cfg.vin_range
+            )
+        else:
+            self.vin_tensor = torch.full((num_envs, 1), act.vin, dtype=torch.float32, device=device)
+
+        # vin_drop_gain: (N, 1) — per-env resistance gain [V/Nm], constant across resets
+        if self.cfg.vin_drop_gain_range is not None:
+            self.vin_drop_gain = torch.empty(num_envs, 1, dtype=torch.float32, device=device).uniform_(
+                *self.cfg.vin_drop_gain_range
+            )
+        else:
+            self.vin_drop_gain = None
+
+        # Previous motor torques for the voltage-drop computation (lagged 1 step)
+        self._prev_motor_torque = torch.zeros(num_envs, num_joints, dtype=torch.float32, device=device)
+
+        vin_repr = f"range={self.cfg.vin_range}" if self.cfg.vin_range is not None else f"{act.vin:.1f}V"
+        drop_repr = f"drop_gain_range={self.cfg.vin_drop_gain_range}" if self.cfg.vin_drop_gain_range is not None else "no drop"
+        vin_for_limit = max(self.cfg.vin_range) if self.cfg.vin_range is not None else act.vin
+        force_limit = vin_for_limit * bam.kt.value / bam.R.value
         print(
             f"[BamActuator] model={bam.name!r} "
-            f"joints={len(self._dof_ids)} "
+            f"joints={num_joints} "
             f"kt={bam.kt.value:.4f} R={bam.R.value:.4f} "
-            f"vin={vin:.1f}V force_limit=±{force_limit:.2f}Nm "
+            f"vin={vin_repr} {drop_repr} force_limit=±{force_limit:.2f}Nm "
             f"friction_base={bam.friction_base.value:.4f} "
             f"friction_viscous={bam.friction_viscous.value:.4f} "
             f"envs={num_envs} device={device}"
@@ -229,6 +269,13 @@ class BamActuator(Actuator):
 
     def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
         super().reset(env_ids)
+        # vin_tensor and vin_drop_gain are startup-randomized: do NOT re-sample on reset.
+        # Reset previous motor torques so the voltage-drop model starts clean.
+        if self._prev_motor_torque is not None:
+            if env_ids is None:
+                self._prev_motor_torque.zero_()
+            else:
+                self._prev_motor_torque[env_ids] = 0.0
 
     @property
     def command_field(self) -> CommandField:
@@ -347,8 +394,14 @@ class BamActuator(Actuator):
         act = bam.actuator
 
         # Read scalar params (cheap attribute reads, no tensor overhead)
-        # vin / kp_fw overrides were already applied to act in __init__
-        vin = act.vin
+        # vin_tensor is a (N,1) tensor initialized in initialize(); act.vin is no longer used directly.
+        assert self.vin_tensor is not None
+        vin = self.vin_tensor  # (N, 1)
+        if self.vin_drop_gain is not None and self._prev_motor_torque is not None:
+            load = self._prev_motor_torque.abs().sum(dim=-1, keepdim=True)  # (N, 1)
+            vin = vin - self.vin_drop_gain * load  # (N, 1), broadcast safe
+            if self.cfg.vin_min is not None:
+                vin = torch.clamp(vin, min=self.cfg.vin_min)
         kp_fw = act.kp
         kt = bam.kt.value
         R = bam.R.value
@@ -421,7 +474,13 @@ class BamActuator(Actuator):
         friction_magnitude = torch.minimum(torch.abs(tau_stop), friction_budget)
         friction_torque = -torch.sign(tau_stop) * friction_magnitude  # (N, J)
 
-        return motor_torque + friction_torque  # (N, J)
+        output = motor_torque + friction_torque  # (N, J)
+
+        # Store motor torque for next step's voltage-drop computation
+        if self._prev_motor_torque is not None:
+            self._prev_motor_torque = motor_torque.detach()
+
+        return output
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -434,6 +493,9 @@ def make_bam_actuator_cfg(
     target_names_expr: tuple[str, ...] = (r".*",),
     vin: float | None = None,
     kp_fw: float | None = None,
+    vin_range: tuple[float, float] | None = None,
+    vin_drop_gain_range: tuple[float, float] | None = None,
+    vin_min: float | None = None,
     delay_min_lag: int = 0,
     delay_max_lag: int = 0,
     delay_hold_prob: float = 0.0,
@@ -475,6 +537,9 @@ def make_bam_actuator_cfg(
         json_path=str(json_path),
         vin=vin,
         kp_fw=kp_fw,
+        vin_range=vin_range,
+        vin_drop_gain_range=vin_drop_gain_range,
+        vin_min=vin_min,
         delay_min_lag=delay_min_lag,
         delay_max_lag=delay_max_lag,
         delay_hold_prob=delay_hold_prob,
