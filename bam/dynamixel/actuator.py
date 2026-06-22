@@ -8,7 +8,7 @@
 
 import numpy as np
 from bam.message import yellow, print_parameter, bright
-from bam.actuator import VoltageControlledActuator
+from bam.actuator import VoltageControlledActuator, CurrentControlledActuator
 from bam.parameter import Parameter
 from bam.testbench import Testbench, Pendulum
 
@@ -56,7 +56,7 @@ class XL320Actuator(VoltageControlledActuator):
             # This gain, if multiplied by a position error and firmware KP, gives duty cycle
             # It was determined using an oscilloscope and XL-320 actuators
             error_gain = 0.05048199,
-            # Maximum allowable duty cycle, also determined with oscilloscope   
+            # Maximum allowable duty cycle, also determined with oscilloscope
             max_pwm = 1.0
         )
 
@@ -71,6 +71,59 @@ class XL320Actuator(VoltageControlledActuator):
         self.model.armature = Parameter(0.0005, 0.0001, 0.01)
 
         self.model.max_load_friction = 1.0
+
+    def get_extra_inertia(self) -> float:
+        return self.model.armature.value
+
+
+XL330_ENCODER_COUNTS_PER_REV = 4096
+XL330_KP_DIVISOR = 256  # Empirically observed for XL330 (manual mentions 128)
+XL330_PWM_LIMIT = 885   # Default Present PWM limit for XL330
+
+
+class XL330Actuator(VoltageControlledActuator):
+    """
+    Represents a Dynamixel XL330 actuator.
+    """
+
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(
+            testbench_class,
+            vin=7.5,
+            kp=400,
+            error_gain=(XL330_ENCODER_COUNTS_PER_REV / (2 * np.pi))
+            / (XL330_KP_DIVISOR * XL330_PWM_LIMIT),
+            max_pwm=1.0,
+        )
+
+    def initialize(self):
+        self.model.kt = Parameter(1.6, 0.1, 3.0)
+        self.model.R = Parameter(2.6, 2.0, 5.0)
+        self.model.armature = Parameter(0.005, 0.0001, 0.05)
+
+    def get_extra_inertia(self) -> float:
+        return self.model.armature.value
+
+
+class XL330CurrentActuator(CurrentControlledActuator):
+    """
+    Represents a Dynamixel XL330 actuator controlled in current position mode.
+    """
+
+    def __init__(self, testbench_class: Testbench):
+        super().__init__(
+            testbench_class,
+            vin=7.5,
+            kp=400,
+            error_gain=0.01,
+        )
+
+    def initialize(self):
+        self.model.kt = Parameter(1.6, 0.1, 3.0)
+        self.model.R = Parameter(2.6, 2.0, 5.0)
+        self.model.armature = Parameter(0.005, 0.0001, 0.05)
+        self.model.current_limit = Parameter(1.5, 1.0, 3.0)
+        self.model.viscous_damping_with_torque = Parameter(0.0, 0.0, 0.1)
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value

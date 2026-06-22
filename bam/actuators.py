@@ -8,8 +8,7 @@
 
 from .testbench import Pendulum
 from .erob.actuator import ErobActuator
-from .dynamixel.actuator import MXActuator
-from .xl330.actuator import XLActuator, XLCurrentActuator
+from .dynamixel.actuator import MXActuator, XL320Actuator, XL330Actuator, XL330CurrentActuator
 from .feetech.actuator import STS3215Actuator
 from .unitree.actuator import UnitreeGo1Actuator
 
@@ -19,8 +18,9 @@ actuators = {
     "mx106": lambda: MXActuator(Pendulum),
     
     # Dynamixel XL series
-    "xl330": lambda: XLActuator(Pendulum),
-    "xl330i": lambda: XLCurrentActuator(Pendulum),
+    "xl320": lambda: XL320Actuator(Pendulum),
+    "xl330": lambda: XL330Actuator(Pendulum),
+    "xl330i": lambda: XL330CurrentActuator(Pendulum),
     
     # eRob actuators with custom PD controller
     "erob80_100": lambda: ErobActuator(Pendulum, damping=2.0),
