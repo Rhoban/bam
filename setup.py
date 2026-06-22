@@ -42,6 +42,6 @@ setuptools.setup(
         ],  
     },
     include_package_data=True,
-    package_data={},
+    package_data={"bam": ["params/**/*.json"]},
     python_requires=">=3.6",
 )

@@ -58,7 +58,7 @@ def _resolve_json_path(json_path: str | None, motor_name: str | None, model: str
         raise ValueError(
             "Provide either json_path or both motor_name and model."
         )
-    params_root = Path(__file__).parent.parent / "params"
+    params_root = Path(__file__).parent / "params"
     path = params_root / motor_name / f"{model}.json"
     if not path.exists():
         motor_dir = params_root / motor_name
@@ -84,9 +84,9 @@ class BamActuatorCfg(ActuatorCfg):
     * **Custom JSON**: set ``json_path`` to a BAM params JSON file produced by
       ``bam.fit``.
 
-    :param motor_name: Name of the bundled motor. Currently supported: "xl330", "xl320", "mx106", "mx64".
-    :param model: Model variant to use with ``motor_name``, one of "m1"–"m6".
-    :param json_path: Path to a custom BAM params JSON file produced by ``bam.fit``.
+    :param motor_name: Name of the bundled motor. Currently supported: "xl330", "xl320", "mx106", "mx64", "erob80:50", and "erob80:100". Mutually exclusive with ``json_path``.
+    :param model: Model variant to use with ``motor_name``, one of "m1"–"m6". Mutually exclusive with ``json_path``.
+    :param json_path: Path to a custom BAM params JSON file produced by ``bam.fit``. Mutually exclusive with ``motor_name`` and ``model``.
     :param target_names_expr: Tuple of regex patterns to match actuated joint names.
     :param vin: Supply voltage override [V]. ``None`` → uses the value in the JSON.
     :param kp_fw: Firmware P-gain override. ``None`` → uses the value in the JSON.

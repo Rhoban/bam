@@ -1,0 +1,17 @@
+{
+    "kt": 0.36221278145533053,
+    "R": 2.7519133088033305,
+    "armature": 0.001846893632595922,
+    "q_offset": 0.02914237064352493,
+    "friction_base": 0.00036595207645983614,
+    "friction_stribeck": 0.008677887561102606,
+    "load_friction_motor": 0.2896521957827231,
+    "load_friction_external": 0.0,
+    "load_friction_motor_stribeck": 3.057449839759573e-05,
+    "load_friction_external_stribeck": 0.0586825054453192,
+    "dtheta_stribeck": 3.1889119963879637,
+    "alpha": 2.99040048918495,
+    "friction_viscous": 0.00634803186996739,
+    "model": "m5",
+    "actuator": "xl330"
+}
