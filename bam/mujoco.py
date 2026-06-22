@@ -17,13 +17,13 @@ class MujocoController:
     A MujocoController is a class allowing to apply the torque and update frictions
     from the computed model during a simulation.
 
-    Args:
-        model (Model): model to use (can be loaded using load_model)
-        actuator (str): actuator to control
-                Note1: the actuated joint properties will be updated
-                Note2: this can be a list of actuators
-        mujoco_model (mujoco.MjModel): the mujoco model
-        mujoco_data (mujoco.MjData): the mujoco data
+    :param bam.Model model: Model to use (can be loaded using load_model)
+    :param str actuator: Actuator to control. The actuated joint properties will be updated. This can be a list of actuators
+    :param mujoco.MjModel mujoco_model: The mujoco model
+    :param mujoco.MjData mujoco_data: The mujoco data
+    :param float | None vin_drop_gain: The voltage drop gain, if not None the voltage will be reduced by 
+        vin_drop_gain * load, where load is the sum of the absolute value of the motor torques
+    :param float | None vin_min: the minimum voltage, if not None the voltage will not go below this value
     """
 
     def __init__(
@@ -32,11 +32,15 @@ class MujocoController:
         actuator: str,
         mujoco_model: mujoco.MjModel,
         mujoco_data: mujoco.MjData,
+        vin_drop_gain: float | None = None,
+        vin_min: float | None = None,
     ):
         self.model = model
         self.actuator = np.atleast_1d(actuator)
         self.mujoco_model = mujoco_model
         self.mujoco_data = mujoco_data
+        self.vin_drop_gain = vin_drop_gain
+        self.vin_min = vin_min
 
         self.dofs = []
         self.q_target = np.zeros(len(self.actuator))
@@ -65,6 +69,8 @@ class MujocoController:
         )
         mujoco.mj_setConst(self.mujoco_model, self.mujoco_data)
 
+        self._prev_motor_torque = np.zeros(len(self.actuator))
+
     def get_q_target(self, name: str) -> float:
         return self.q_target[self.dof_to_q_target[name]]
     
@@ -73,6 +79,7 @@ class MujocoController:
     
     def reset(self, qpos):
         self.q_target = qpos[self.qpos_indexes]
+        self._prev_motor_torque[:] = 0.0
 
     def update(self):
         """
@@ -84,13 +91,28 @@ class MujocoController:
         q = self.mujoco_data.qpos[self.qpos_indexes]
         dq = self.mujoco_data.qvel[self.dof_indexes]
 
+        # Apply voltage drop based on previous step's motor torques
+        act = self.model.actuator
+        vin_orig = act.vin
+        if self.vin_drop_gain is not None:
+            load = np.sum(np.abs(self._prev_motor_torque))
+            vin_eff = vin_orig - self.vin_drop_gain * load
+            if self.vin_min is not None:
+                vin_eff = max(vin_eff, self.vin_min)
+            act.vin = vin_eff
+
         # Computing the control signal
         dt = self.mujoco_data.time - self.last_ts
         self.last_ts = self.mujoco_data.time
-        control = self.model.actuator.compute_control(self.q_target, q, dq, dt)
+        control = act.compute_control(self.q_target, q, dq, dt)
 
         # Computing the applied torque
-        torque = self.model.actuator.compute_torque(control, True, q, dq)
+        torque = act.compute_torque(control, True, q, dq)
+
+        # Restore original vin and store motor torques for next step's drop computation
+        if self.vin_drop_gain is not None:
+            act.vin = vin_orig
+            self._prev_motor_torque = np.atleast_1d(torque).copy()
 
         # Applying the torque
         self.mujoco_data.ctrl[self.act_indexes] = torque
