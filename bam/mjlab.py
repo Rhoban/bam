@@ -532,10 +532,10 @@ class BamActuator(Actuator):
 
 
 def make_bam_actuator_cfg(
-    json_path: str | Path | None = None,
-    *,
     motor_name: str | None = None,
     model: str | None = None,
+    *,
+    json_path: str | Path | None = None,
     target_names_expr: tuple[str, ...] = (r".*",),
     vin: float | None = None,
     kp_fw: float | None = None,
