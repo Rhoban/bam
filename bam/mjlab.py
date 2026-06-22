@@ -12,12 +12,20 @@ Wraps any BAM Model (m1–m6) into mjlab's actuator framework. All friction
 computations are fully vectorized over the (num_envs, num_joints) batch
 dimension using PyTorch.
 
-Usage example::
+Usage example — bundled motor::
 
     from bam.mjlab import make_bam_actuator_cfg
 
     actuator_cfg = make_bam_actuator_cfg(
-        "params/xl330/m6.json",
+        motor_name="xl330",
+        model="m6",
+        target_names_expr=(r".*",),
+    )
+
+Usage example — custom JSON path::
+
+    actuator_cfg = make_bam_actuator_cfg(
+        json_path="params/xl330/m6.json",
         target_names_expr=(r".*",),
     )
 """
@@ -43,22 +51,46 @@ if TYPE_CHECKING:
     from mjlab.entity import Entity
 
 
+def _resolve_json_path(json_path: str | None, motor_name: str | None, model: str | None) -> str:
+    if json_path is not None:
+        return json_path
+    if motor_name is None or model is None:
+        raise ValueError(
+            "Provide either json_path or both motor_name and model."
+        )
+    params_root = Path(__file__).parent.parent / "params"
+    path = params_root / motor_name / f"{model}.json"
+    if not path.exists():
+        motor_dir = params_root / motor_name
+        available_models = sorted(p.stem for p in motor_dir.glob("*.json")) if motor_dir.exists() else []
+        available_motors = sorted(d.name for d in params_root.iterdir() if d.is_dir()) if params_root.exists() else []
+        raise FileNotFoundError(
+            f"No bundled params for motor={motor_name!r} model={model!r}. "
+            f"Available models for this motor: {available_models}. "
+            f"Available motors: {available_motors}."
+        )
+    return str(path)
+
+
 @dataclass(kw_only=True)
 class BamActuatorCfg(ActuatorCfg):
     """Configuration for a BAM actuator compatible with mjlab.
 
-    The friction model (m1–m6) is inferred from the flags stored in the JSON
-    file (``load_dependent``, ``directional``, ``stribeck``, ``quadratic``).
-    Only :class:`~bam.actuator.VoltageControlledActuator` is supported.
+    Specify the model with **one** of two mutually exclusive approaches:
 
-    Using a JSON path (instead of a ``Model`` object) makes this config fully
-    serializable by tyro and safely copyable across processes.
+    * **Bundled motor**: set ``motor_name`` (e.g. "xl330") and ``model``
+      (e.g. "m6"). The path is resolved automatically from the ``params/``
+      directory bundled with the library.
+    * **Custom JSON**: set ``json_path`` to a BAM params JSON file produced by
+      ``bam.fit``.
 
-    :param json_path: Path to a BAM params JSON file (output of ``bam.fit``).
+    :param motor_name: Name of the bundled motor. Currently supported: "xl330", "xl320", "mx106", "mx64".
+    :param model: Model variant to use with ``motor_name``, one of "m1"–"m6".
+    :param json_path: Path to a custom BAM params JSON file produced by ``bam.fit``.
     :param target_names_expr: Tuple of regex patterns to match actuated joint names.
     :param vin: Supply voltage override [V]. ``None`` → uses the value in the JSON.
     :param kp_fw: Firmware P-gain override. ``None`` → uses the value in the JSON.
-    :param vin_range: If set, a per-env battery voltage is sampled uniformly from this 
+    :param vin_range: If set, a per-env battery voltage is sampled uniformly from this
         range at startup and held constant across resets. Takes precedence over ``vin``.
     :param vin_drop_gain_range: If set, a per-env internal-resistance gain [V/Nm] is sampled uniformly
         from this range at startup. Models the voltage drop V_drop = gain * Σ|τ| due to
@@ -69,12 +101,23 @@ class BamActuatorCfg(ActuatorCfg):
         ``None`` → no lower bound.
     """
 
-    json_path: str
+    motor_name: str | None = None
+    model: str | None = None
+    json_path: str | None = None
     vin: float | None = None
     kp_fw: float | None = None
     vin_range: tuple[float, float] | None = None
     vin_drop_gain_range: tuple[float, float] | None = None
     vin_min: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.json_path is not None and (self.motor_name is not None or self.model is not None):
+            raise ValueError("Specify either json_path OR (motor_name + model), not both.")
+        object.__setattr__(
+            self,
+            "_resolved_json_path",
+            _resolve_json_path(self.json_path, self.motor_name, self.model),
+        )
 
     def build(
         self,
@@ -113,7 +156,7 @@ class BamActuator(Actuator):
         super().__init__(cfg, entity, target_ids, target_names)
 
         # Load the BAM model from JSON (one instance per actuator)
-        self._bam_model: Model = load_model(cfg.json_path)
+        self._bam_model: Model = load_model(cfg._resolved_json_path)
 
         if cfg.vin is not None:
             self._bam_model.actuator.vin = cfg.vin
@@ -489,7 +532,10 @@ class BamActuator(Actuator):
 
 
 def make_bam_actuator_cfg(
-    json_path: str | Path,
+    json_path: str | Path | None = None,
+    *,
+    motor_name: str | None = None,
+    model: str | None = None,
     target_names_expr: tuple[str, ...] = (r".*",),
     vin: float | None = None,
     kp_fw: float | None = None,
@@ -502,13 +548,31 @@ def make_bam_actuator_cfg(
     delay_update_period: int = 0,
     delay_per_env_phase: bool = True,
 ) -> BamActuatorCfg:
-    """Create a :class:`BamActuatorCfg` from a BAM params JSON file.
+    """Create a :class:`BamActuatorCfg` for a BAM actuator.
+
+    Specify the model with **one** of two mutually exclusive approaches:
+
+    * **Bundled motor** — pass ``motor_name`` and ``model``::
+
+        cfg = make_bam_actuator_cfg(motor_name="xl330", model="m6")
+
+    * **Custom JSON** — pass ``json_path`` (output of ``bam.fit``)::
+
+        cfg = make_bam_actuator_cfg(json_path="my_params/custom.json")
 
     Args:
-        json_path: Path to a BAM params JSON file (output of ``bam.fit``).
+        json_path: Path to a custom BAM params JSON file. Mutually exclusive
+            with ``motor_name`` / ``model``.
+        motor_name: Name of a bundled motor (e.g. ``"xl330"``, ``"mx106"``).
+            Must be combined with ``model``.
+        model: Model variant for a bundled motor (``"m1"``–``"m6"``).
+            Must be combined with ``motor_name``.
         target_names_expr: Regex patterns to match actuated joint names.
         vin: Supply voltage override [V]. ``None`` → uses the value in the JSON.
         kp_fw: Firmware P-gain override. ``None`` → uses the value in the JSON.
+        vin_range: Per-env battery voltage range [V] sampled at startup.
+        vin_drop_gain_range: Per-env resistance gain range [V/Nm] sampled at startup.
+        vin_min: Hard lower bound on effective supply voltage [V] after voltage drop.
         delay_min_lag: Minimum observation delay in simulation steps.
         delay_max_lag: Maximum observation delay in simulation steps.
         delay_hold_prob: Probability of holding the same lag value each step.
@@ -518,23 +582,12 @@ def make_bam_actuator_cfg(
     Returns:
         A :class:`BamActuatorCfg` ready to pass as ``actuator_cfgs`` to an
         mjlab Entity.
-
-    Example::
-
-        from bam.mjlab import make_bam_actuator_cfg
-
-        cfg = make_bam_actuator_cfg(
-            "params/xl330/m6.json",
-            target_names_expr=(r".*",),
-            kp_fw=125,
-            vin=8.0,
-            delay_min_lag=0,
-            delay_max_lag=3,
-        )
     """
     return BamActuatorCfg(
         target_names_expr=target_names_expr,
-        json_path=str(json_path),
+        json_path=str(json_path) if json_path is not None else None,
+        motor_name=motor_name,
+        model=model,
         vin=vin,
         kp_fw=kp_fw,
         vin_range=vin_range,
