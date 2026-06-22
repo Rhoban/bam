@@ -8,6 +8,7 @@
 
 import numpy as np
 import json
+from pathlib import Path
 from .actuator import Actuator
 from .actuators import actuators
 from .parameter import Parameter
@@ -229,8 +230,28 @@ models = {
 }
 
 
-def load_model(json_file: str):
-    with open(json_file) as f:
+def _resolve_json_path(json_file: str | None, motor_name: str | None, model: str | None) -> str:
+    if json_file is not None:
+        return json_file
+    if motor_name is None or model is None:
+        raise ValueError("Provide either json_file or both motor_name and model.")
+    params_root = Path(__file__).parent / "params"
+    path = params_root / motor_name / f"{model}.json"
+    if not path.exists():
+        motor_dir = params_root / motor_name
+        available_models = sorted(p.stem for p in motor_dir.glob("*.json")) if motor_dir.exists() else []
+        available_motors = sorted(d.name for d in params_root.iterdir() if d.is_dir()) if params_root.exists() else []
+        raise FileNotFoundError(
+            f"No bundled params for motor={motor_name!r} model={model!r}. "
+            f"Available models for this motor: {available_models}. "
+            f"Available motors: {available_motors}."
+        )
+    return str(path)
+
+
+def load_model(json_file: str = None, *, motor_name: str = None, model: str = None):
+    path = _resolve_json_path(json_file, motor_name, model)
+    with open(path) as f:
         data = json.load(f)
         return load_model_from_dict(data)
     
