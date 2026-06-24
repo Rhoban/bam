@@ -69,16 +69,16 @@ def compute_score(model: Model, log: dict) -> float:
     return np.mean(np.abs(positions - log_positions))
 
 
-# def compute_scores(model: Model, compute_logs=None):
-#     scores = 0
-#     for log in compute_logs.logs:
-#         # t0 = time.time()
-#         scores += compute_score(model, log)
-#         # t1 = time.time()
-#         # elapsed = t1 - t0
-#         # print(f"Durations: {elapsed:.6f} s")
+def compute_scores(model: Model, compute_logs=None):
+    scores = 0
+    for log in compute_logs.logs:
+        # t0 = time.time()
+        scores += compute_score(model, log)
+        # t1 = time.time()
+        # elapsed = t1 - t0
+        # print(f"Durations: {elapsed:.6f} s")
 
-#     return scores / len(compute_logs.logs)
+    return scores / len(compute_logs.logs)
 
 
 def make_model() -> Model:
