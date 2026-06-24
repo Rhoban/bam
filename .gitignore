@@ -8,6 +8,7 @@ build/
 dist/
 bam.egg-info/
 docs/_build/
+docs/autoapi/
 data_raw/
 data_processed/
 uv.lock
