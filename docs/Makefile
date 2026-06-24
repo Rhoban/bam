@@ -3,7 +3,7 @@
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 SPHINXOPTS    ?=
-VENV          ?= ../.venv
+VENV          ?= .venv
 SPHINXBUILD   ?= $(if $(wildcard $(VENV)/bin/sphinx-build),$(VENV)/bin/sphinx-build,sphinx-build)
 SOURCEDIR     = .
 BUILDDIR      = _build
@@ -12,10 +12,15 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile clean
+.PHONY: help Makefile clean api
 
 clean:
 	rm -rf _build
+
+# Rebuild API reference from scratch (forces autoapi to re-scan bam/)
+api:
+	rm -rf autoapi/
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

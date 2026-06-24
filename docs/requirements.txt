@@ -2,3 +2,4 @@ sphinx>=7.2,<9
 pydata-sphinx-theme>=0.15
 sphinx-copybutton>=0.5
 sphinx-autobuild>=2024.4.16
+sphinx-autoapi>=3.0
