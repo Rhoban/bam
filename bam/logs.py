@@ -15,6 +15,16 @@ from . import message
 
 
 class Logs:
+    """Collection of processed trajectory logs used for identification.
+
+    Loads all JSON files found in a directory (produced by ``python -m bam.process``)
+    and exposes them as a list of log dicts.  Each log dict contains the pendulum
+    configuration (mass, arm_mass, length, kp, vin) and a list of timestep entries with
+    position, velocity, and control values.
+
+    :param directory: Path to a directory of processed JSON log files.
+    """
+
     def __init__(self, directory: str):
         # Directories
         self.directory: str = directory
@@ -30,8 +40,14 @@ class Logs:
                 self.logs.append(data)
 
     def split(self, selector_kp: int) -> "Logs":
-        """
-        Extract ratio% of the logs from the current object to
+        """Split logs by P-gain value to create a validation set.
+
+        Removes all logs recorded with ``kp == selector_kp`` from this object
+        and returns them as a new :class:`Logs` instance.  Modifies ``self``
+        in place.
+
+        :param selector_kp: P-gain value used to select the held-out logs.
+        :returns: A new :class:`Logs` object containing only the held-out logs.
         """
         indices = []
         for k, log in enumerate(self.logs):

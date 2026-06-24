@@ -79,6 +79,16 @@ class BamActuatorCfg(ActuatorCfg):
     :param vin_min: Hard lower bound on the effective supply voltage [V] after applying the
         voltage drop. Ensures ``vin`` never falls below this value regardless of the load.
         ``None`` → no lower bound.
+    :param delay_min_lag: Minimum command delay in simulation steps. Models the latency
+        between the policy output and the motor response. ``0`` → no delay.
+    :param delay_max_lag: Maximum command delay in simulation steps. Set greater than
+        ``delay_min_lag`` to randomize the delay across environments.
+    :param delay_hold_prob: Probability of keeping the same lag value at each step.
+        ``0.0`` → lag is resampled every ``delay_update_period`` steps.
+    :param delay_update_period: Number of steps between lag updates. ``0`` → updated
+        every step.
+    :param delay_per_env_phase: Whether each environment starts with an independent
+        delay phase offset. ``True`` → environments are not synchronized.
     """
 
     motor_name: str | None = None
@@ -504,78 +514,3 @@ class BamActuator(Actuator):
             self._prev_motor_torque = motor_torque.detach()
 
         return output
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Factory helper
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-def make_bam_actuator_cfg(
-    motor_name: str | None = None,
-    model: str | None = None,
-    *,
-    json_path: str | Path | None = None,
-    target_names_expr: tuple[str, ...] = (r".*",),
-    vin: float | None = None,
-    kp_fw: float | None = None,
-    vin_range: tuple[float, float] | None = None,
-    vin_drop_gain_range: tuple[float, float] | None = None,
-    vin_min: float | None = None,
-    delay_min_lag: int = 0,
-    delay_max_lag: int = 0,
-    delay_hold_prob: float = 0.0,
-    delay_update_period: int = 0,
-    delay_per_env_phase: bool = True,
-) -> BamActuatorCfg:
-    """Create a :class:`BamActuatorCfg` for a BAM actuator.
-
-    Specify the model with **one** of two mutually exclusive approaches:
-
-    * **Bundled motor** — pass ``motor_name`` and ``model``::
-
-        cfg = make_bam_actuator_cfg(motor_name="xl330", model="m6")
-
-    * **Custom JSON** — pass ``json_path`` (output of ``bam.fit``)::
-
-        cfg = make_bam_actuator_cfg(json_path="my_params/custom.json")
-
-    Args:
-        json_path: Path to a custom BAM params JSON file. Mutually exclusive
-            with ``motor_name`` / ``model``.
-        motor_name: Name of a bundled motor (e.g. ``"xl330"``, ``"mx106"``).
-            Must be combined with ``model``.
-        model: Model variant for a bundled motor (``"m1"``–``"m6"``).
-            Must be combined with ``motor_name``.
-        target_names_expr: Regex patterns to match actuated joint names.
-        vin: Supply voltage override [V]. ``None`` → uses the value in the JSON.
-        kp_fw: Firmware P-gain override. ``None`` → uses the value in the JSON.
-        vin_range: Per-env battery voltage range [V] sampled at startup.
-        vin_drop_gain_range: Per-env resistance gain range [V/Nm] sampled at startup.
-        vin_min: Hard lower bound on effective supply voltage [V] after voltage drop.
-        delay_min_lag: Minimum observation delay in simulation steps.
-        delay_max_lag: Maximum observation delay in simulation steps.
-        delay_hold_prob: Probability of holding the same lag value each step.
-        delay_update_period: Number of steps between lag updates (0 = every step).
-        delay_per_env_phase: Whether each env has an independent delay phase.
-
-    Returns:
-        A :class:`BamActuatorCfg` ready to pass as ``actuator_cfgs`` to an
-        mjlab Entity.
-    """
-    return BamActuatorCfg(
-        target_names_expr=target_names_expr,
-        json_path=str(json_path) if json_path is not None else None,
-        motor_name=motor_name,
-        model=model,
-        vin=vin,
-        kp_fw=kp_fw,
-        vin_range=vin_range,
-        vin_drop_gain_range=vin_drop_gain_range,
-        vin_min=vin_min,
-        delay_min_lag=delay_min_lag,
-        delay_max_lag=delay_max_lag,
-        delay_hold_prob=delay_hold_prob,
-        delay_update_period=delay_update_period,
-        delay_per_env_phase=delay_per_env_phase,
-    )

@@ -15,6 +15,26 @@ from .parameter import Parameter
 
 
 class Model:
+    """Friction model for a servo actuator.
+
+    Combines a motor model (set via :meth:`set_actuator`) with a friction budget
+    that maps joint state and torques to a maximum resistive torque
+    :math:`\\tau_{fm}`. The friction applied by the simulator is the stopping
+    torque clipped in :math:`[-\\tau_{fm}, \\tau_{fm}]`.
+
+    Use :func:`load_model` to instantiate from a parameter file rather than
+    constructing directly.
+
+    :param load_dependent: Enable load-dependent friction terms.
+    :param directional: Enable directional (motor-side vs external-side) load friction.
+        Requires ``load_dependent=True``.
+    :param stribeck: Enable Stribeck effect (higher friction near zero velocity).
+    :param quadratic: Enable quadratic load-friction coupling term.
+        Requires ``directional=True`` and ``stribeck=True``.
+    :param name: Model variant identifier, e.g. ``"m6"``.
+    :param title: Human-readable title used in plots.
+    """
+
     def __init__(
         self,
         load_dependent: bool = False,
@@ -45,6 +65,12 @@ class Model:
         self.actuator.reset()
 
     def set_actuator(self, actuator: Actuator) -> None:
+        """Attach an actuator to this model and initialize its parameters.
+
+        :param actuator: Actuator instance to attach. Determines the motor
+            model (kt, R, kp, vin) and the set of friction parameters that
+            are created on this model.
+        """
         self.actuator = actuator
         self.actuator.set_model(self)
 
@@ -88,6 +114,20 @@ class Model:
     def compute_frictions(
         self, motor_torque: float, external_torque: float, dtheta: float
     ) -> tuple:
+        """Compute the friction budget for the current state.
+
+        Returns the two MuJoCo friction parameters that implement the BAM
+        friction-budget formulation: ``frictionloss`` (Coulomb-like constant
+        term) and ``damping`` (viscous term).  The simulator applies friction
+        by clipping the stopping torque in
+        :math:`[-\\text{frictionloss} - \\text{damping}\\cdot|\\dot{\\theta}|,\\ +\\ldots]`.
+
+        :param motor_torque: Torque produced by the motor [Nm].
+        :param external_torque: External (gravity/load) torque seen at the joint [Nm].
+        :param dtheta: Joint velocity [rad/s].
+        :returns: Tuple ``(frictionloss, damping)`` ready to be written into
+            ``mj_model.dof_frictionloss`` and ``mj_model.dof_damping``.
+        """
         # Torque applied to the gearbox
         if self.directional:
             gearbox_torque = np.abs(
@@ -249,13 +289,42 @@ def _resolve_json_path(json_file: str | None, motor_name: str | None, model: str
     return str(path)
 
 
-def load_model(json_file: str = None, *, motor_name: str = None, model: str = None):
+def load_model(json_file: str = None, *, motor_name: str = None, model: str = None) -> Model:
+    """Load a BAM friction model from a parameter file.
+
+    Specify the source with **one** of two mutually exclusive approaches:
+
+    - **Bundled motor** — pass ``motor_name`` and ``model``::
+
+        model = load_model(motor_name="xl330", model="m6")
+
+    - **Custom JSON** — pass ``json_file`` (output of ``bam.fit``)::
+
+        model = load_model("params/my_motor/m6.json")
+
+    :param json_file: Path to a BAM params JSON file.
+    :param motor_name: Name of a bundled motor (e.g. ``"xl330"``, ``"mx106"``).
+        Must be combined with ``model``.
+    :param model: Model variant for a bundled motor (``"m1"``–``"m6"``).
+        Must be combined with ``motor_name``.
+    :returns: A :class:`Model` instance with all parameters loaded.
+    :raises FileNotFoundError: If the requested bundled motor or model does not exist.
+    """
     path = _resolve_json_path(json_file, motor_name, model)
     with open(path) as f:
         data = json.load(f)
         return load_model_from_dict(data)
     
-def load_model_from_dict(data: dict):
+def load_model_from_dict(data: dict) -> Model:
+    """Load a BAM friction model from a parameter dictionary.
+
+    This is the low-level counterpart of :func:`load_model`, used when the
+    JSON data has already been parsed.
+
+    :param data: Dictionary produced by ``json.load`` on a BAM params file.
+        Must contain at least ``"model"`` and ``"actuator"`` keys.
+    :returns: A :class:`Model` instance with all parameters loaded.
+    """
     model = models[data["model"]]()
     model.set_actuator(actuators[data["actuator"]]())
     model.actuator_name = data["actuator"]

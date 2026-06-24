@@ -8,13 +8,20 @@
 
 
 class Parameter:
-    def __init__(self, value: float, min: float, max: float, optimize: bool = True):
-        # Current value of the parameter
-        self.value: float = value
+    """A scalar model parameter with bounds and an optimization flag.
 
-        # Minimum and maximum values for the parameter
+    Parameters are attached to a :class:`~bam.model.Model` by
+    :meth:`~bam.model.Model.set_actuator` and collected by
+    :meth:`~bam.model.Model.get_parameters` for optimization.
+
+    :param value: Initial value.
+    :param min: Lower bound used by the optimizer.
+    :param max: Upper bound used by the optimizer.
+    :param optimize: If ``False`` the parameter is held fixed during fitting.
+    """
+
+    def __init__(self, value: float, min: float, max: float, optimize: bool = True):
+        self.value: float = value
         self.min: float = min
         self.max: float = max
-
-        # Should this parameter be optimized?
         self.optimize: bool = optimize

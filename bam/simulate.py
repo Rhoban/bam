@@ -12,6 +12,16 @@ from .model import Model
 
 
 class Simulator:
+    """Single-axis pendulum simulator used during identification.
+
+    Implements the BAM simulation loop: firmware control law → motor torque →
+    friction budget → stopping-torque clipping → Euler integration.  Used by
+    ``bam.fit`` to roll out a model against recorded logs and compute the
+    identification loss.
+
+    :param model: BAM friction model to simulate.
+    """
+
     def __init__(self, model: Model):
         self.screen = None
         self.model = model
@@ -28,8 +38,13 @@ class Simulator:
         self.model.reset()
 
     def step(self, control: None | float, torque_enable: bool, dt: float):
-        """
-        Steps the simulation for dt given the applied control
+        """Advance the simulation by one timestep.
+
+        :param control: Control signal sent to the actuator (voltage, current,
+            or torque depending on the actuator type). ``None`` is treated as zero.
+        :param torque_enable: Whether the actuator is powered. When ``False``
+            the motor torque is zero and only gravity and friction act.
+        :param dt: Timestep [s].
         """
         bias_torque = self.model.actuator.testbench.compute_bias(
             self.q + self.model.q_offset.value, self.dq
@@ -66,8 +81,18 @@ class Simulator:
     def rollout_log(
         self, log: dict, reset_period: float = None, simulate_control: bool = False
     ):
-        """
-        Read a given log dict and return the sequential reached positions
+        """Roll out the model against a recorded log and return predicted trajectories.
+
+        :param log: Processed log dict as returned by :meth:`bam.logs.Logs.make_batch`
+            or loaded directly from a processed JSON file.
+        :param reset_period: If set, re-synchronize the simulator state to the
+            log at this interval [s]. Useful when error accumulation destabilizes
+            long rollouts.
+        :param simulate_control: If ``True``, recompute the control signal from
+            the simulated state using the firmware control law. If ``False``,
+            use the control values recorded in the log.
+        :returns: Tuple ``(positions, velocities, controls)`` — lists of values
+            at each timestep.
         """
         positions = []
         velocities = []

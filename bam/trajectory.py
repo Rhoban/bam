@@ -9,7 +9,16 @@
 import numpy as np
 
 
-def cubic_interpolate(keyframes: list, t: float):
+def cubic_interpolate(keyframes: list, t: float) -> float:
+    """Interpolate a scalar signal through a list of keyframes with cubic splines.
+
+    Each keyframe is a triplet ``(t, x, x')`` where ``t`` is the time, ``x``
+    the value, and ``x'`` the desired first derivative at that point.
+
+    :param keyframes: List of ``[t, x, dx/dt]`` triplets, sorted by time.
+    :param t: Query time.
+    :returns: Interpolated value at time ``t``.
+    """
     if t < keyframes[0][0]:
         return keyframes[0][1]
     if t > keyframes[-1][0]:
@@ -33,67 +42,97 @@ def cubic_interpolate(keyframes: list, t: float):
 
 
 class Trajectory:
-    duration = None
+    """Abstract base class for identification trajectories.
 
-    def __call__(self, t: float):
-        """
-        Retrieve (angle, torque_enable) at time t
+    A trajectory is a callable that maps a time ``t`` to a target angle and a
+    torque-enable flag.  All built-in trajectories run for 6 seconds.
+    """
+
+    duration: float = None
+
+    def __call__(self, t: float) -> tuple[float, bool]:
+        """Return ``(angle [rad], torque_enable)`` at time ``t``.
+
+        :param t: Time since the start of the trajectory [s].
         """
         raise NotImplementedError
 
 
 class LiftAndDrop(Trajectory):
+    """Cubic move to −π/2 over 2 s, then torque disabled (gravity drop).
+
+    Useful for identifying backdrivability and Stribeck effects at very low
+    speed, as the arm falls freely under gravity after the motor is released.
+    """
+
     duration = 6.0
 
-    def __call__(self, t: float):
+    def __call__(self, t: float) -> tuple[float, bool]:
         keyframes = [[0.0, 0.0, 0.0], [2.0, -np.pi / 2, 0.0]]
         angle = cubic_interpolate(keyframes, t)
-
         enable = t < 2.0
-
         return angle, enable
 
 
 class SinusTimeSquare(Trajectory):
+    """Progressively faster sinusoidal trajectory: :math:`\\sin(t^2)`.
+
+    General-purpose trajectory that sweeps a wide velocity range in a single
+    run.  Recommended as the primary identification trajectory.
+    """
+
     duration = 6.0
 
-    def __call__(self, t: float):
-        angle = np.sin(t**2)
-
-        return angle, True
+    def __call__(self, t: float) -> tuple[float, bool]:
+        return np.sin(t**2), True
 
 
 class UpAndDown(Trajectory):
+    """Slow cubic path 0 → π/2 → 0.8·π/2.
+
+    Emphasises static friction and load-dependent effects at low to medium
+    speed.
+    """
+
     duration = 6.0
 
-    def __call__(self, t: float):
+    def __call__(self, t: float) -> tuple[float, bool]:
         keyframes = [
             [0.0, 0.0, 0.0],
             [3.0, np.pi / 2, 0.0],
             [6.0, 0.8 * np.pi / 2, 0.0],
         ]
-        angle = cubic_interpolate(keyframes, t)
-
-        return angle, True
+        return cubic_interpolate(keyframes, t), True
 
 
 class SinSin(Trajectory):
+    """Multi-frequency trajectory: :math:`\\sin(t)\\cdot\\pi/2 + \\sin(5t)\\cdot 0.5\\cdot\\sin(2t)`.
+
+    Rich spectral content covers a broad range of velocities and accelerations.
+    """
+
     duration = 6.0
 
-    def __call__(self, t: float):
-        angle = np.sin(t) * np.pi / 2 + np.sin(5.0 * t) * 0.5 * np.sin(t*2.0)
-
+    def __call__(self, t: float) -> tuple[float, bool]:
+        angle = np.sin(t) * np.pi / 2 + np.sin(5.0 * t) * 0.5 * np.sin(t * 2.0)
         return angle, True
 
 
 class Nothing(Trajectory):
+    """Zero torque for the full duration (pure gravity response).
+
+    Useful to isolate backdrivability and measure passive dynamics.
+    """
+
     duration = 6.0
 
-    def __call__(self, t: float):
+    def __call__(self, t: float) -> tuple[float, bool]:
         return 0.0, False
 
 
-trajectories = {
+#: Registry of all built-in trajectories, keyed by name.
+#: Pass one of these names to the ``--trajectory`` argument of the recording scripts.
+trajectories: dict[str, Trajectory] = {
     "lift_and_drop": LiftAndDrop(),
     "sin_time_square": SinusTimeSquare(),
     "up_and_down": UpAndDown(),

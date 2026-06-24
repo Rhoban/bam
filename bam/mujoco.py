@@ -72,12 +72,29 @@ class MujocoController:
         self._prev_motor_torque = np.zeros(len(self.actuator))
 
     def get_q_target(self, name: str) -> float:
+        """Return the current target position for a named actuator [rad].
+
+        :param name: Actuator name as passed to the constructor.
+        """
         return self.q_target[self.dof_to_q_target[name]]
-    
+
     def set_q_target(self, name: str, q_target: float):
+        """Set the target position for a named actuator.
+
+        :param name: Actuator name as passed to the constructor.
+        :param q_target: Desired joint angle [rad].
+        """
         self.q_target[self.dof_to_q_target[name]] = q_target
     
     def reset(self, qpos):
+        """Reset the controller to a given joint position state.
+
+        Should be called after every ``mujoco.mj_resetData`` to clear the
+        internal target and voltage-drop state.
+
+        :param qpos: Full ``mj_data.qpos`` array. The controller extracts
+            the positions of its controlled joints.
+        """
         self.q_target = qpos[self.qpos_indexes]
         self._prev_motor_torque[:] = 0.0
 
