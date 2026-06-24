@@ -79,6 +79,10 @@ class BamActuatorCfg(ActuatorCfg):
     :param vin_min: Hard lower bound on the effective supply voltage [V] after applying the
         voltage drop. Ensures ``vin`` never falls below this value regardless of the load.
         ``None`` → no lower bound.
+    :param max_current: Firmware current limit [A]. If set, the motor current is clipped to
+        ``[-max_current, max_current]`` (equivalently the motor torque is clipped to
+        ``±max_current * kt``), reproducing the firmware-side current saturation of the
+        motor. ``None`` → no current clipping.
     :param delay_min_lag: Minimum command delay in simulation steps. Models the latency
         between the policy output and the motor response. ``0`` → no delay.
     :param delay_max_lag: Maximum command delay in simulation steps. Set greater than
@@ -99,6 +103,7 @@ class BamActuatorCfg(ActuatorCfg):
     vin_range: tuple[float, float] | None = None
     vin_drop_gain_range: tuple[float, float] | None = None
     vin_min: float | None = None
+    max_current: float | None = None
 
     def __post_init__(self) -> None:
         if self.json_path is not None and (self.motor_name is not None or self.model is not None):
@@ -460,6 +465,12 @@ class BamActuator(Actuator):
             kt * voltage / R
             - (kt**2) * vel * self.kd_scale / R
         )
+
+        # Firmware current clipping: I = motor_torque / kt is capped at
+        # ±max_current, i.e. the motor torque is clipped to ±max_current * kt.
+        if self.cfg.max_current is not None:
+            torque_limit = self.cfg.max_current * kt
+            motor_torque = torch.clamp(motor_torque, -torque_limit, torque_limit)
 
         # ── 3. External (gravity + Coriolis) torque ───────────────────────────
         # qfrc_bias shape: (N, ndof) — slice to (N, J)
