@@ -24,6 +24,9 @@ class MujocoController:
     :param float | None vin_drop_gain: The voltage drop gain, if not None the voltage will be reduced by 
         vin_drop_gain * load, where load is the sum of the absolute value of the motor torques
     :param float | None vin_min: the minimum voltage, if not None the voltage will not go below this value
+    :param float | None max_current: Firmware current limit [A]. If not None, the motor current is
+        clipped to ``[-max_current, max_current]`` (equivalently the motor torque is clipped to
+        ``±max_current * kt``), reproducing the firmware-side current saturation of the motor.
     """
 
     def __init__(
@@ -34,6 +37,7 @@ class MujocoController:
         mujoco_data: mujoco.MjData,
         vin_drop_gain: float | None = None,
         vin_min: float | None = None,
+        max_current: float | None = None,
     ):
         self.model = model
         self.actuator = np.atleast_1d(actuator)
@@ -41,6 +45,7 @@ class MujocoController:
         self.mujoco_data = mujoco_data
         self.vin_drop_gain = vin_drop_gain
         self.vin_min = vin_min
+        self.max_current = max_current
 
         self.dofs = []
         self.q_target = np.zeros(len(self.actuator))
@@ -125,6 +130,12 @@ class MujocoController:
 
         # Computing the applied torque
         torque = act.compute_torque(control, True, q, dq)
+
+        # Firmware current clipping: I = torque / kt is capped at ±max_current,
+        # i.e. the motor torque is clipped to ±max_current * kt.
+        if self.max_current is not None:
+            torque_limit = self.max_current * self.model.kt.value
+            torque = np.clip(torque, -torque_limit, torque_limit)
 
         # Restore original vin and store motor torques for next step's drop computation
         if self.vin_drop_gain is not None:
