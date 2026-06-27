@@ -1,8 +1,8 @@
-# BAM: Better Actuator Models
-
 <p align="center">
-  <img src="docs/_static/BAM_logo.png" alt="BAM logo" height="200">
+  <img src="docs/_static/BAM_logo.png" alt="BAM logo" width="60%">
 </p>
+
+# BAM: Better Actuator Models
 
 Accurate models of servo actuators are essential for the simulation of robotic systems. It is particularly important while performing Reinforcement Learning (RL) on real robots, as the precision of the model impacts directly the transferability of the learned policy.
 
