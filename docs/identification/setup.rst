@@ -73,11 +73,7 @@ parameter files:
    * - ``xl330``
      - Dynamixel TTL
      - 7.5 V
-     - Voltage-controlled mode
-   * - ``xl330i``
-     - Dynamixel TTL
-     - 7.5 V
-     - Current-controlled mode
+     -
    * - ``erob80_50``
      - EtherBan
      - 48 V

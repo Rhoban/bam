@@ -40,7 +40,7 @@ servos:
 
    model = load_model(motor_name="xl330", model="m6")
 
-Supported motor names: ``"xl320"``, ``"xl330"``, ``"xl330i"``, ``"mx106"``, ``"mx64"``,
+Supported motor names: ``"xl320"``, ``"xl330"``, ``"mx106"``, ``"mx64"``,
 ``"erob80:50"``, ``"erob80:100"``.
 Supported model variants: ``"m1"`` through ``"m6"`` (see :doc:`../theory/models`).
 

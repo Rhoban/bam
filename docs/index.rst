@@ -21,7 +21,7 @@ BAM aims at making servo-actuator simulation more faithful by:
 Getting started
 ---------------
 
-**Your motor is in the bundled library** (``xl320``, ``xl330``, ``xl330i``, ``mx64``,
+**Your motor is in the bundled library** (``xl320``, ``xl330``, ``mx64``,
 ``mx106``, ``erob80:50``, ``erob80:100``) — load the parameters and plug them into
 your MuJoCo or mjlab simulation right away. Head to :doc:`usage/index`.
 
@@ -37,10 +37,37 @@ variants M1–M6.
 Reference paper
 ---------------
 
-This library implements the modeling and identification approach introduced in the paper
+This library implements the modeling and identification approach introduced
 in the paper `"Extended Friction Models for the Physics Simulation of Servo
 Actuators" <https://arxiv.org/pdf/2410.08650>`_ by Marc Duclusaud, Gregoire Passault, Vincent Padois, and Olivier
 Ly .
+
+If you use BAM or the friction models provided in this library for your
+scientific work, please cite the publication:
+
+.. code-block:: bibtex
+
+   @inproceedings{duclusaud2025extended,
+     title={Extended Friction Models for the Physics Simulation of Servo Actuators},
+     author={Duclusaud, Marc and Passault, Gr{\'e}goire and Padois, Vincent and Ly, Olivier},
+     booktitle={2025 IEEE International Conference on Robotics and Automation (ICRA)},
+     pages={12091--12097},
+     year={2025},
+     organization={IEEE}
+   }
+
+If you also wish to cite the software directly, you may use:
+
+.. code-block:: bibtex
+
+   @software{BAM,
+     title = {{BAM: Better Actuator Models}},
+     author = {Duclusaud, Marc and Passault, Grégoire},
+     license = {Apache-2.0},
+     url = {https://github.com/Rhoban/bam},
+     version = {0.0.1},
+     year = {2024}
+   }
 
 .. toctree::
    :maxdepth: 2

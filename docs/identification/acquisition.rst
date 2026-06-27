@@ -6,6 +6,20 @@ trajectories while logging position, velocity, and control signals at the
 firmware's native rate. The result is a collection of JSON files that are
 then resampled to a fixed timestep before fitting.
 
+Installation
+------------
+
+The identification pipeline needs the extra dependencies listed in
+``requirements_bam.txt`` (Optuna, hardware SDKs, etc.). We recommend ``uv``
+for a faster install:
+
+.. code-block:: bash
+
+   uv venv .venv
+   source .venv/bin/activate
+   uv pip install -e .
+   uv pip install -r requirements_bam.txt
+
 Available trajectories
 ----------------------
 
@@ -59,6 +73,24 @@ the values actually programmed in the firmware.
 
 eRob (erob80\_50, erob80\_100)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+eRob actuators are driven through an EtherBan server, which must be running
+before recording. The communication relies on generated protobuf bindings,
+so first compile the ``.proto`` files:
+
+.. code-block:: bash
+
+   cd bam/erob/
+   bash generate_protobuf.sh
+
+You can then monitor the connected devices, which also reports the angular
+offset to use for the zero position:
+
+.. code-block:: bash
+
+   python -m bam.erob.etherban
+
+Pass that value to ``--offset`` when recording:
 
 .. code-block:: bash
 
