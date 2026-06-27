@@ -1,14 +1,26 @@
 # BAM: Better Actuator Models
 
+<p align="center">
+  <img src="docs/_static/BAM_logo.png" alt="BAM logo" height="200">
+</p>
+
 Accurate models of servo actuators are essential for the simulation of robotic systems. It is particularly important while performing Reinforcement Learning (RL) on real robots, as the precision of the model impacts directly the transferability of the learned policy.
 
 The friction model generally implemented in widely used simulators like MuJoCo or IsaacGym is the Coulomb-Viscous, which is too simplistic to accurately represent complex friction phenomena like Stribeck, load-dependence or quadratic effects (read [this article](https://arxiv.org/pdf/2410.08650v1) for more details).
 
-**BAM** provides:
+**BAM** aims at making servo-actuator simulation more faithful by:
 
-1. A method to identify extended friction models for servo actuators.
-2. A set of readily available identified models (Dynamixel MX-64, MX-106, XL-320, XL330-288-T, eRob80:50, eRob80:100, Feetech STS3215).
-3. A pipeline to use these models in MuJoCo (CPU) and mjlab (GPU).
+- proposing an identification pipeline to fit friction models from recorded trajectories,
+- providing a set of extended friction models that capture complex friction phenomena,
+- sharing a library of identified models for common servos:
+  - Dynamixel MX-64
+  - Dynamixel MX-106
+  - Dynamixel XL-320
+  - Dynamixel XL330-288-T
+  - eRob80:50
+  - eRob80:100
+  - Feetech STS3215
+- providing a simple API to use these models in MuJoCo CPU and MuJoCo Warp.
 
 ## 📖 Documentation
 
