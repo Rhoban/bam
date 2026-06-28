@@ -14,6 +14,8 @@ BAM is available on PyPI:
 
    pip install bam
 
+BAM is compatible with mjlab 1.3.
+
 
 Overview
 --------
@@ -117,6 +119,25 @@ variability in cable length or connector quality across units:
 
 Both ranges are sampled once at initialization and held constant across
 episode resets.
+
+Current clipping
+----------------
+
+Servo firmwares can cap the motor current to protect the hardware. BAM reproduces
+this saturation with the ``max_current`` field: the motor current
+:math:`I = \tau / K_t` is clipped to ``[-max_current, max_current]``, which is
+equivalent to clipping the motor torque to :math:`\pm\,\texttt{max\_current}\cdot K_t`.
+
+.. code-block:: python
+
+   actuator_cfg = BamActuatorCfg(
+      motor_name="xl330",
+      model="m6",
+      target_names_expr=(r".*",),
+      max_current=1.75,   # firmware current limit [A]
+   )
+
+Leave it at ``None`` (default) to disable current clipping.
 
 Command delay
 -------------

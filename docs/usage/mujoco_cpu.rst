@@ -18,12 +18,13 @@ Overview
 
 At each simulation step, :class:`~bam.mujoco.MujocoController` does three things:
 
-1. Computes the motor torque from a firmware-like P-controller and applies it
-   via ``mj_data.ctrl``.
-2. Evaluates the BAM friction model and writes the result into
+1. Optionally lowers the supply voltage by a drop proportional to the previous
+   step's load, to model battery + cable resistance.
+2. Computes the motor torque from a firmware-like P-controller — optionally
+   clipping it to the firmware current limit — and applies it via
+   ``mj_data.ctrl``.
+3. Evaluates the BAM friction model and writes the result into
    ``mj_model.dof_frictionloss`` and ``mj_model.dof_damping``.
-3. Optionally applies a voltage drop proportional to the current load, to
-   model battery + cable resistance.
 
 Loading a model
 ---------------
@@ -138,6 +139,26 @@ from collapsing under heavy load:
       vin_min=6.0,         # [V]
    )
 
+Current clipping (optional)
+---------------------------
+
+Servo firmwares can cap the motor current to protect the hardware. BAM reproduces
+this saturation with the ``max_current`` parameter: the motor current
+:math:`I = \tau / K_t` is clipped to ``[-max_current, max_current]``, which is
+equivalent to clipping the motor torque to :math:`\pm\,\texttt{max\_current}\cdot K_t`.
+
+.. code-block:: python
+
+   controller = MujocoController(
+      model=model,
+      actuator=["joint_1", ..., "joint_n"],
+      mujoco_model=mj_model,
+      mujoco_data=mj_data,
+      max_current=1.75,   # firmware current limit [A]
+   )
+
+Leave it at ``None`` (default) to disable current clipping.
+
 Multi-actuator config file
 --------------------------
 
@@ -163,13 +184,29 @@ The config file has the following structure:
    {
       "arm": {
          "dofs": ["shoulder", "elbow"],
-         "model": { ... },
+         "model": {
+            "kt": 1.6224667906987444,
+            "R": 3.949433673232461,
+            "armature": 0.011951238325312509,
+            "friction_base": 0.09038677246291783,
+            "friction_viscous": 0.011691602145974832,
+            "model": "m1",
+            "actuator": "mx64"
+         },
          "error_gain": 1.0,
          "max_pwm": 885
       },
       "leg": {
          "dofs": ["hip", "knee", "ankle"],
-         "model": { ... },
+         "model": {
+            "kt": 2.1913757006745245,
+            "R": 2.9649903987776804,
+            "armature": 0.026609234235148084,
+            "friction_base": 0.10352026623606064,
+            "friction_viscous": 0.03520238029013507,
+            "model": "m1",
+            "actuator": "mx106"
+         },
          "error_gain": 1.0,
          "max_pwm": 885
       }
