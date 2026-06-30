@@ -19,17 +19,33 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "numpy",
+    "colorama",
+]
+
+[project.optional-dependencies]
+# Use identified models in a MuJoCo (CPU) simulation.
+mujoco = [
+    "mujoco",
+]
+# Use identified models in MuJoCo Warp via mjlab (GPU).
+mjlab = [
+    "mjlab>=1.3,<1.4",
+]
+# Identify your own motors: hardware drivers, optimization, logging, plotting.
+identification = [
     "zmq",
     "protobuf>=3.20,<4.0",
-    "numpy",
     "dynamixel_sdk",
+    "rustypot>=1.5.0",
     "optuna",
     "cmaes",
     "wandb",
     "matplotlib",
-    "scipy",
-    "colorama",
-    "rustypot>=1.5.0",
+]
+# Everything at once.
+all = [
+    "better-actuator-models[mujoco,mjlab,identification]",
 ]
 
 [project.urls]

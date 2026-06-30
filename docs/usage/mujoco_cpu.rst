@@ -7,11 +7,12 @@ simulation running on CPU. The entry point is :class:`bam.mujoco.MujocoControlle
 Installation
 ------------
 
-BAM is available on PyPI:
+BAM is available on PyPI. Install it with the ``mujoco`` extra to pull in the
+MuJoCo dependency:
 
 .. code-block:: bash
 
-   pip install better-actuator-models
+   pip install better-actuator-models[mujoco]
 
 Overview
 --------

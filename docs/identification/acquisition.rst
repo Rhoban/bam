@@ -9,12 +9,14 @@ then resampled to a fixed timestep before fitting.
 Installation
 ------------
 
-To install the dependencies for data acquisition, you need to install the full
-project using ``uv`` (`installation instructions <https://docs.astral.sh/uv/getting-started/installation/>`_):
+First, you need to clone the `BAM repository <https://github.com/Rhoban/bam>`_.
+
+Then, you can install the extra dependencies for the identification pipeline using 
+``uv`` (`installation instructions <https://docs.astral.sh/uv/getting-started/installation/>`_):
 
 .. code-block:: bash
 
-   uv sync
+   uv sync --extra identification
 
 Available trajectories
 ----------------------

@@ -8,11 +8,12 @@ pipeline running on GPU with MuJoCo Warp. The entry point is
 Installation
 ------------
 
-BAM is available on PyPI:
+BAM is available on PyPI. Install it with the ``mjlab`` extra, which pulls in
+mjlab together with mujoco, mujoco-warp and torch:
 
 .. code-block:: bash
 
-   pip install better-actuator-models
+   pip install better-actuator-models[mjlab]
 
 BAM is compatible with mjlab 1.3.
 
