@@ -1,12 +1,23 @@
-[tool.setuptools.package-data]
-bam = ["params/**/*.json"]
+[build-system]
+requires = ["setuptools>=77.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "bam"
+name = "better-actuator-models"
 version = "1.0.0"
-description = "BAM: Better Actuator Models"
+description = "BAM: Better Actuator Models is a Python library dedicated to the identification and simulation of advanced actuator models."
 readme = "README.md"
 requires-python = ">=3.12"
+license = "Apache-2.0"
+authors = [
+    { name = "Marc Duclusaud" },
+    { name = "Grégoire Passault" },
+]
+keywords = ["robot", "robotics", "actuator", "simulation", "friction"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "zmq",
     "protobuf>=3.20,<4.0",
@@ -20,3 +31,13 @@ dependencies = [
     "colorama",
     "rustypot>=1.5.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Rhoban/bam"
+Repository = "https://github.com/Rhoban/bam"
+
+[tool.setuptools.packages.find]
+include = ["bam*"]
+
+[tool.setuptools.package-data]
+bam = ["params/**/*.json"]

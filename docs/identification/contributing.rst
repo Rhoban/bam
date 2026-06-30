@@ -19,7 +19,7 @@ A contribution consists of:
 Parameter file format
 ---------------------
 
-The JSON file produced by ``python -m bam.fit`` is the expected format:
+The JSON file produced by ``uv run python -m bam.fit`` is the expected format:
 
 .. code-block:: json
 
@@ -52,7 +52,7 @@ Quality checklist
 Before submitting, verify:
 
 - The identified parameters reproduce recorded trajectories with a reasonable
-  MAE (use ``python -m bam.plot --sim`` to inspect the fit visually).
+  MAE (use ``uv run python -m bam.plot --sim`` to inspect the fit visually).
 - The fit was validated on a hold-out set (``--validation_kp``) to check for
   overfitting.
 - All six models (M1–M6) have been fitted so users can choose the complexity

@@ -1,0 +1,25 @@
+name: UV run
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  run_with_uv:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, windows-latest]
+        pyver: [cp38, cp39, cp310, cp311, cp312, cp313, cp314]
+
+    name: Wheel ${{ matrix.os }}, ${{ matrix.pyver }}
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Syncing UV
+        run: uv sync

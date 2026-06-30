@@ -11,7 +11,7 @@ Running the fit
 
 .. code-block:: bash
 
-   python -m bam.fit \
+   uv run python -m bam.fit \
        --actuator xl330 \
        --model m6 \
        --logdir data_processed \
@@ -22,7 +22,7 @@ Running the fit
 
 The optimizer writes ``params.json`` every few seconds as it runs, so
 progress can be monitored by inspecting the output file or running
-``python -m bam.plot`` in parallel.
+``uv run python -m bam.plot`` in parallel.
 
 Optimization options
 --------------------
@@ -62,7 +62,7 @@ use them as a validation set:
 
 .. code-block:: bash
 
-   python -m bam.fit \
+   uv run python -m bam.fit \
        --actuator xl330 \
        --model m6 \
        --logdir data_processed \
@@ -80,7 +80,7 @@ It is recommended to fit all six models and compare their validation error:
 .. code-block:: bash
 
    for model in m1 m2 m3 m4 m5 m6; do
-       python -m bam.fit \
+       uv run python -m bam.fit \
            --actuator xl330 \
            --model $model \
            --logdir data_processed \
@@ -132,7 +132,7 @@ To evaluate a parameter file on the recorded logs:
 
 .. code-block:: bash
 
-   python -m bam.fit \
+   uv run python -m bam.fit \
        --actuator xl330 \
        --model m6 \
        --logdir data_processed \
@@ -143,7 +143,7 @@ To plot measured versus simulated trajectories:
 
 .. code-block:: bash
 
-   python -m bam.plot \
+   uv run python -m bam.plot \
        --actuator xl330 \
        --logdir data_processed \
        --sim \
@@ -159,7 +159,7 @@ Pass ``--wandb`` to stream training and validation metrics to a W&B project:
 
 .. code-block:: bash
 
-   python -m bam.fit \
+   uv run python -m bam.fit \
        --actuator xl330 \
        --model m6 \
        --logdir data_processed \

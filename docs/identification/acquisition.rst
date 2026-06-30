@@ -9,16 +9,12 @@ then resampled to a fixed timestep before fitting.
 Installation
 ------------
 
-The identification pipeline needs the extra dependencies listed in
-``requirements_bam.txt`` (Optuna, hardware SDKs, etc.). We recommend ``uv``
-for a faster install:
+To install the dependencies for data acquisition, you need to install the full
+project using ``uv`` (`installation instructions <https://docs.astral.sh/uv/getting-started/installation/>`_):
 
 .. code-block:: bash
 
-   uv venv .venv
-   source .venv/bin/activate
-   uv pip install -e .
-   uv pip install -r requirements_bam.txt
+   uv sync
 
 Available trajectories
 ----------------------
@@ -57,7 +53,7 @@ Dynamixel (MX-64, MX-106, XL-320, XL-330)
 
 .. code-block:: bash
 
-   python -m bam.dynamixel.record \
+   uv run python -m bam.dynamixel.record \
        --port /dev/ttyUSB0 \
        --motor xl330 \
        --mass 0.567 \
@@ -88,13 +84,13 @@ offset to use for the zero position:
 
 .. code-block:: bash
 
-   python -m bam.erob.etherban
+   uv run python -m bam.erob.etherban
 
 Pass that value to ``--offset`` when recording:
 
 .. code-block:: bash
 
-   python -m bam.erob.record \
+   uv run python -m bam.erob.record \
        --host 127.0.0.1 \
        --motor erob80_100 \
        --mass 1.2 \
@@ -114,7 +110,7 @@ Feetech (STS3215)
 
 .. code-block:: bash
 
-   python -m bam.feetech.record \
+   uv run python -m bam.feetech.record \
        --port /dev/ttyUSB0 \
        --id 1 \
        --motor sts3215 \
@@ -132,7 +128,7 @@ To sweep multiple P-gain values and trajectories in one go:
 
 .. code-block:: bash
 
-   python -m bam.dynamixel.all_record \
+   uv run python -m bam.dynamixel.all_record \
        --port /dev/ttyUSB0 \
        --motor xl330 \
        --mass 0.567 \
@@ -195,7 +191,7 @@ Resample raw logs to a constant timestep before fitting:
 
 .. code-block:: bash
 
-   python -m bam.process \
+   uv run python -m bam.process \
        --raw data_raw \
        --logdir data_processed \
        --dt 0.005

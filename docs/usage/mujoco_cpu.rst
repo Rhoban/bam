@@ -11,7 +11,7 @@ BAM is available on PyPI:
 
 .. code-block:: bash
 
-   pip install bam
+   pip install better-actuator-models
 
 Overview
 --------
