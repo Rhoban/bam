@@ -35,7 +35,12 @@ covers the pendulum dynamics, the friction-budget formulation, and the six model
 variants M1–M6.
 
 Each section gives the exact install command for its use case. To install
-everything at once, use ``pip install better-actuator-models[all]``.
+everything at once, use:
+
+.. code-block:: bash
+
+   pip install better-actuator-models[all]
+
 
 Reference paper
 ---------------
