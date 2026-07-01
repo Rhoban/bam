@@ -9,7 +9,7 @@ joint positions, averaged across all logs.
 Running the fit
 ---------------
 
-.. code-block:: bash
+.. code-block:: text
 
    uv run python -m bam.fit \
        --actuator xl330 \
@@ -60,7 +60,7 @@ Validation split
 To detect overfitting, hold out the logs recorded at one P-gain value and
 use them as a validation set:
 
-.. code-block:: bash
+.. code-block:: text
 
    uv run python -m bam.fit \
        --actuator xl330 \
@@ -77,7 +77,7 @@ Fitting all models
 
 It is recommended to fit all six models and compare their validation error:
 
-.. code-block:: bash
+.. code-block:: text
 
    for model in m1 m2 m3 m4 m5 m6; do
        uv run python -m bam.fit \
@@ -130,7 +130,7 @@ Evaluating and visualizing results
 
 To evaluate a parameter file on the recorded logs:
 
-.. code-block:: bash
+.. code-block:: text
 
    uv run python -m bam.fit \
        --actuator xl330 \
@@ -141,7 +141,7 @@ To evaluate a parameter file on the recorded logs:
 
 To plot measured versus simulated trajectories:
 
-.. code-block:: bash
+.. code-block:: text
 
    uv run python -m bam.plot \
        --actuator xl330 \
@@ -157,7 +157,7 @@ Weights & Biases logging
 
 Pass ``--wandb`` to stream training and validation metrics to a W&B project:
 
-.. code-block:: bash
+.. code-block:: text
 
    uv run python -m bam.fit \
        --actuator xl330 \

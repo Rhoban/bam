@@ -11,7 +11,7 @@ Installation
 BAM is available on PyPI. Install it with the ``mjlab`` extra, which pulls in
 mjlab together with mujoco, mujoco-warp and torch:
 
-.. code-block:: bash
+.. code-block:: text
 
    pip install better-actuator-models[mjlab]
 

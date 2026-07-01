@@ -10,7 +10,7 @@ Installation
 BAM is available on PyPI. Install it with the ``mujoco`` extra to pull in the
 MuJoCo dependency:
 
-.. code-block:: bash
+.. code-block:: text
 
    pip install better-actuator-models[mujoco]
 

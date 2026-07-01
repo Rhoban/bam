@@ -37,7 +37,7 @@ variants M1–M6.
 Each section gives the exact install command for its use case. To install
 everything at once, use:
 
-.. code-block:: bash
+.. code-block:: text
 
    pip install better-actuator-models[all]
 
