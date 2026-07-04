@@ -9,6 +9,7 @@ start:
   open-source project, in which the fully open-source 30 cm humanoid Microban 
   learns to walk. It shows how to plug :class:`bam.mjlab.BamActuatorCfg` into 
   a vectorized MuJoCo Warp training pipeline.
-- **MuJoCo (CPU)** — `FRASA <https://TODO-REPLACE-WITH-SIGMABAN-REPO>`_ is a
-  humanoid stand-up env that uses :class:`bam.mujoco.MujocoController` in a 
-  standard MuJoCo simulation to train the SigmaBan humanoid to stand up. 
+- **MuJoCo (CPU)** — `Microban <https://github.com/MarcDcls/microban>`_ is 
+  the repository containing the CAD and codebase for the Microban humanoid. 
+  It shows how to use :class:`bam.mujoco.MujocoController` in the MuJoCo 
+  simulation of the robot run by ``make sim``.

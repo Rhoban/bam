@@ -34,14 +34,6 @@ is documented step by step in :doc:`identification/index`.
 covers the pendulum dynamics, the friction-budget formulation, and the six model
 variants M1–M6.
 
-Each section gives the exact install command for its use case. To install
-everything at once, use:
-
-.. code-block:: text
-
-   pip install better-actuator-models[all]
-
-
 Reference paper
 ---------------
 
