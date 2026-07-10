@@ -51,6 +51,11 @@ if TYPE_CHECKING:
     from mjlab.entity import Entity
 
 
+# MuJoCo constraint-type id for a per-DOF friction constraint. In MuJoCo Warp the
+# ``efc.id`` of such a constraint is the DOF index and its Jacobian is a unit row
+# on that DOF, so it contributes exactly ``efc.force`` to ``qfrc_constraint``.
+_FRICTION_DOF_CONSTRAINT = int(mujoco.mjtConstraint.mjCNSTR_FRICTION_DOF)
+
 
 @dataclass(kw_only=True)
 class BamActuatorCfg(ActuatorCfg):
@@ -106,8 +111,12 @@ class BamActuatorCfg(ActuatorCfg):
     max_current: float | None = None
 
     def __post_init__(self) -> None:
-        if self.json_path is not None and (self.motor_name is not None or self.model is not None):
-            raise ValueError("Specify either json_path OR (motor_name + model), not both.")
+        if self.json_path is not None and (
+            self.motor_name is not None or self.model is not None
+        ):
+            raise ValueError(
+                "Specify either json_path OR (motor_name + model), not both."
+            )
         object.__setattr__(
             self,
             "_resolved_json_path",
@@ -133,8 +142,22 @@ class BamActuator(Actuator):
     2. **DC motor torque** — back-EMF equation (voltage → torque).
     3. **Friction budget** — BAM m1–m6 friction model (Coulomb, Stribeck,
        load-dependent, directional, quadratic).
-    4. **Static friction clipping** — BAM Algorithm 1 (prevents overshoot when
-       the joint is nearly stopped).
+
+    Rather than injecting a passive friction torque into the returned motor
+    torque, the friction budget is written into MuJoCo's native
+    ``dof_frictionloss`` (dry friction) and ``dof_damping`` (viscous) each step,
+    exactly like :class:`bam.mujoco.MujocoController`. MuJoCo's constraint solver
+    then applies the static-friction clipping (BAM Algorithm 1) itself.
+
+    .. important::
+        Because every environment carries a different friction budget, the
+        ``dof_frictionloss`` and ``dof_damping`` model fields must be expanded
+        per world *before* stepping. After building the environment, call::
+
+            env.sim.expand_model_fields(("dof_frictionloss", "dof_damping"))
+
+        (or add a ``randomize_field`` event for those fields). Otherwise the
+        fields alias a single shared buffer and per-env writes are invalid.
 
     Per-environment gain scaling is supported via :meth:`set_gains`.
     """
@@ -166,7 +189,6 @@ class BamActuator(Actuator):
 
         self._mjwarp_model: mjwarp.Model | None = None
         self._data: mjwarp.Data | None = None
-        self._dt: float = 0.0
         self._device: str = "cpu"
         self._dof_ids: torch.Tensor | None = None
 
@@ -179,6 +201,9 @@ class BamActuator(Actuator):
         self.default_kp_scale: torch.Tensor | None = None
         self.default_kd_scale: torch.Tensor | None = None
 
+        self._num_envs: int = 0
+        self._friction_fields_checked: bool = False
+
     # ─────────────────────────────────────────────────────────────────────────
     # mjlab interface
     # ─────────────────────────────────────────────────────────────────────────
@@ -186,8 +211,9 @@ class BamActuator(Actuator):
     def edit_spec(self, spec: mujoco.MjSpec, target_names: list[str]) -> None:
         """Convert position actuators to motor mode and zero MuJoCo friction.
 
-        We handle all friction ourselves inside :meth:`compute`, so MuJoCo's
-        built-in ``frictionloss`` and ``damping`` are zeroed out here.
+        The ``frictionloss`` and ``damping`` are zeroed here only as an initial
+        value; :meth:`compute` rewrites them every step with the BAM friction
+        budget so MuJoCo's solver applies the friction natively.
         """
         bam = self._bam_model
         act = bam.actuator
@@ -196,7 +222,9 @@ class BamActuator(Actuator):
         armature = act.get_extra_inertia()
         # Use upper bound of vin_range for force_limit so MuJoCo's forcerange
         # is always a safe ceiling regardless of per-env voltage.
-        vin_for_limit = max(self.cfg.vin_range) if self.cfg.vin_range is not None else act.vin
+        vin_for_limit = (
+            max(self.cfg.vin_range) if self.cfg.vin_range is not None else act.vin
+        )
         force_limit = vin_for_limit * kt / R
 
         target_set = set(target_names)
@@ -204,11 +232,7 @@ class BamActuator(Actuator):
 
         for mjact in spec.actuators:
             tgt = mjact.target
-            tgt_name = (
-                tgt.name
-                if hasattr(tgt, "name")
-                else (str(tgt) if tgt else None)
-            )
+            tgt_name = tgt.name if hasattr(tgt, "name") else (str(tgt) if tgt else None)
             if tgt_name in target_set:
                 mjact.set_to_motor()
                 mjact.forcelimited = True
@@ -250,19 +274,19 @@ class BamActuator(Actuator):
         super().initialize(mj_model, model, data, device)
         self._mjwarp_model = model
         self._data = data
-        self._dt = mj_model.opt.timestep
         self._device = device
 
         # Map local target indices → global joint indices → DOF addresses
         jnt_dofadr = mj_model.jnt_dofadr
         entity_joint_ids = self.entity.indexing.joint_ids
         dof_ids = [
-            jnt_dofadr[entity_joint_ids[tid].item()]
-            for tid in self._target_ids_list
+            jnt_dofadr[entity_joint_ids[tid].item()] for tid in self._target_ids_list
         ]
         self._dof_ids = torch.tensor(dof_ids, dtype=torch.long, device=device)
 
         num_envs = data.nworld
+        self._num_envs = num_envs
+        self._friction_fields_checked = False
         num_joints = len(self._dof_ids)
         self.kp_scale = torch.ones(num_envs, 1, dtype=torch.float32, device=device)
         self.kd_scale = torch.ones(num_envs, 1, dtype=torch.float32, device=device)
@@ -274,26 +298,40 @@ class BamActuator(Actuator):
 
         # vin_tensor: (N, 1) — per-env battery voltage, constant across resets
         if self.cfg.vin_range is not None:
-            self.vin_tensor = torch.empty(num_envs, 1, dtype=torch.float32, device=device).uniform_(
-                *self.cfg.vin_range
-            )
+            self.vin_tensor = torch.empty(
+                num_envs, 1, dtype=torch.float32, device=device
+            ).uniform_(*self.cfg.vin_range)
         else:
-            self.vin_tensor = torch.full((num_envs, 1), act.vin, dtype=torch.float32, device=device)
+            self.vin_tensor = torch.full(
+                (num_envs, 1), act.vin, dtype=torch.float32, device=device
+            )
 
         # vin_drop_gain: (N, 1) — per-env resistance gain [V/Nm], constant across resets
         if self.cfg.vin_drop_gain_range is not None:
-            self.vin_drop_gain = torch.empty(num_envs, 1, dtype=torch.float32, device=device).uniform_(
-                *self.cfg.vin_drop_gain_range
-            )
+            self.vin_drop_gain = torch.empty(
+                num_envs, 1, dtype=torch.float32, device=device
+            ).uniform_(*self.cfg.vin_drop_gain_range)
         else:
             self.vin_drop_gain = None
 
         # Previous motor torques for the voltage-drop computation (lagged 1 step)
-        self._prev_motor_torque = torch.zeros(num_envs, num_joints, dtype=torch.float32, device=device)
+        self._prev_motor_torque = torch.zeros(
+            num_envs, num_joints, dtype=torch.float32, device=device
+        )
 
-        vin_repr = f"range={self.cfg.vin_range}" if self.cfg.vin_range is not None else f"{act.vin:.1f}V"
-        drop_repr = f"drop_gain_range={self.cfg.vin_drop_gain_range}" if self.cfg.vin_drop_gain_range is not None else "no drop"
-        vin_for_limit = max(self.cfg.vin_range) if self.cfg.vin_range is not None else act.vin
+        vin_repr = (
+            f"range={self.cfg.vin_range}"
+            if self.cfg.vin_range is not None
+            else f"{act.vin:.1f}V"
+        )
+        drop_repr = (
+            f"drop_gain_range={self.cfg.vin_drop_gain_range}"
+            if self.cfg.vin_drop_gain_range is not None
+            else "no drop"
+        )
+        vin_for_limit = (
+            max(self.cfg.vin_range) if self.cfg.vin_range is not None else act.vin
+        )
         force_limit = vin_for_limit * bam.kt.value / bam.R.value
         print(
             f"[BamActuator] model={bam.name!r} "
@@ -408,8 +446,7 @@ class BamActuator(Actuator):
                 # m3/m4 — non-directional gearbox torque
                 gearbox_torque = torch.abs(external_torque - motor_torque)
                 frictionloss = (
-                    frictionloss
-                    + bam.load_friction_base.value * gearbox_torque
+                    frictionloss + bam.load_friction_base.value * gearbox_torque
                 )
 
                 if bam.stribeck:
@@ -421,6 +458,84 @@ class BamActuator(Actuator):
                     )
 
         return frictionloss
+
+    def _write_frictions(self, frictionloss: torch.Tensor, damping: float) -> None:
+        """Write the friction budget into MuJoCo's per-DOF friction fields.
+
+        ``frictionloss`` (shape ``(N, J)``) and ``damping`` (scalar viscous
+        coefficient) are written into ``dof_frictionloss`` and ``dof_damping``
+        of the controlled DOFs, for every environment. The fields are accessed
+        fresh each call so that a later :meth:`~mjlab.sim.Sim.expand_model_fields`
+        (which reallocates the arrays and clears the bridge cache) is picked up.
+        """
+        assert self._mjwarp_model is not None and self._dof_ids is not None
+
+        fl_field = self._mjwarp_model.dof_frictionloss
+        damping_field = self._mjwarp_model.dof_damping
+
+        if not self._friction_fields_checked:
+            # Per-env writes require truly per-world storage. A non-expanded
+            # field aliases a single (1, nv) buffer (stride 0 on the world axis),
+            # so writing distinct per-env values would be invalid.
+            if self._num_envs > 1 and fl_field.stride(0) == 0:
+                raise RuntimeError(
+                    "BamActuator writes per-environment dof_frictionloss/"
+                    "dof_damping, but these model fields are not expanded per "
+                    "world. After building the environment, call "
+                    "sim.expand_model_fields(('dof_frictionloss', "
+                    "'dof_damping')) (or add a randomize_field event for them)."
+                )
+            self._friction_fields_checked = True
+
+        fl_field[:, self._dof_ids] = frictionloss
+        damping_field[:, self._dof_ids] = damping
+
+    def _as_tensor(self, x) -> torch.Tensor:
+        """Normalize a mjwarp/bridge field to a real ``torch.Tensor``.
+
+        Handles mjlab's ``TorchArray`` bridge wrapper (indexing it returns the
+        underlying tensor), plain tensors, and numpy fallbacks.
+        """
+        if isinstance(x, torch.Tensor):
+            return x
+        if hasattr(x, "_tensor"):  # mjlab TorchArray bridge wrapper
+            return x[...]
+        return torch.as_tensor(x, device=self._device)
+
+    def _dof_friction_force(self, nv: int) -> torch.Tensor:
+        """Per-DOF force produced by our own ``dof_frictionloss`` constraints.
+
+        Scans the active constraint rows (``efc``) of the previous solve, keeps
+        only the DOF-friction constraints, and scatters their constraint-space
+        force onto the DOF they act on. Returns shape ``(N, nv)``.
+
+        This is the MuJoCo-Warp equivalent of the ``efc``-scan done in
+        :class:`bam.mujoco.MujocoController`, used to strip the friction
+        contribution out of ``qfrc_constraint``.
+        """
+        assert self._data is not None
+        efc = self._data.efc
+        efc_type = self._as_tensor(efc.type)  # (N, njmax) int
+        efc_id = self._as_tensor(efc.id)  # (N, njmax) int
+        efc_force = self._as_tensor(efc.force)  # (N, njmax) float
+        nefc = self._as_tensor(self._data.nefc)  # (N,) int
+
+        n_worlds, n_max = efc_type.shape
+        # Only the first nefc[w] rows of each world are valid; the rest is stale.
+        valid = torch.arange(n_max, device=efc_type.device).unsqueeze(
+            0
+        ) < nefc.unsqueeze(1)
+        is_fric = valid & (efc_type == _FRICTION_DOF_CONSTRAINT)  # (N, njmax)
+
+        contrib = torch.where(is_fric, efc_force, torch.zeros_like(efc_force))
+        # Masked-out rows scatter a zero contribution into DOF 0 (harmless).
+        idx = torch.where(is_fric, efc_id, torch.zeros_like(efc_id)).long()
+
+        qfrc_friction = torch.zeros(
+            n_worlds, nv, dtype=efc_force.dtype, device=efc_force.device
+        )
+        qfrc_friction.scatter_add_(1, idx, contrib)
+        return qfrc_friction
 
     # ─────────────────────────────────────────────────────────────────────────
     # Main compute — shape (num_envs, num_joints) throughout
@@ -461,10 +576,7 @@ class BamActuator(Actuator):
         # ── 2. DC motor torque with back-EMF ─────────────────────────────────
         # (N, J)
         vel = cmd.vel
-        motor_torque = (
-            kt * voltage / R
-            - (kt**2) * vel * self.kd_scale / R
-        )
+        motor_torque = kt * voltage / R - (kt**2) * vel * self.kd_scale / R
 
         # Firmware current clipping: I = motor_torque / kt is capped at
         # ±max_current, i.e. the motor torque is clipped to ±max_current * kt.
@@ -472,12 +584,21 @@ class BamActuator(Actuator):
             torque_limit = self.cfg.max_current * kt
             motor_torque = torch.clamp(motor_torque, -torque_limit, torque_limit)
 
-        # ── 3. External (gravity + Coriolis) torque ───────────────────────────
-        # qfrc_bias shape: (N, ndof) — slice to (N, J)
-        qfrc_bias_raw = self._data.qfrc_bias
-        if not isinstance(qfrc_bias_raw, torch.Tensor):
-            qfrc_bias_raw = torch.as_tensor(qfrc_bias_raw, device=self._device)
-        external_torque = -qfrc_bias_raw[:, self._dof_ids]  # (N, J)
+        # ── 3. External torque (gravity + Coriolis + constraints) ─────────────
+        # The external load on the gearbox is the gravity/Coriolis bias plus the
+        # constraint forces (contacts, joint limits, …), but NOT the DOF-friction
+        # constraint force we injected via dof_frictionloss on the previous solve
+        # — otherwise the load-dependent friction terms would feed back on
+        # themselves. This mirrors bam.mujoco.MujocoController.
+        qfrc_bias = self._as_tensor(self._data.qfrc_bias)  # (N, nv)
+        qfrc_constraint = self._as_tensor(self._data.qfrc_constraint)  # (N, nv)
+        nv = qfrc_bias.shape[-1]
+        qfrc_friction = self._dof_friction_force(nv)  # (N, nv)
+        external_torque = (
+            -qfrc_bias[:, self._dof_ids]
+            + qfrc_constraint[:, self._dof_ids]
+            - qfrc_friction[:, self._dof_ids]
+        )  # (N, J)
 
         # ── 4. Stribeck coefficient ───────────────────────────────────────────
         # (N, J); zero tensor when model has no stribeck (unused in budget)
@@ -485,43 +606,22 @@ class BamActuator(Actuator):
         if bam.stribeck:
             dtheta_stribeck = bam.dtheta_stribeck.value
             alpha = bam.alpha.value
-            stribeck_coeff = torch.exp(
-                -torch.pow(abs_vel / dtheta_stribeck, alpha)
-            )
+            stribeck_coeff = torch.exp(-torch.pow(abs_vel / dtheta_stribeck, alpha))
         else:
             stribeck_coeff = torch.zeros_like(vel)
 
-        # ── 5. Friction budget ────────────────────────────────────────────────
-        # (N, J)  velocity-independent part
+        # ── 5. Friction budget → MuJoCo dof_frictionloss / dof_damping ────────
+        # Velocity-independent (Coulomb + Stribeck + load) part → frictionloss.
+        # Viscous part → damping. MuJoCo's constraint solver then performs the
+        # static-friction clipping (BAM Algorithm 1) itself, so we do NOT add a
+        # passive friction torque to the returned motor torque.
         frictionloss = self._compute_friction_budget(
             motor_torque, external_torque, stribeck_coeff
-        )
-        # Add viscous friction to get total budget
-        friction_budget = frictionloss + friction_viscous * abs_vel  # (N, J)
-
-        # ── 6. Static friction clipping — BAM Algorithm 1 ────────────────────
-        # Effective inertia from MuJoCo's dof_invweight0
-        dof_invweight = self._mjwarp_model.dof_invweight0
-        if not isinstance(dof_invweight, torch.Tensor):
-            dof_invweight = torch.as_tensor(dof_invweight, device=self._device)
-        if dof_invweight.ndim == 1:
-            eff_inertia = 1.0 / dof_invweight[self._dof_ids].unsqueeze(0)  # (1, J)
-        else:
-            eff_inertia = 1.0 / dof_invweight[:, self._dof_ids]  # (N, J)
-
-        # Torque needed to stop the joint in one timestep (absent friction):
-        #   tau_stop = (I/dt)*vel + motor_torque + qfrc_bias
-        #            = (I/dt)*vel + motor_torque - external_torque
-        net_no_friction = motor_torque - external_torque  # (N, J)
-        tau_stop = (eff_inertia / self._dt) * vel + net_no_friction  # (N, J)
-
-        friction_magnitude = torch.minimum(torch.abs(tau_stop), friction_budget)
-        friction_torque = -torch.sign(tau_stop) * friction_magnitude  # (N, J)
-
-        output = motor_torque + friction_torque  # (N, J)
+        )  # (N, J)
+        self._write_frictions(frictionloss, friction_viscous)
 
         # Store motor torque for next step's voltage-drop computation
         if self._prev_motor_torque is not None:
             self._prev_motor_torque = motor_torque.detach()
 
-        return output
+        return motor_torque
