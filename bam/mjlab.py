@@ -472,12 +472,22 @@ class BamActuator(Actuator):
             torque_limit = self.cfg.max_current * kt
             motor_torque = torch.clamp(motor_torque, -torque_limit, torque_limit)
 
-        # ── 3. External (gravity + Coriolis) torque ───────────────────────────
-        # qfrc_bias shape: (N, ndof) — slice to (N, J)
+        # ── 3. External (gravity + Coriolis + constraint) torque ──────────────
+        # Mirrors bam/mujoco.py: torque_external = -qfrc_bias + qfrc_constraint.
+        # In mjlab, BAM friction is applied as a direct output torque (MuJoCo's
+        # frictionloss is zeroed in edit_spec), so qfrc_constraint holds only
+        # contact/limit forces — none of our own friction to subtract back out.
+        # Both arrays have shape (N, ndof) — slice to (N, J).
         qfrc_bias_raw = self._data.qfrc_bias
         if not isinstance(qfrc_bias_raw, torch.Tensor):
             qfrc_bias_raw = torch.as_tensor(qfrc_bias_raw, device=self._device)
-        external_torque = -qfrc_bias_raw[:, self._dof_ids]  # (N, J)
+        qfrc_constraint_raw = self._data.qfrc_constraint
+        if not isinstance(qfrc_constraint_raw, torch.Tensor):
+            qfrc_constraint_raw = torch.as_tensor(qfrc_constraint_raw, device=self._device)
+        external_torque = (
+            -qfrc_bias_raw[:, self._dof_ids]
+            + qfrc_constraint_raw[:, self._dof_ids]
+        )  # (N, J)
 
         # ── 4. Stribeck coefficient ───────────────────────────────────────────
         # (N, J); zero tensor when model has no stribeck (unused in budget)
