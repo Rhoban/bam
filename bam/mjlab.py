@@ -592,6 +592,7 @@ class BamActuator(Actuator):
         # themselves. This mirrors bam.mujoco.MujocoController.
         qfrc_bias = self._as_tensor(self._data.qfrc_bias)  # (N, nv)
         qfrc_constraint = self._as_tensor(self._data.qfrc_constraint)  # (N, nv)
+        qfrc_actuator = self._as_tensor(self._data.qfrc_actuator)  # (N, nv)
         nv = qfrc_bias.shape[-1]
         qfrc_friction = self._dof_friction_force(nv)  # (N, nv)
         external_torque = (
@@ -599,6 +600,10 @@ class BamActuator(Actuator):
             + qfrc_constraint[:, self._dof_ids]
             - qfrc_friction[:, self._dof_ids]
         )  # (N, J)
+        # Actuator torque applied on the PREVIOUS solve. The BAM friction budget
+        # uses this (not the freshly-computed motor_torque) as the motor-side load,
+        # matching bam.mujoco.MujocoController which reads data.qfrc_actuator.
+        prev_actuator_torque = qfrc_actuator[:, self._dof_ids]  # (N, J)
 
         # ── 4. Stribeck coefficient ───────────────────────────────────────────
         # (N, J); zero tensor when model has no stribeck (unused in budget)
@@ -616,7 +621,7 @@ class BamActuator(Actuator):
         # static-friction clipping (BAM Algorithm 1) itself, so we do NOT add a
         # passive friction torque to the returned motor torque.
         frictionloss = self._compute_friction_budget(
-            motor_torque, external_torque, stribeck_coeff
+            prev_actuator_torque, external_torque, stribeck_coeff
         )  # (N, J)
         self._write_frictions(frictionloss, friction_viscous)
 
