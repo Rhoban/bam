@@ -99,6 +99,12 @@ class BamActuatorCfg(ActuatorCfg):
         every step.
     :param delay_per_env_phase: Whether each environment starts with an independent
         delay phase offset. ``True`` → environments are not synchronized.
+    :param stiff_frictionloss: When ``True`` (default), stiffen the joint-friction
+        constraint (``solref_friction`` / ``solimp_friction``). MuJoCo Warp has no
+        noslip solver, so the frictionloss constraint stays soft and a statically-held
+        joint creeps; this is the GPU-side substitute. Uses MuJoCo's direct
+        (timestep-independent) solref form so it works regardless of the sim ``dt``.
+        Set ``False`` to keep MuJoCo's soft defaults.
     """
 
     motor_name: str | None = None
@@ -109,6 +115,7 @@ class BamActuatorCfg(ActuatorCfg):
     vin_range: tuple[float, float] | None = None
     vin_drop_gain_range: tuple[float, float] | None = None
     vin_min: float | None = None
+    stiff_frictionloss: bool = True
 
     def __post_init__(self) -> None:
         if self.json_path is not None and (
@@ -211,12 +218,28 @@ class BamActuator(Actuator):
     # mjlab interface
     # ─────────────────────────────────────────────────────────────────────────
 
+    # Stiff joint-friction constraint, in MuJoCo's direct (timestep-independent)
+    # solref form: solref = (-stiffness, -damping), solimp with dmax→1. Applied
+    # when cfg.stiff_frictionloss is True to counter the lack of a noslip solver
+    # in MuJoCo Warp (matches a (2*dt, 1.0) timeconst solref at dt≈5 ms).
+    _STIFF_SOLREF_FRICTION = (-5.0e4, -2.0e2)
+    _STIFF_SOLIMP_FRICTION = (0.99, 0.9999, 0.001, 0.5, 2.0)
+
+    def _set_friction_stiffness(self, joint: "mujoco.MjsJoint") -> None:
+        """Stiffen a joint's friction constraint if ``cfg.stiff_frictionloss``."""
+        if self.cfg.stiff_frictionloss:
+            joint.solref_friction = self._STIFF_SOLREF_FRICTION
+            joint.solimp_friction = self._STIFF_SOLIMP_FRICTION
+
     def edit_spec(self, spec: mujoco.MjSpec, target_names: list[str]) -> None:
         """Convert position actuators to motor mode and zero MuJoCo friction.
 
         The ``frictionloss`` and ``damping`` are zeroed here only as an initial
         value; :meth:`compute` rewrites them every step with the BAM friction
-        budget so MuJoCo's solver applies the friction natively.
+        budget so MuJoCo's solver applies the friction natively. When
+        ``cfg.stiff_frictionloss`` is set, the friction constraint's
+        ``solref_friction`` / ``solimp_friction`` are stiffened here too (see
+        :meth:`_set_friction_stiffness`).
         """
         bam = self._bam_model
         act = bam.actuator
@@ -246,6 +269,7 @@ class BamActuator(Actuator):
                         joint.armature = float(armature)
                         joint.damping = np.zeros((3, 1))
                         joint.frictionloss = 0.0
+                        self._set_friction_stiffness(joint)
                         break
                 self._mjs_actuators.append(mjact)
                 converted.add(tgt_name)
@@ -265,6 +289,7 @@ class BamActuator(Actuator):
                     if joint.name == target_name:
                         joint.damping = np.zeros((3, 1))
                         joint.frictionloss = 0.0
+                        self._set_friction_stiffness(joint)
                         break
 
     def initialize(
@@ -692,6 +717,9 @@ class Simulator:
     :param device: Torch device, defaults to ``"cuda"`` when available else ``"cpu"``.
     :param integrator: MuJoCo integrator, ``"euler"`` (default, matching the CPU
         backend) or ``"implicitfast"``.
+    :param stiff_frictionloss: Forwarded to :class:`BamActuatorCfg`. When ``True``
+        (default), the joint-friction constraint is stiffened to counter MuJoCo
+        Warp's lack of a noslip solver (see :attr:`BamActuatorCfg.stiff_frictionloss`).
     """
 
     def __init__(
@@ -702,6 +730,7 @@ class Simulator:
         model: str | None = None,
         device: str | None = None,
         integrator: str = "euler",
+        stiff_frictionloss: bool = True,
     ) -> None:
         self._params_path = _resolve_json_path(json_path, motor_name, model)
         # Default supply voltage from the JSON, used for logs that don't carry vin.
@@ -710,6 +739,7 @@ class Simulator:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
         self.integrator = integrator
+        self.stiff_frictionloss = stiff_frictionloss
 
     # ── Public API (mirrors the reference / CPU simulators) ──────────────────
 
@@ -844,6 +874,7 @@ class Simulator:
             target_names_expr=(_JOINT_NAME,),
             kp_fw=float(base_log["kp"]),
             vin=base_log.get("vin"),
+            stiff_frictionloss=self.stiff_frictionloss,
         )
         base = {
             "mass": base_log["mass"],
@@ -862,6 +893,8 @@ class Simulator:
             self.device,
         )
         mj_model = scene.compile()
+        # The joint-friction constraint stiffening (for the missing noslip solver)
+        # is applied by BamActuator.edit_spec via cfg.stiff_frictionloss.
         sim = Simulation(
             num_envs=num_envs,
             cfg=SimulationCfg(
