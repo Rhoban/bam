@@ -121,24 +121,27 @@ variability in cable length or connector quality across units:
 Both ranges are sampled once at initialization and held constant across
 episode resets.
 
-Current clipping
+Current limiting
 ----------------
 
-Servo firmwares can cap the motor current to protect the hardware. BAM reproduces
-this saturation with the ``max_current`` field: the motor current
-:math:`I = \tau / K_t` is clipped to ``[-max_current, max_current]``, which is
-equivalent to clipping the motor torque to :math:`\pm\,\texttt{max\_current}\cdot K_t`.
+Servo firmwares try to cap the motor current to protect the hardware. The firmware
+can only act on the PWM duty cycle, though — it cannot synthesize a voltage the
+battery does not have — so a current limit is really a *duty-cycle constraint*, not
+a hard clamp on the output torque. BAM models it that way in
+:meth:`~bam.actuator.VoltageControlledActuator.compute_control`: from the motor
+relation :math:`I = (\texttt{duty}\cdot V_\text{in} - K_t\dot{q}) / R`, the
+constraint :math:`|I| \le \texttt{max\_current}` maps to a duty window that is
+clamped and then intersected with the physical ``[-max_pwm, max_pwm]`` range,
+applied **last**. At high speed the back-EMF :math:`K_t\dot{q}` can push the window
+outside the achievable PWM range, in which case the limiter saturates and the
+current is *not* actually held at ``max_current`` — exactly as the real firmware
+behaves when the battery cannot supply the required voltage.
 
-.. code-block:: python
-
-   actuator_cfg = BamActuatorCfg(
-      motor_name="xl330",
-      model="m6",
-      target_names_expr=(r".*",),
-      max_current=1.75,   # firmware current limit [A]
-   )
-
-Leave it at ``None`` (default) to disable current clipping.
+``max_current`` is a property of the actuator model (``VoltageControlledActuator``),
+not a field of ``BamActuatorCfg``. It is set per motor family — for instance the
+``xl330`` uses ``max_current = 1.75`` A — so the limiter is applied automatically
+based on the selected ``motor_name``. Actuators whose ``max_current`` is ``None``
+(default) perform no current limiting.
 
 Command delay
 -------------

@@ -140,25 +140,35 @@ from collapsing under heavy load:
       vin_min=6.0,         # [V]
    )
 
-Current clipping (optional)
----------------------------
+Current limiting
+----------------
 
-Servo firmwares can cap the motor current to protect the hardware. BAM reproduces
-this saturation with the ``max_current`` parameter: the motor current
-:math:`I = \tau / K_t` is clipped to ``[-max_current, max_current]``, which is
-equivalent to clipping the motor torque to :math:`\pm\,\texttt{max\_current}\cdot K_t`.
+Servo firmwares try to cap the motor current to protect the hardware. The firmware
+can only act on the PWM duty cycle, though — it cannot synthesize a voltage the
+battery does not have — so a current limit is really a *duty-cycle constraint*, not
+a hard clamp on the output torque. BAM models it that way in
+:meth:`~bam.actuator.VoltageControlledActuator.compute_control`: from the motor
+relation :math:`I = (\texttt{duty}\cdot V_\text{in} - K_t\dot{q}) / R`, the
+constraint :math:`|I| \le \texttt{max\_current}` maps to the duty window
 
-.. code-block:: python
+.. math::
 
-   controller = MujocoController(
-      model=model,
-      actuator=["joint_1", ..., "joint_n"],
-      mujoco_model=mj_model,
-      mujoco_data=mj_data,
-      max_current=1.75,   # firmware current limit [A]
-   )
+   \frac{K_t\dot{q} - R\,\texttt{max\_current}}{V_\text{in}}
+   \le \texttt{duty} \le
+   \frac{K_t\dot{q} + R\,\texttt{max\_current}}{V_\text{in}}
 
-Leave it at ``None`` (default) to disable current clipping.
+The commanded duty is clamped to this window and then to the physical
+``[-max_pwm, max_pwm]`` range, applied **last**. At high speed the back-EMF
+:math:`K_t\dot{q}` can push the window outside the achievable PWM range, in which
+case the limiter saturates and the current is *not* actually held at
+``max_current`` — exactly as the real firmware behaves when the battery cannot
+supply the required voltage.
+
+``max_current`` is a property of the actuator model (``VoltageControlledActuator``),
+not of the ``MujocoController``. It is set per motor family — for instance the
+``xl330`` uses ``max_current = 1.75`` A — so no controller configuration is
+required. Actuators whose ``max_current`` is ``None`` (default) perform no current
+limiting.
 
 Multi-actuator config file
 --------------------------
