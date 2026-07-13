@@ -7,7 +7,7 @@ name = "better-actuator-models"
 version = "1.0.1"
 description = "BAM: Better Actuator Models is a Python library dedicated to the identification and simulation of advanced actuator models."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 license = "Apache-2.0"
 authors = [
     { name = "Marc Duclusaud" },
@@ -42,6 +42,7 @@ identification = [
     "cmaes",
     "wandb",
     "matplotlib",
+    "PyQt5"
 ]
 # Everything at once.
 all = [
