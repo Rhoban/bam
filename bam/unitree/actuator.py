@@ -52,7 +52,7 @@ class UnitreeGo1Actuator(Actuator):
     ) -> Union[float, None]:
         # Target velocity is assumed to be 0
         torque = (q_target - q) * self.kp * self.model.ratio.value + self.damping * (0.0 - dq)
-        torque = np.clip(
+        torque = self.backend.clamp(
             torque, -self.model.max_torque.value, self.model.max_torque.value
         )
 

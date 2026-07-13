@@ -55,7 +55,7 @@ class ErobActuator(Actuator):
     ) -> float | None:
         # Target velocity is assumed to be 0
         amps = (q_target - q) * self.kp + self.damping * np.sqrt(self.kp) * (0.0 - dq)
-        amps = np.clip(amps, -self.max_amps, self.max_amps)
+        amps = self.backend.clamp(amps, -self.max_amps, self.max_amps)
 
         return amps
 
@@ -75,7 +75,7 @@ class ErobActuator(Actuator):
 
         min_torque = -volts_bounded_torque - emf
         max_torque = volts_bounded_torque - emf
-        torque = np.clip(torque, min_torque, max_torque)
+        torque = self.backend.clamp(torque, min_torque, max_torque)
 
         return torque
 

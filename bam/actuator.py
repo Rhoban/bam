@@ -12,6 +12,23 @@ from bam.parameter import Parameter
 from .message import yellow, print_parameter
 
 
+class Backend:
+    def clamp(self, x, low, high):
+        raise NotImplementedError
+
+
+class NumpyBackend(Backend):
+    def clamp(self, x, low, high):
+        return np.clip(x, low, high)
+
+
+class TorchBackend(Backend):
+    def clamp(self, x, low, high):
+        import torch
+
+        return torch.clamp(x, low, high)
+
+
 class Actuator:
     """Abstract base class for all BAM actuator models.
 
@@ -28,6 +45,7 @@ class Actuator:
     def __init__(self, testbench_class: Testbench):
         self.testbench_class = testbench_class
         self.testbench: Testbench | None = None
+        self.backend: Backend = NumpyBackend()
 
     def set_model(self, model):
         """Attach this actuator to a model and run :meth:`initialize`.
@@ -174,7 +192,7 @@ class VoltageControlledActuator(DCMotorActuator):
         :returns: Voltage [V] sent to the motor.
         """
         duty_cycle = (q_target - q) * self.kp * self.error_gain
-        duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
+        duty_cycle = self.backend.clamp(duty_cycle, -self.max_pwm, self.max_pwm)
 
         return self.vin * duty_cycle
 
@@ -265,10 +283,10 @@ class CurrentControlledActuator(DCMotorActuator):
         current_limit_high = (1 / self.model.R.value) * (
             -self.vin - self.model.kt.value * dq
         )
-        current = np.clip(current, current_limit_high, current_limit_low)
+        current = self.backend.clamp(current, current_limit_high, current_limit_low)
 
         # Maximum current allowed by the user to avoid heating
-        current = np.clip(
+        current = self.backend.clamp(
             current, -self.model.current_limit.value, self.model.current_limit.value
         )
 
@@ -304,9 +322,11 @@ class CurrentControlledActuator(DCMotorActuator):
             self.model.friction_viscous.value
             + self.model.viscous_damping_with_torque.value
         )
-        
+
         forcerange = self.vin * self.model.kt.value / self.model.R.value
-        forcerange = min(forcerange, self.model.current_limit.value * self.model.kt.value)
+        forcerange = min(
+            forcerange, self.model.current_limit.value * self.model.kt.value
+        )
 
         print_parameter("forcerange", forcerange)
         print_parameter("armature", self.model.armature.value)

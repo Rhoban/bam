@@ -70,9 +70,9 @@ class STS3215Actuator(VoltageControlledActuator):
         Assumes the motor is using a kp controller
         This can be overloaded if more custom behaviour is used
         """
-        
+
         # Internal target position is clipped using maximum velocity
-        self.q_target_smooth = np.clip(
+        self.q_target_smooth = self.backend.clamp(
             q_target,
             self.q_target_smooth - self.model.max_velocity.value * dt,
             self.q_target_smooth + self.model.max_velocity.value * dt,
@@ -84,6 +84,6 @@ class STS3215Actuator(VoltageControlledActuator):
             * self.error_gain
             * self.model.error_gain_ratio.value
         )
-        duty_cycle = np.clip(duty_cycle, -self.max_pwm, self.max_pwm)
+        duty_cycle = self.backend.clamp(duty_cycle, -self.max_pwm, self.max_pwm)
 
         return self.vin * duty_cycle
