@@ -184,6 +184,17 @@ Each recording produces one JSON file:
 Entries are logged at the firmware's native rate, which is not necessarily
 constant. The processing step resamples them to a fixed timestep.
 
+Checking jitter
+---------------
+
+You can use the following script:
+
+.. code-block:: bash
+
+    uv run python -m bam.jitter --logdir data_raw/
+
+To visualize the jitter histogram.
+
 Processing
 ----------
 
@@ -199,3 +210,14 @@ Resample raw logs to a constant timestep before fitting:
 ``--dt`` is the target timestep in seconds (5 ms is a good default). The
 script linearly interpolates between consecutive entries and writes one
 processed JSON per raw file into ``data_processed/``.
+
+Plotting
+--------
+
+You can plot the processed data using the following command:
+
+.. code-block:: bash
+
+   uv run python -m bam.plot \
+       --actuator xl330 \
+       --logdir data_processed 

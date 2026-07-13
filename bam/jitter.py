@@ -6,34 +6,41 @@
 
 #     http://www.apache.org/licenses/LICENSE-2.0
 
-import sys
+import argparse
+import glob
+import os
 import numpy as np
 import json
 
-if len(sys.argv) != 2:
-    print("Usage: jitter.py <filename (raw log)>")
-    sys.exit(1)
+arg_parser = argparse.ArgumentParser(description="Show jitter histogram across logs")
+arg_parser.add_argument("--logdir", type=str, required=True, help="Directory containing raw log json files")
+args = arg_parser.parse_args()
 
-filename = sys.argv[1]
+filenames = sorted(glob.glob(os.path.join(args.logdir, "*.json")))
+if len(filenames) == 0:
+    print(f"No json files found in {args.logdir}")
+    exit(1)
 
-data = json.load(open(filename))
+dts = []
+for filename in filenames:
+    data = json.load(open(filename))
+    ts = [entry["timestamp"] for entry in data["entries"]]
+    dts.append(np.diff(ts))
 
-ts = [entry["timestamp"] for entry in data["entries"]]
-dt = np.diff(ts)
+dt = np.concatenate(dts)
+
+mean = np.mean(dt)
+std = np.std(dt)
+print(f"Loaded {len(filenames)} logs, {len(dt)} intervals")
+print(f"Mean: {mean:.6f} s, Std: {std:.6f} s")
 
 import matplotlib.pyplot as plt
 
-plt.plot(dt)
-plt.title("Time between samples")
-plt.xlabel("Sample")
-plt.ylabel("Time (s)")
-plt.grid()
-plt.show()
-
-# Showing histogram
 plt.hist(dt, bins=100)
-plt.title("Histogram of time between samples")
+plt.axvline(mean, color="red", linestyle="--", label=f"Mean: {mean:.6f} s")
+plt.title(f"Histogram of time between samples\nMean: {mean:.6f} s, Std: {std:.6f} s")
 plt.xlabel("Time (s)")
 plt.ylabel("Count")
+plt.legend()
 plt.grid()
 plt.show()
