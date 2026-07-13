@@ -6,12 +6,17 @@
 
 #     http://www.apache.org/licenses/LICENSE-2.0
 
+from __future__ import annotations
+
 import numpy as np
-from typing import Union
+from typing import TYPE_CHECKING, Union
 from bam.message import yellow, print_parameter, bright
 from bam.actuator import VoltageControlledActuator
 from bam.parameter import Parameter
 from bam.testbench import Testbench, Pendulum
+
+if TYPE_CHECKING:
+    from bam.actuator import ArrayLike
 
 
 class STS3215Actuator(VoltageControlledActuator):
@@ -64,8 +69,8 @@ class STS3215Actuator(VoltageControlledActuator):
         )
 
     def compute_control(
-        self, q_target: float, q: float, dq: float, dt: float
-    ) -> float | None:
+        self, q_target: ArrayLike, q: ArrayLike, dq: ArrayLike, dt: float
+    ) -> ArrayLike | None:
         """
         Assumes the motor is using a kp controller
         This can be overloaded if more custom behaviour is used

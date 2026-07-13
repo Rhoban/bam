@@ -6,24 +6,44 @@
 
 #     http://www.apache.org/licenses/LICENSE-2.0
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Union
+
 import numpy as np
 from .testbench import Testbench
 from bam.parameter import Parameter
 from .message import yellow, print_parameter
 
+if TYPE_CHECKING:
+    import torch
+
+# Anything the control law / torque equations can operate on elementwise. The
+# concrete backend (numpy or torch, see :class:`Backend`) decides how ``clamp``
+# behaves; the arithmetic itself broadcasts identically over scalars, numpy
+# arrays and torch tensors.
+ArrayLike = Union[float, np.ndarray, "torch.Tensor"]
+
 
 class Backend:
-    def clamp(self, x, low, high):
+    """Abstracts the array library so the actuator math is vectorization-agnostic.
+
+    Only operations that differ between numpy and torch (currently ``clamp``)
+    live here; plain arithmetic (``+``, ``*``, ``**``, ``np.sign`` …) broadcasts
+    the same way for both, so it is written directly in the actuator methods.
+    """
+
+    def clamp(self, x: ArrayLike, low: ArrayLike, high: ArrayLike) -> ArrayLike:
         raise NotImplementedError
 
 
 class NumpyBackend(Backend):
-    def clamp(self, x, low, high):
+    def clamp(self, x: ArrayLike, low: ArrayLike, high: ArrayLike) -> ArrayLike:
         return np.clip(x, low, high)
 
 
 class TorchBackend(Backend):
-    def clamp(self, x, low, high):
+    def clamp(self, x: ArrayLike, low: ArrayLike, high: ArrayLike) -> ArrayLike:
         import torch
 
         return torch.clamp(x, low, high)
@@ -82,27 +102,35 @@ class Actuator:
         raise NotImplementedError
 
     def compute_control(
-        self, q_target: float, q: float, dq: float, dt: float
-    ) -> float | None:
+        self, q_target: ArrayLike, q: ArrayLike, dq: ArrayLike, dt: float
+    ) -> ArrayLike | None:
         """Compute the control signal from the current state and target.
 
-        :param q_target: Target joint angle [rad].
-        :param q: Current joint angle [rad].
-        :param dq: Current joint velocity [rad/s].
+        The state arguments (``q_target``, ``q``, ``dq``) may be Python floats,
+        numpy arrays or torch tensors; the computation is elementwise and the
+        result matches their (broadcast) type. Use :class:`TorchBackend` for a
+        fully vectorized, autograd-friendly evaluation.
+
+        :param q_target: Target joint angle(s) [rad].
+        :param q: Current joint angle(s) [rad].
+        :param dq: Current joint velocity(ies) [rad/s].
         :param dt: Timestep [s].
         :returns: Control signal in the unit given by :meth:`control_unit`.
         """
         raise NotImplementedError
 
     def compute_torque(
-        self, control: float | None, torque_enable: bool, q: float, dq: float
-    ) -> float:
+        self, control: ArrayLike | None, torque_enable: bool, q: ArrayLike, dq: ArrayLike
+    ) -> ArrayLike:
         """Compute the motor torque from the control signal and current state.
+
+        As with :meth:`compute_control`, the array arguments accept floats, numpy
+        arrays or torch tensors and the result follows their (broadcast) type.
 
         :param control: Control signal (volts, amps, or Nm depending on the actuator).
         :param torque_enable: Whether the actuator is powered.
-        :param q: Current joint angle [rad].
-        :param dq: Current joint velocity [rad/s].
+        :param q: Current joint angle(s) [rad].
+        :param dq: Current joint velocity(ies) [rad/s].
         :returns: Motor torque [Nm].
         """
         raise NotImplementedError
@@ -181,13 +209,13 @@ class VoltageControlledActuator(DCMotorActuator):
         return "volts"
 
     def compute_control(
-        self, q_target: float, q: float, dq: float, dt: float
-    ) -> float | None:
+        self, q_target: ArrayLike, q: ArrayLike, dq: ArrayLike, dt: float
+    ) -> ArrayLike | None:
         """Compute the voltage command from position error.
 
-        :param q_target: Target joint angle [rad].
-        :param q: Current joint angle [rad].
-        :param dq: Current joint velocity [rad/s] (unused here).
+        :param q_target: Target joint angle(s) [rad].
+        :param q: Current joint angle(s) [rad].
+        :param dq: Current joint velocity(ies) [rad/s] (unused here).
         :param dt: Timestep [s] (unused here).
         :returns: Voltage [V] sent to the motor.
         """
@@ -197,16 +225,16 @@ class VoltageControlledActuator(DCMotorActuator):
         return self.vin * duty_cycle
 
     def compute_torque(
-        self, control: float | None, torque_enable: bool, q: float, dq: float
-    ) -> float:
+        self, control: ArrayLike | None, torque_enable: bool, q: ArrayLike, dq: ArrayLike
+    ) -> ArrayLike:
         """Compute motor torque using the DC motor equation with back-EMF.
 
         :math:`\\tau = k_t V / R - k_t^2 \\dot{q} / R`
 
-        :param control: Voltage [V].
+        :param control: Voltage(s) [V].
         :param torque_enable: If ``False``, returns zero torque.
-        :param q: Current joint angle [rad] (unused here).
-        :param dq: Current joint velocity [rad/s].
+        :param q: Current joint angle(s) [rad] (unused here).
+        :param dq: Current joint velocity(ies) [rad/s].
         :returns: Motor torque [Nm].
         """
         volts = control
@@ -260,16 +288,18 @@ class CurrentControlledActuator(DCMotorActuator):
         self.model.viscous_damping_with_torque = Parameter(0.0, 0.0, 0.1)
 
     def compute_control(
-        self, q_target: float, q: float, dq: float, dt: float
-    ) -> float | None:
+        self, q_target: ArrayLike, q: ArrayLike, dq: ArrayLike, dt: float
+    ) -> ArrayLike | None:
         """Compute the current command from position error.
 
         Clips the P-controller output by both the back-EMF voltage limit and
-        the ``current_limit`` parameter.
+        the ``current_limit`` parameter. The voltage-limit bounds are themselves
+        elementwise (they depend on ``dq``), so with the torch backend the clamp
+        broadcasts per environment.
 
-        :param q_target: Target joint angle [rad].
-        :param q: Current joint angle [rad].
-        :param dq: Current joint velocity [rad/s].
+        :param q_target: Target joint angle(s) [rad].
+        :param q: Current joint angle(s) [rad].
+        :param dq: Current joint velocity(ies) [rad/s].
         :param dt: Timestep [s] (unused here).
         :returns: Target current [A].
         """
@@ -293,16 +323,16 @@ class CurrentControlledActuator(DCMotorActuator):
         return current
 
     def compute_torque(
-        self, control: float | None, torque_enable: bool, q: float, dq: float
-    ) -> float:
+        self, control: ArrayLike | None, torque_enable: bool, q: ArrayLike, dq: ArrayLike
+    ) -> ArrayLike:
         """Compute motor torque from current command.
 
         :math:`\\tau = k_t I - b_{\\text{active}} \\dot{q}`
 
-        :param control: Current command [A].
+        :param control: Current command(s) [A].
         :param torque_enable: If ``False``, returns zero torque.
-        :param q: Current joint angle [rad] (unused here).
-        :param dq: Current joint velocity [rad/s].
+        :param q: Current joint angle(s) [rad] (unused here).
+        :param dq: Current joint velocity(ies) [rad/s].
         :returns: Motor torque [Nm].
         """
         torque = (

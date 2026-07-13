@@ -48,7 +48,7 @@ from mjlab.sim import MujocoCfg, Simulation, SimulationCfg
 from mjlab.entity import EntityArticulationInfoCfg, EntityCfg
 from mjlab.managers.event_manager import RecomputeLevel
 
-from .actuator import VoltageControlledActuator
+from .actuator import TorchBackend, VoltageControlledActuator
 from .model import Model, load_model, _resolve_json_path
 from .testbench_mujoco import Pendulum
 
@@ -206,6 +206,9 @@ class BamActuator(Actuator):
         self.default_kp_scale: torch.Tensor | None = None
         self.default_kd_scale: torch.Tensor | None = None
 
+        self._base_kp: float = 0.0
+        self._dt: float = 0.0
+
         self._num_envs: int = 0
         self._friction_fields_checked: bool = False
 
@@ -300,6 +303,14 @@ class BamActuator(Actuator):
 
         bam = self._bam_model
         act = bam.actuator
+
+        # Delegate the control law / torque equation to the BAM actuator, run on
+        # the Torch backend so its clamps are vectorized over (num_envs, num_joints).
+        act.backend = TorchBackend()
+        # Base firmware gain and physics timestep, captured before compute() starts
+        # overwriting act.kp / act.vin with per-env tensors each step.
+        self._base_kp = float(act.kp)
+        self._dt = float(mj_model.opt.timestep)
 
         # vin_tensor: (N, 1) — per-env battery voltage, constant across resets
         if self.cfg.vin_range is not None:
@@ -547,41 +558,49 @@ class BamActuator(Actuator):
     # ─────────────────────────────────────────────────────────────────────────
 
     def compute(self, cmd: ActuatorCmd) -> torch.Tensor:
-        """Compute output torques for all environments — shape ``(N, J)``."""
+        """Compute output torques for all environments — shape ``(N, J)``.
+
+        The firmware control law and the DC-motor torque equation are delegated
+        to the underlying BAM actuator's :meth:`~bam.actuator.Actuator.compute_control`
+        and :meth:`~bam.actuator.Actuator.compute_torque` (running on the Torch
+        backend, so their clamps vectorize over ``(N, J)``). This backend only
+        injects the mjlab-specific per-environment quantities around those calls:
+
+        * ``vin`` (with the optional battery drop) → ``actuator.vin``
+        * ``kp * kp_scale`` → ``actuator.kp``
+        * ``kd_scale`` → applied to the back-EMF via a scaled velocity
+        """
         bam = self._bam_model
         act = bam.actuator
 
-        # Read scalar params (cheap attribute reads, no tensor overhead)
-        # vin_tensor is a (N,1) tensor initialized in initialize(); act.vin is no longer used directly.
         assert self.vin_tensor is not None
+        assert self.kp_scale is not None and self.kd_scale is not None
+        assert self._data is not None and self._dof_ids is not None
+        assert self._mjwarp_model is not None
+
+        # ── Per-env supply voltage (with optional battery drop) ──────────────
         vin = self.vin_tensor  # (N, 1)
         if self.vin_drop_gain is not None and self._prev_motor_torque is not None:
             load = self._prev_motor_torque.abs().sum(dim=-1, keepdim=True)  # (N, 1)
             vin = vin - self.vin_drop_gain * load  # (N, 1), broadcast safe
             if self.cfg.vin_min is not None:
                 vin = torch.clamp(vin, min=self.cfg.vin_min)
-        kp_fw = act.kp
+
         kt = bam.kt.value
-        R = bam.R.value
-        error_gain = act.error_gain
-        max_pwm = act.max_pwm
         friction_viscous = bam.friction_viscous.value
+        vel = cmd.vel  # (N, J)
 
-        assert self.kp_scale is not None and self.kd_scale is not None
-        assert self._data is not None and self._dof_ids is not None
-        assert self._mjwarp_model is not None
-
-        # ── 1. Firmware voltage control law ──────────────────────────────────
-        # (N, J)
-        pos_error = cmd.position_target - cmd.pos
-        duty_cycle = pos_error * kp_fw * self.kp_scale * error_gain
-        duty_cycle = torch.clamp(duty_cycle, -max_pwm, max_pwm)
-        voltage = vin * duty_cycle
-
-        # ── 2. DC motor torque with back-EMF ─────────────────────────────────
-        # (N, J)
-        vel = cmd.vel
-        motor_torque = kt * voltage / R - (kt**2) * vel * self.kd_scale / R
+        # ── 1-2. Firmware control law + DC-motor torque (delegated) ──────────
+        # Inject the per-env firmware parameters: compute_control multiplies by
+        # actuator.kp and actuator.vin, so writing per-env tensors there yields
+        # the vectorized firmware controller with no re-implementation.
+        act.vin = vin  # (N, 1)
+        act.kp = self._base_kp * self.kp_scale  # (N, 1)
+        control = act.compute_control(cmd.position_target, cmd.pos, vel, self._dt)
+        # kd_scale scales the electrical (back-EMF) damping only. compute_torque
+        # uses the velocity solely in that term, so feeding it a scaled velocity
+        # applies kd_scale exactly (torque_enable handled by the Simulator).
+        motor_torque = act.compute_torque(control, True, cmd.pos, vel * self.kd_scale)
 
         # Firmware current clipping: I = motor_torque / kt is capped at
         # ±max_current, i.e. the motor torque is clipped to ±max_current * kt.
