@@ -43,9 +43,14 @@ import torch
 
 from mjlab.actuator.actuator import Actuator, ActuatorCfg, ActuatorCmd, CommandField
 from mjlab.utils.spec import create_motor_actuator
+from mjlab.scene import Scene, SceneCfg
+from mjlab.sim import MujocoCfg, Simulation, SimulationCfg
+from mjlab.entity import EntityArticulationInfoCfg, EntityCfg
+from mjlab.managers.event_manager import RecomputeLevel
 
 from .actuator import VoltageControlledActuator
 from .model import Model, load_model, _resolve_json_path
+from .testbench_mujoco import Pendulum
 
 if TYPE_CHECKING:
     from mjlab.entity import Entity
@@ -630,3 +635,285 @@ class BamActuator(Actuator):
             self._prev_motor_torque = motor_torque.detach()
 
         return motor_torque
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GPU (MuJoCo Warp) simulator — mirrors bam.simulate / bam.mujoco Simulator
+# ─────────────────────────────────────────────────────────────────────────────
+
+_ENTITY_NAME = "pendulum"
+_JOINT_NAME = "pendulum"
+
+
+class Simulator:
+    """mjlab (MuJoCo Warp) GPU simulator, mirroring :class:`bam.simulate.Simulator`.
+
+    Builds the *same* pendulum spec as :class:`bam.testbench_mujoco.Pendulum`,
+    drives the hinge with a :class:`BamActuator` (via :class:`BamActuatorCfg`),
+    and steps everything on mjlab's vectorized MuJoCo-Warp pipeline.
+
+    The point of this backend is to exploit mjlab's GPU parallelization: a whole
+    batch of logs is rolled out **at once**, one environment per log. Every
+    environment shares the same motor model (kt, R, friction budget) but carries
+    its own pendulum parameters (``mass``/``arm_mass``/``length``) and firmware
+    gains (``kp``/``vin``). This is exactly what makes evaluating a model over a
+    directory of logs (as in :mod:`bam.mae`) embarrassingly parallel here.
+
+    How the per-environment "specs" are made different
+    --------------------------------------------------
+    mjlab replicates one compiled model across all worlds, so per-log physical
+    parameters are injected *after* building the sim by expanding the relevant
+    model fields per world and writing each environment's values:
+
+    * ``body_mass`` / ``body_ipos`` / ``body_inertia`` — the pendulum inertial,
+      computed by :meth:`bam.testbench_mujoco.Pendulum.inertial_params`, followed
+      by :meth:`mjlab.sim.Simulation.recompute_constants` to refresh the derived
+      mass matrix.
+    * ``kp`` — applied through the actuator's per-env ``kp_scale``.
+    * ``vin`` — written into the actuator's per-env ``vin_tensor``.
+
+    :param json_path: Path to a BAM params JSON file (produced by ``bam.fit``).
+        Mutually exclusive with ``motor_name`` / ``model``.
+    :param motor_name: Bundled motor name (e.g. ``"mx106"``). Combine with ``model``.
+    :param model: Bundled model variant (``"m1"``–``"m6"``). Combine with ``motor_name``.
+    :param device: Torch device, defaults to ``"cuda"`` when available else ``"cpu"``.
+    :param integrator: MuJoCo integrator, ``"euler"`` (default, matching the CPU
+        backend) or ``"implicitfast"``.
+    """
+
+    def __init__(
+        self,
+        json_path: str | None = None,
+        *,
+        motor_name: str | None = None,
+        model: str | None = None,
+        device: str | None = None,
+        integrator: str = "euler",
+    ) -> None:
+        self._params_path = _resolve_json_path(json_path, motor_name, model)
+        # Default supply voltage from the JSON, used for logs that don't carry vin.
+        self._default_vin = load_model(self._params_path).actuator.vin
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
+        self.integrator = integrator
+
+    # ── Public API (mirrors the reference / CPU simulators) ──────────────────
+
+    def rollout_log(self, log: dict, reset_period: float | None = None) -> tuple:
+        """Roll out a single log. See :meth:`rollout_logs`.
+
+        :returns: Tuple ``(positions, velocities, controls)`` — lists over timesteps.
+        """
+        positions, velocities, controls = self.rollout_logs(
+            [log], reset_period=reset_period
+        )
+        return positions[0], velocities[0], controls[0]
+
+    def rollout_logs(
+        self, logs: list[dict], reset_period: float | None = None
+    ) -> tuple[list, list, list]:
+        """Roll out a batch of logs in parallel — one environment per log.
+
+        All logs must share the same timestep ``dt`` (a single MuJoCo timestep is
+        used for the whole batch) but may otherwise differ in pendulum parameters,
+        firmware gains, initial state, goal trajectory and length. Logs of
+        different lengths are padded (holding the last command) and their outputs
+        trimmed back to their own length.
+
+        :param logs: List of processed log dicts.
+        :param reset_period: If set, re-synchronize each environment's state to its
+            log at this interval [s] (mirrors the reference simulator).
+        :returns: Tuple ``(positions, velocities, controls)`` — each a list (one
+            entry per log) of per-timestep values. ``controls`` are the applied
+            joint torques [Nm] (the BAM actuator drives MuJoCo in motor mode).
+        """
+        n = len(logs)
+        if n == 0:
+            return [], [], []
+
+        dts = {log["dt"] for log in logs}
+        if len(dts) != 1:
+            raise ValueError(
+                f"All logs must share the same dt for the mjlab backend, got {sorted(dts)}"
+            )
+        dt = dts.pop()
+        lengths = [len(log["entries"]) for log in logs]
+        max_len = max(lengths)
+
+        # ── Pre-extract per-step arrays, padded by holding the last command ──
+        goals = np.zeros((max_len, n))
+        torque_en = np.zeros((max_len, n), dtype=bool)
+        log_pos = np.zeros((max_len, n))
+        log_speed = np.zeros((max_len, n))
+        for i, log in enumerate(logs):
+            entries = log["entries"]
+            length = lengths[i]
+
+            def _col(key, default=None):
+                return np.array(
+                    [e.get(key, default) if default is not None else e[key] for e in entries]
+                )
+
+            gi = _col("goal_position")
+            ti = _col("torque_enable")
+            pi = _col("position")
+            si = np.array([e.get("speed", 0.0) for e in entries])
+            goals[:length, i], goals[length:, i] = gi, gi[-1]
+            torque_en[:length, i], torque_en[length:, i] = ti, ti[-1]
+            log_pos[:length, i], log_pos[length:, i] = pi, pi[-1]
+            log_speed[:length, i], log_speed[length:, i] = si, si[-1]
+
+        # ── Build the scene / sim / actuator ─────────────────────────────────
+        scene, sim, entity, bam_act, body_id = self._build(logs[0], n, dt)
+        self._apply_per_env_params(sim, entity, bam_act, body_id, logs)
+
+        dev = self.device
+        f32 = torch.float32
+
+        # ── Reset to each log's first entry ──────────────────────────────────
+        sim.reset()
+        scene.reset()
+        p0 = torch.as_tensor(log_pos[0], dtype=f32, device=dev).unsqueeze(1)
+        v0 = torch.as_tensor(log_speed[0], dtype=f32, device=dev).unsqueeze(1)
+        entity.write_joint_state_to_sim(p0, v0)
+        sim.forward()
+
+        ctrl_ids = bam_act.ctrl_ids
+
+        positions = np.zeros((max_len, n))
+        velocities = np.zeros((max_len, n))
+        controls = np.zeros((max_len, n))
+
+        reset_t = 0.0
+        for k in range(max_len):
+            # Optional periodic re-sync to the log (mirrors the reference sim).
+            reset_t += dt
+            if reset_period is not None and reset_t > reset_period:
+                reset_t = 0.0
+                pk = torch.as_tensor(log_pos[k], dtype=f32, device=dev).unsqueeze(1)
+                vk = torch.as_tensor(log_speed[k], dtype=f32, device=dev).unsqueeze(1)
+                entity.write_joint_state_to_sim(pk, vk)
+                sim.forward()
+
+            positions[k] = entity.data.joint_pos[:, 0].detach().cpu().numpy()
+            velocities[k] = entity.data.joint_vel[:, 0].detach().cpu().numpy()
+
+            goal = torch.as_tensor(goals[k], dtype=f32, device=dev).unsqueeze(1)
+            entity.set_joint_position_target(goal)
+            scene.write_data_to_sim()
+
+            # Zero the applied torque where the log has torque disabled.
+            te = torque_en[k]
+            if not te.all():
+                off = np.nonzero(~te)[0]
+                off_ids = torch.as_tensor(off, dtype=torch.long, device=dev)
+                zeros = torch.zeros((off_ids.numel(), ctrl_ids.numel()), dtype=f32, device=dev)
+                entity.write_ctrl_to_sim(zeros, env_ids=off_ids)
+
+            controls[k] = sim.data.ctrl[:, ctrl_ids][:, 0].detach().cpu().numpy()
+
+            sim.step()
+            scene.update(dt=dt)
+
+        # ── Trim each environment's output back to its own length ────────────
+        out_pos = [list(positions[: lengths[i], i]) for i in range(n)]
+        out_vel = [list(velocities[: lengths[i], i]) for i in range(n)]
+        out_ctrl = [list(controls[: lengths[i], i]) for i in range(n)]
+        return out_pos, out_vel, out_ctrl
+
+    # ── Internals ────────────────────────────────────────────────────────────
+
+    def _build(self, base_log: dict, num_envs: int, dt: float):
+        """Build the scene, sim and actuator for ``num_envs`` pendulums."""
+        bam_cfg = BamActuatorCfg(
+            json_path=self._params_path,
+            target_names_expr=(_JOINT_NAME,),
+            kp_fw=float(base_log["kp"]),
+            vin=base_log.get("vin"),
+        )
+        base = {
+            "mass": base_log["mass"],
+            "arm_mass": base_log.get("arm_mass", 0.0),
+            "length": base_log["length"],
+        }
+        ent_cfg = EntityCfg(
+            spec_fn=lambda: Pendulum(base).build_spec(_JOINT_NAME),
+            articulation=EntityArticulationInfoCfg(actuators=(bam_cfg,)),
+            init_state=EntityCfg.InitialStateCfg(
+                joint_pos={_JOINT_NAME: 0.0}, joint_vel={".*": 0.0}
+            ),
+        )
+        scene = Scene(
+            SceneCfg(num_envs=num_envs, terrain=None, entities={_ENTITY_NAME: ent_cfg}),
+            self.device,
+        )
+        mj_model = scene.compile()
+        sim = Simulation(
+            num_envs=num_envs,
+            cfg=SimulationCfg(
+                mujoco=MujocoCfg(
+                    timestep=dt,
+                    integrator=self.integrator,
+                    gravity=(0.0, 0.0, -Pendulum.G),
+                )
+            ),
+            model=mj_model,
+            device=self.device,
+        )
+        scene.initialize(sim.mj_model, sim.model, sim.data)
+        # BamActuator writes per-env friction; those fields must be per-world.
+        sim.expand_model_fields(
+            ("body_mass", "body_ipos", "body_inertia", "dof_frictionloss", "dof_damping")
+        )
+        entity = scene[_ENTITY_NAME]
+        bam_act = entity.actuators[0]
+        body_id = mj_model.body(f"{_ENTITY_NAME}/{_JOINT_NAME}").id
+        return scene, sim, entity, bam_act, body_id
+
+    def _apply_per_env_params(self, sim, entity, bam_act, body_id, logs):
+        """Inject per-environment pendulum inertial + firmware gains."""
+        dev = self.device
+        f32 = torch.float32
+        n = len(logs)
+
+        masses, coms, inertias = [], [], []
+        for log in logs:
+            pend = Pendulum(
+                {
+                    "mass": log["mass"],
+                    "arm_mass": log.get("arm_mass", 0.0),
+                    "length": log["length"],
+                }
+            )
+            total_mass, com_z, inertia_x = pend.inertial_params()
+            masses.append(total_mass)
+            coms.append(com_z)
+            inertias.append(inertia_x)
+
+        sim.model.body_mass[:, body_id] = torch.as_tensor(masses, dtype=f32, device=dev)
+        ipos = sim.model.body_ipos
+        ipos[:, body_id, 0] = 0.0
+        ipos[:, body_id, 1] = 0.0
+        ipos[:, body_id, 2] = torch.as_tensor(coms, dtype=f32, device=dev)
+        inertia = sim.model.body_inertia
+        it = torch.as_tensor(inertias, dtype=f32, device=dev)
+        inertia[:, body_id, 0] = it
+        inertia[:, body_id, 1] = it
+        inertia[:, body_id, 2] = it
+        # Refresh derived quantities (mass matrix, subtree mass) after mass/inertia edits.
+        sim.recompute_constants(RecomputeLevel.set_const)
+
+        # Firmware: kp via per-env kp_scale (relative to base kp), vin per-env.
+        base_kp = float(logs[0]["kp"])
+        kp_scale = torch.as_tensor(
+            [[float(log["kp"]) / base_kp] for log in logs], dtype=f32, device=dev
+        )
+        bam_act.kp_scale[:] = kp_scale
+        bam_act.default_kp_scale[:] = kp_scale
+        vin = torch.as_tensor(
+            [[float(log.get("vin", self._default_vin))] for log in logs],
+            dtype=f32,
+            device=dev,
+        )
+        bam_act.vin_tensor[:] = vin

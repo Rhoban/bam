@@ -45,6 +45,28 @@ class Pendulum:
         self.arm_mass = log["arm_mass"]
         self.length = log["length"]
 
+    def inertial_params(self) -> tuple[float, float, float]:
+        """Return the MuJoCo body inertial matching the analytic testbench.
+
+        :returns: ``(total_mass, com_z, inertia_x)`` where ``total_mass`` [kg]
+            is the body mass, ``com_z`` [m] the (negative) center-of-mass offset
+            along the downward arm, and ``inertia_x`` [kg·m²] the principal
+            inertia about the center of mass. MuJoCo re-adds ``total_mass *
+            com_z²`` through the COM offset, so the inertia about the pivot stays
+            equal to :meth:`bam.testbench.Pendulum.compute_mass`.
+        """
+        total_mass = self.mass + self.arm_mass
+        # Center of mass along the (downward) arm: rod contributes at l/2, the
+        # tip mass at l.
+        com_z = -(self.mass * self.length + self.arm_mass * self.length / 2.0) / total_mass
+        # Inertia about the pivot, shifted to the COM with the parallel axis theorem.
+        inertia_pivot = self.mass * self.length**2 + (self.arm_mass / 3.0) * self.length**2
+        inertia_com = inertia_pivot - total_mass * com_z**2
+        # A point mass has zero inertia about its own COM, which MuJoCo would
+        # reject; floor it. Only rotation about x (the hinge axis) matters.
+        inertia_x = max(inertia_com, 1e-9)
+        return total_mass, com_z, inertia_x
+
     def build_spec(self, name: str = "pendulum") -> mujoco.MjSpec:
         """Build and return a MuJoCo spec for this pendulum.
 
@@ -115,25 +137,9 @@ class Pendulum:
             axis=[1.0, 0.0, 0.0],
         )
 
-        total_mass = self.mass + self.arm_mass
-
-        # Center of mass along the (downward) arm: rod contributes at l/2, the
-        # tip mass at l.
-        com_z = -(self.mass * length + self.arm_mass * length / 2.0) / total_mass
-
-        # Inertia about the pivot (matches Pendulum.compute_mass), then shifted
-        # to the center of mass with the parallel axis theorem for the spec.
-        inertia_pivot = self.mass * length**2 + (self.arm_mass / 3.0) * length**2
-        inertia_com = inertia_pivot - total_mass * com_z**2
-
+        total_mass, com_z, inertia_x = self.inertial_params()
         body.mass = total_mass
         body.ipos = [0.0, 0.0, com_z]
-        # Only rotation about x (the hinge axis) matters for the 1-DOF dynamics,
-        # and MuJoCo re-adds M*com_z^2 through the COM offset, so the hinge
-        # inertia stays equal to inertia_pivot. We use an isotropic tensor with a
-        # small floor: a point mass has zero inertia about its own COM, which
-        # MuJoCo would reject.
-        inertia_x = max(inertia_com, 1e-9)
         body.inertia = [inertia_x, inertia_x, inertia_x]
 
         # Visual arm: a brown stick (no mass/collision, inertia set explicitly).

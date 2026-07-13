@@ -25,19 +25,34 @@ arg_parser.add_argument(
     "--sim-mujoco",
     dest="sim_mujoco",
     action="store_true",
-    help="Same as --sim but rolls out with the MuJoCo simulator backend",
+    help="Same as --sim but rolls out with the MuJoCo (CPU) simulator backend",
+)
+arg_parser.add_argument(
+    "--sim-mjlab",
+    dest="sim_mjlab",
+    action="store_true",
+    help="Same as --sim but rolls out with the mjlab (MuJoCo Warp / GPU) simulator backend",
 )
 args = arg_parser.parse_args()
 
 # Whether to overlay a simulation, and which backend to use.
-do_sim = args.sim or args.sim_mujoco
-sim_name = "MuJoCo" if args.sim_mujoco else "reference"
+do_sim = args.sim or args.sim_mujoco or args.sim_mjlab
+if args.sim_mujoco:
+    sim_name = "MuJoCo"
+elif args.sim_mjlab:
+    sim_name = "mjlab"
+else:
+    sim_name = "reference"
 
 logs = logs.Logs(args.logdir)
 
 if args.sim_mujoco:
     # Imported lazily so --sim (or no sim) doesn't require MuJoCo.
     from . import mujoco as mujoco_backend
+
+if args.sim_mjlab:
+    # Imported lazily so other backends don't require mjlab.
+    from . import mjlab as mjlab_backend
 
 if do_sim:
     model_names = args.params
@@ -55,6 +70,11 @@ for log in logs.logs:
             all_names.append(model.name)
             if args.sim_mujoco:
                 simulator = mujoco_backend.Simulator(model)
+                sim_q, sim_speed, sim_controls = simulator.rollout_log(
+                    log, reset_period=args.reset_period
+                )
+            elif args.sim_mjlab:
+                simulator = mjlab_backend.Simulator(json_path=model_name)
                 sim_q, sim_speed, sim_controls = simulator.rollout_log(
                     log, reset_period=args.reset_period
                 )

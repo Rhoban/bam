@@ -38,12 +38,18 @@ arg_parser.add_argument("--no-sort", dest="sort", action="store_false")
 arg_parser.add_argument("--json", type=str, default=None,
                         help="Write results to this JSON file instead of plotting")
 arg_parser.add_argument("--mujoco", action="store_true",
-                        help="Use the MuJoCo simulator backend instead of the reference one")
+                        help="Use the MuJoCo (CPU) simulator backend instead of the reference one")
+arg_parser.add_argument("--mjlab", action="store_true",
+                        help="Use the mjlab (MuJoCo Warp / GPU) simulator backend, vectorized over all logs")
 args = arg_parser.parse_args()
 
 if args.mujoco:
     # Imported lazily so the default (reference) backend doesn't require MuJoCo.
     from bam import mujoco as mujoco_backend
+
+if args.mjlab:
+    # Imported lazily so other backends don't require mjlab.
+    from bam import mjlab as mjlab_backend
 
 # ── Load logs ─────────────────────────────────────────────────────────────────
 logs = Logs(args.logdir)
@@ -58,6 +64,11 @@ print(f"Found {len(param_files)} param files: {[p.name for p in param_files]}")
 
 
 # ── MAE computation ───────────────────────────────────────────────────────────
+def _mae(positions, log: dict) -> float:
+    log_positions = np.array([entry["position"] for entry in log["entries"]])
+    return float(np.mean(np.abs(np.array(positions) - log_positions)))
+
+
 def compute_mae(model, log: dict) -> float:
     if args.mujoco:
         simulator = mujoco_backend.Simulator(model)
@@ -67,8 +78,27 @@ def compute_mae(model, log: dict) -> float:
         positions, _, _ = simulator.rollout_log(
             log, reset_period=args.reset_period, simulate_control=True
         )
-    log_positions = np.array([entry["position"] for entry in log["entries"]])
-    return float(np.mean(np.abs(np.array(positions) - log_positions)))
+    return _mae(positions, log)
+
+
+def compute_maes_mjlab(param_file, all_logs: list) -> list:
+    """Vectorized MAEs for one param file over all logs, using the mjlab GPU backend.
+
+    Logs are grouped by ``dt`` (a batch must share a single MuJoCo timestep) and
+    each group is rolled out in a single parallel ``rollout_logs`` call.
+    """
+    simulator = mjlab_backend.Simulator(json_path=str(param_file))
+    groups: dict[float, list[int]] = {}
+    for i, log in enumerate(all_logs):
+        groups.setdefault(log["dt"], []).append(i)
+
+    maes: list[float | None] = [None] * len(all_logs)
+    for indices in groups.values():
+        batch = [all_logs[i] for i in indices]
+        positions, _, _ = simulator.rollout_logs(batch, reset_period=args.reset_period)
+        for j, i in enumerate(indices):
+            maes[i] = _mae(positions[j], all_logs[i])
+    return maes
 
 
 results = {}  # name → list of per-log MAEs
@@ -82,9 +112,10 @@ for param_file in param_files:
     label = param_file.stem  # e.g. "m6", "m4", ...
     print(f"  {label:30s}", end="", flush=True)
 
-    maes = []
-    for log in logs.logs:
-        maes.append(compute_mae(model, log))
+    if args.mjlab:
+        maes = compute_maes_mjlab(param_file, logs.logs)
+    else:
+        maes = [compute_mae(model, log) for log in logs.logs]
 
     mean_mae = float(np.mean(maes))
     std_mae  = float(np.std(maes))
