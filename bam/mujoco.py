@@ -9,7 +9,9 @@
 import numpy as np
 import mujoco
 import json
+from copy import copy
 from .model import Model, load_model_from_dict
+from .testbench_mujoco import Pendulum
 
 
 class MujocoController:
@@ -179,6 +181,181 @@ class MujocoController:
         # Updating damping and frictionloss
         self.mujoco_model.dof_frictionloss[self.dof_indexes] = frictionloss
         self.mujoco_model.dof_damping[self.dof_indexes] = damping
+
+class Simulator:
+    """MuJoCo mirror of :class:`bam.simulate.Simulator`.
+
+    Rolls out a BAM model against the same testbench, but uses MuJoCo physics
+    (from :class:`bam.testbench_mujoco.Pendulum`) instead of the hand-written
+    Euler integrator, with the actuator driven by a :class:`MujocoController`.
+
+    Vectorization is handled the naive way: one independent ``(MjModel, MjData,
+    MujocoController)`` triplet is created per environment and they are ticked
+    one by one. This is intentionally not efficient — the point of this
+    simulator is to validate that the MuJoCo spec and the controller reproduce
+    the reference simulation.
+
+    :param model: BAM friction model to simulate.
+    :param actuator: Name used for the hinge joint and the motor actuator in
+        the generated spec (and the name the :class:`MujocoController` controls).
+    """
+
+    def __init__(self, model: Model, actuator: str = "pendulum"):
+        self.model = model
+        self.actuator = actuator
+        # One entry per environment: (mujoco_model, mujoco_data, controller)
+        self.instances: list[tuple] = []
+        self.t = 0.0
+
+    def _build_spec(self) -> mujoco.MjSpec:
+        testbench = self.model.actuator.testbench
+        if testbench is None:
+            raise RuntimeError(
+                "No testbench set on the actuator. Call model.actuator.load_log(log) "
+                "(or set model.actuator.testbench) before building the simulator."
+            )
+        pendulum = Pendulum(
+            {
+                "mass": testbench.mass,
+                "arm_mass": testbench.arm_mass,
+                "length": testbench.length,
+            }
+        )
+        return pendulum.build_spec(self.actuator)
+
+    def reset(self, q: float = 0.0, dq: float = 0.0):
+        """(Re)build the environments and reset them to a given state.
+
+        ``q`` and ``dq`` may be scalars or arrays; the number of environments is
+        the length of the (broadcast) inputs.
+
+        :param q: Initial joint angle(s) [rad].
+        :param dq: Initial joint velocity(ies) [rad/s].
+        """
+        q = np.atleast_1d(np.asarray(q, dtype=float))
+        dq = np.atleast_1d(np.asarray(dq, dtype=float))
+        n = max(len(q), len(dq))
+        q = np.broadcast_to(q, (n,))
+        dq = np.broadcast_to(dq, (n,))
+
+        self.model.reset()
+        spec = self._build_spec()
+
+        self.instances = []
+        for i in range(n):
+            mujoco_model = spec.compile()
+            mujoco_data = mujoco.MjData(mujoco_model)
+            controller = MujocoController(
+                self.model, self.actuator, mujoco_model, mujoco_data
+            )
+            mujoco_data.qpos[controller.qpos_indexes] = q[i]
+            mujoco_data.qvel[controller.dof_indexes] = dq[i]
+            mujoco.mj_forward(mujoco_model, mujoco_data)
+            controller.reset(mujoco_data.qpos)
+            self.instances.append((mujoco_model, mujoco_data, controller))
+
+        self.t = 0.0
+
+    def _pack(self, values: list):
+        """Return a scalar for a single environment, else a numpy array."""
+        if len(values) == 1:
+            return values[0]
+        return np.array(values)
+
+    @property
+    def q(self):
+        """Current joint angle(s) [rad] (scalar if a single environment)."""
+        return self._pack(
+            [data.qpos[ctrl.qpos_indexes][0] for _, data, ctrl in self.instances]
+        )
+
+    @property
+    def dq(self):
+        """Current joint velocity(ies) [rad/s] (scalar if a single environment)."""
+        return self._pack(
+            [data.qvel[ctrl.dof_indexes][0] for _, data, ctrl in self.instances]
+        )
+
+    def step(self, goal_position, torque_enable, dt: float):
+        """Advance every environment by one timestep.
+
+        Unlike :meth:`bam.simulate.Simulator.step` (which is fed a raw control
+        signal), the actuator here is a position controller: the input is the
+        goal position and the :class:`MujocoController` computes the control and
+        the applied torque internally.
+
+        :param goal_position: Target joint angle(s) [rad], scalar or per-environment.
+        :param torque_enable: Whether the actuator is powered (scalar or per-env).
+            When ``False`` the applied torque is zeroed and only gravity and
+            friction act.
+        :param dt: Timestep [s].
+        """
+        goal_position = np.broadcast_to(
+            np.atleast_1d(np.asarray(goal_position, dtype=float)),
+            (len(self.instances),),
+        )
+        torque_enable = np.broadcast_to(
+            np.atleast_1d(np.asarray(torque_enable)), (len(self.instances),)
+        )
+
+        for i, (mujoco_model, mujoco_data, controller) in enumerate(self.instances):
+            mujoco_model.opt.timestep = dt
+            controller.set_q_target(self.actuator, goal_position[i])
+            controller.update()
+            if not torque_enable[i]:
+                mujoco_data.ctrl[controller.act_indexes] = 0.0
+            mujoco.mj_step(mujoco_model, mujoco_data)
+
+        self.t += dt
+
+    def rollout_log(self, log: dict, reset_period: float = None):
+        """Roll out the model against a recorded log and return predicted trajectories.
+
+        Mirrors :meth:`bam.simulate.Simulator.rollout_log`, but drives the
+        actuator through the :class:`MujocoController` (position control from the
+        recorded ``goal_position``), so it is equivalent to the reference
+        simulator's ``simulate_control=True`` mode.
+
+        :param log: Processed log dict (see :meth:`bam.logs.Logs.make_batch`).
+        :param reset_period: If set, re-synchronize the state to the log at this
+            interval [s].
+        :returns: Tuple ``(positions, velocities, controls)`` — lists of values
+            at each timestep. ``controls`` are the voltages/currents computed by
+            the controller.
+        """
+        positions = []
+        velocities = []
+        controls = []
+
+        dt = log["dt"]
+        self.model.actuator.load_log(log)
+
+        first_entry = log["entries"][0]
+        self.reset(
+            first_entry["position"],
+            first_entry["speed"] if "speed" in first_entry else 0.0,
+        )
+
+        reset_period_t = 0.0
+        for entry in log["entries"]:
+            reset_period_t += dt
+            if reset_period is not None and reset_period_t > reset_period:
+                reset_period_t = 0.0
+                self.reset(entry["position"], entry["speed"])
+
+            positions.append(copy(self.q))
+            velocities.append(copy(self.dq))
+
+            # Control recomputed the same way the controller does, for reference.
+            control = self.model.actuator.compute_control(
+                entry["goal_position"], self.q, self.dq, dt
+            )
+            controls.append(copy(control))
+
+            self.step(entry["goal_position"], entry["torque_enable"], dt)
+
+        return positions, velocities, controls
+
 
 def load_config(
     path: str,

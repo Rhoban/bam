@@ -21,11 +21,25 @@ arg_parser.add_argument("--params", type=str, default=["params.json"], nargs="+"
 arg_parser.add_argument("--actuator", type=str, required=True)
 arg_parser.add_argument("--reset_period", default=None, type=float)
 arg_parser.add_argument("--sim", action="store_true")
+arg_parser.add_argument(
+    "--sim-mujoco",
+    dest="sim_mujoco",
+    action="store_true",
+    help="Same as --sim but rolls out with the MuJoCo simulator backend",
+)
 args = arg_parser.parse_args()
+
+# Whether to overlay a simulation, and which backend to use.
+do_sim = args.sim or args.sim_mujoco
+sim_name = "MuJoCo" if args.sim_mujoco else "reference"
 
 logs = logs.Logs(args.logdir)
 
-if args.sim:
+if args.sim_mujoco:
+    # Imported lazily so --sim (or no sim) doesn't require MuJoCo.
+    from . import mujoco as mujoco_backend
+
+if do_sim:
     model_names = args.params
 
 for log in logs.logs:
@@ -35,14 +49,20 @@ for log in logs.logs:
     all_sim_controls = []
     all_names = []
 
-    if args.sim:
+    if do_sim:
         for model_name in model_names:
             model = load_model(model_name)
             all_names.append(model.name)
-            simulator = simulate.Simulator(model)
-            sim_q, sim_speed, sim_controls = simulator.rollout_log(
-                log, reset_period=args.reset_period, simulate_control=True
-            )
+            if args.sim_mujoco:
+                simulator = mujoco_backend.Simulator(model)
+                sim_q, sim_speed, sim_controls = simulator.rollout_log(
+                    log, reset_period=args.reset_period
+                )
+            else:
+                simulator = simulate.Simulator(model)
+                sim_q, sim_speed, sim_controls = simulator.rollout_log(
+                    log, reset_period=args.reset_period, simulate_control=True
+                )
             all_sim_q.append(np.array(sim_q))
             all_sim_speeds.append(np.array(sim_speed))
             all_sim_controls.append(np.array(sim_controls))
@@ -67,7 +87,7 @@ for log in logs.logs:
 
     ax1.plot(ts, q, label="q")
     ax1.plot(ts, goal_q, label="goal_q", color="black", linestyle="--")
-    if args.sim:
+    if do_sim:
         for model_name, sim_q in zip(all_names, all_sim_q):
             ax1.plot(ts, sim_q, label=f"{model_name}_q")
     ax1.legend()
@@ -81,7 +101,7 @@ for log in logs.logs:
 
     if has_speed:
         ax2.plot(ts, speed, label="speed")
-        if args.sim:
+        if do_sim:
             for model_name, sim_speeds in zip(all_names, all_sim_speeds):
                 ax2.plot(ts, sim_speeds, label=f"{model_name}_speed")
         ax2.set_ylabel("speed [rad/s]")
@@ -90,7 +110,7 @@ for log in logs.logs:
 
     # Using torque_enable color piecewise
     ax3.plot(ts, controls, label=dummy.actuator.control_unit())
-    if args.sim:
+    if do_sim:
         for model_name, sim_controls in zip(all_names, all_sim_controls):
             ax3.plot(
                 ts,
@@ -109,7 +129,10 @@ for log in logs.logs:
     )
     ax3.set_ylabel(f"{dummy.actuator.control_unit()}")
     ax3.legend()
-    plt.xlabel("time [s]")
+    if do_sim:
+        plt.xlabel(f"time [s] / simulator: {sim_name}")
+    else:
+        plt.xlabel("time [s]")
 
     plt.grid()
     plt.show()
