@@ -7,7 +7,7 @@ from the real one, especially around low-speed motion, static equilibrium, and b
 limits. This matters in particular for reinforcement learning, where having inaccurate 
 simulations can lead to policies that fail to transfer to the real world.
 
-From that perspective, BAM (Better Actuator Models) follows a simple idea: start from trajectories
+From that perspective, `BAM <https://github.com/Rhoban/bam>`_ (Better Actuator Models) follows a simple idea: start from trajectories
 recorded on a pendulum test bench, identify a physically interpretable friction
 model, and reuse the result directly in simulation engines.
 

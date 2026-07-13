@@ -1,99 +1,67 @@
 Hardware Setup
 ==============
 
-BAM's identification pipeline requires a single-axis pendulum test bench. The
-actuator drives a pendulum arm; gravity provides a natural, controllable load
-that depends on the arm's angle and mass distribution. Recording the resulting
-trajectories is enough to identify both the motor model and the friction model.
+BAM's identification pipeline requires a pendulum test bench with variable 
+loads and lengths to increase the variety of the collected logs. The pendulum 
+is attached directly to the actuator's output shaft, optionally using a 
+counter-shaft when the actuator supports it.
 
-Pendulum geometry
------------------
+  To present the identification process, the Dynamixel XL-330 motor is used as 
+  a case study. The instructions are similar for other actuators, adjusting only 
+  for the mass and length parameters.
 
-.. code-block:: text
+Requirements
+------------
 
-         pivot (actuator)
-              |
-              | length l
-              |
-           [mass m]
+The hardware required for the identification process is as follows:
 
-- The arm is attached directly to the actuator output shaft, with no
-  intermediate gearbox or coupling.
-- The zero angle is defined as the arm pointing **downward** (stable
-  equilibrium). Positive angles are measured counter-clockwise.
-- The pendulum can swing freely on both sides up to roughly ±π/2.
+- **A set of rigid arms of varying lengths**.
 
-The gravity torque at angle :math:`\theta` is:
+  The mass of the arms should be negligible compared to the attached loads.
+  Therefore, it is recommended to use 3D-printed or laser-cut wooden arms for
+  smaller motors handling light loads, and to reserve metal arms for more
+  powerful motors.
 
-.. math::
+- **A set of weights compatible with the arms**.
 
-   \tau_e(\theta) = (m + m_\text{arm}/2)\, g\, l\, \sin(\theta)
+  The masses must be heavy enough to generate a wide range of load torques.
 
-where :math:`m` is the load mass, :math:`m_\text{arm}` is the arm mass, and
-:math:`l` is the arm length. These three values must be measured and passed to
-the recording scripts.
+- **A mounting bracket for the actuator**.
 
-Bill of materials
------------------
+  The setup must ensure that the actuator remains firmly secured during data
+  logging, despite the fast movements of the weights at the end of the arm. The
+  arm-weight assemblies must have sufficient clearance to oscillate between
+  +/- 90° relative to the vertical position.
 
-- The actuator to identify, mounted rigidly on a fixed frame.
-- A pendulum arm (rod or profile) attached to the output shaft.
-- A calibrated load mass fixed at the end of the arm.
-- A scale to measure :math:`m` and :math:`m_\text{arm}` precisely.
-- A ruler or caliper to measure :math:`l` (pivot to center of mass).
-- A power supply set to the target voltage.
-- A USB-to-serial adapter (Dynamixel / Feetech) or an EtherBan interface (eRob).
+- **A communication interface for the actuator**.
 
-Supported actuators
--------------------
+Once the hardware is gathered, you must record the mass of the weights as well 
+as the length and mass of the arms. These parameters are mandatory for the identification process.
 
-The following actuators have bundled recording scripts and pre-identified
-parameter files:
+Example: Dynamixel XL-330
+-------------------------
 
-.. list-table::
-   :header-rows: 1
-   :widths: 20 15 15 50
+Here is an example of a test bench for the Dynamixel XL-330 actuator. 
+The pendulum arms are 3D printed; you can refer to the 3D model for inspiration 
+`here <https://cad.onshape.com/documents/c132b33797dc72aa58be8a7c/v/d9921c19039fee61b5e51bba/e/8e6b266057c61625732fd9b0?renderMode=0&uiState=6a447ab873e2fce629279db5>`_.
 
-   * - Motor
-     - Bus
-     - Default Vin
-     - Notes
-   * - ``mx64``
-     - Dynamixel TTL
-     - 15 V
-     -
-   * - ``mx106``
-     - Dynamixel TTL
-     - 15 V
-     -
-   * - ``xl320``
-     - Dynamixel TTL
-     - 7.5 V
-     -
-   * - ``xl330``
-     - Dynamixel TTL
-     - 7.5 V
-     -
-   * - ``erob80_50``
-     - EtherBan
-     - 48 V
-     - Reduction 1:50
-   * - ``erob80_100``
-     - EtherBan
-     - 48 V
-     - Reduction 1:100
-   * - ``sts3215``
-     - Feetech TTL
-     - 7.4 V
-     -
+.. image:: /_static/hardware_1.png
+   :width: 80%
+   :align: center
+   :alt: 3D-printed pendulum test bench for the Dynamixel XL-330
 
-Mechanical recommendations
---------------------------
+The interface with the actuator is established using a U2D2 kit.
 
-- Keep the arm as light and stiff as possible to reduce parasitic modes.
-- The load mass should be large enough to excite a range of load torques, but
-  small enough that the actuator can move it across the full ±π/2 range.
-- Make sure the arm is level at the zero position before recording, to avoid
-  a systematic angle offset that would corrupt the gravity term. The fitting
-  pipeline includes a ``q_offset`` parameter to absorb small calibration
-  errors, but a large offset degrades identifiability.
+.. image:: /_static/hardware_2.png
+   :width: 80%
+   :align: center
+   :alt: U2D2 communication interface
+
+The complete setup is shown below. The pendulum is attached to the
+actuator's output shaft, and the masses are fixed to the end of the
+pendulum arm.
+
+.. image:: /_static/hardware_3.png
+   :width: 80%
+   :align: center
+   :alt: Complete Dynamixel XL-330 test bench setup

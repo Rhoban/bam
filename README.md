@@ -24,7 +24,7 @@ The friction model generally implemented in widely used simulators like MuJoCo o
 
 ## 📖 Documentation
 
-Please refer to the [documentation](https://TODO-REPLACE-WITH-DOCUMENTATION-URL) for more details on how to use BAM and the provided friction models.
+Please refer to the [documentation](https://bam.readthedocs.io/en/latest/) for more details on how to use BAM and the provided friction models.
 
 ## 📚 Citation
 

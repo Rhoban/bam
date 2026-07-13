@@ -6,3 +6,16 @@
 h1, h2 {
   letter-spacing: 0.01em;
 }
+
+/* Add breathing room above and below content images */
+.bd-article img {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* Center the left (trajectory name) column of the trajectories table */
+.traj-table td:first-child,
+.traj-table th:first-child {
+  text-align: center;
+  vertical-align: middle;
+}

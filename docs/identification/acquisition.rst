@@ -2,156 +2,131 @@ Data Acquisition
 ================
 
 Recording consists of running the actuator through a set of predefined
-trajectories while logging position, velocity, and control signals at the
-firmware's native rate. The result is a collection of JSON files that are
-then resampled to a fixed timestep before fitting.
+trajectories while logging position, velocity, and control signals. The 
+trajectories are played with different P-gain values and with each 
+mass/length combination. The resulting data is then processed to a fixed
+timestep and stored in a structured format for later use in the identification
+pipeline. 
+
 
 Installation
 ------------
 
-To install the dependencies for data acquisition, you need to install the full
-project using ``uv`` (`installation instructions <https://docs.astral.sh/uv/getting-started/installation/>`_):
+First, you need to clone the `BAM repository <https://github.com/Rhoban/bam>`_.
 
-.. code-block:: bash
+Then, install the extra dependencies for the identification pipeline using 
+``uv`` (`installation instructions <https://docs.astral.sh/uv/getting-started/installation/>`_):
 
-   uv sync
+.. code-block:: text
 
-Available trajectories
+   uv sync --extra identification
+
+Trajectories
 ----------------------
 
-Each trajectory runs for 6 seconds. The choice of trajectory affects which
-friction regimes are excited; using several is recommended.
+The trajectories are designed to excite different friction regimes. 
+Each trajectory runs for 6 seconds.
 
 .. list-table::
    :header-rows: 1
    :widths: 20 80
+   :class: traj-table
 
    * - Name
      - Description
    * - ``sin_time_square``
      - :math:`\sin(t^2)` profile — progressively faster oscillations, good
        general-purpose trajectory that covers a wide velocity range.
+
+       |traj_sin_time_square|
    * - ``lift_and_drop``
      - Cubic move to −π/2 over 2 s, then torque disabled — the arm falls
        under gravity. Particularly useful for identifying backdrivability and
        Stribeck effects at very low speed.
+
+       |traj_lift_and_drop|
    * - ``up_and_down``
      - Cubic path 0 → π/2 → 0.8·π/2 — slower motion, emphasizes static
        friction and load-dependent effects.
+
+       |traj_up_and_down|
    * - ``sin_sin``
      - :math:`\sin(t)\cdot\pi/2 + \sin(5t)\cdot 0.5\cdot\sin(2t)` — rich
        multi-frequency content.
-   * - ``nothing``
-     - Zero torque command for the full duration — pure gravity response,
-       useful to isolate backdrivability.
 
-Recording scripts
------------------
+       |traj_sin_sin|
 
-Dynamixel (MX-64, MX-106, XL-320, XL-330)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. |traj_sin_time_square| image:: /_static/traj_sin_time_square.png
+   :width: 100%
+   :alt: sin_time_square trajectory
+.. |traj_lift_and_drop| image:: /_static/traj_lift_and_drop.png
+   :width: 100%
+   :alt: lift_and_drop trajectory
+.. |traj_up_and_down| image:: /_static/traj_up_and_down.png
+   :width: 100%
+   :alt: up_and_down trajectory
+.. |traj_sin_sin| image:: /_static/traj_sin_sin.png
+   :width: 100%
+   :alt: sin_sin trajectory
 
-.. code-block:: bash
+Recording
+---------
 
-   uv run python -m bam.dynamixel.record \
+BAM already ships with support for several actuators (the ones whose models
+are provided in the library), and is designed to be extended with new ones.
+Each manufacturer is implemented in its own package under
+``bam/<manufacturer>/``, exposing the same small interface. To record your own
+actuator, you therefore either:
+
+- **extend an existing manufacturer package** if your motor's brand is already
+  supported — simply add your actuator class (for example a new Dynamixel
+  model in ``bam/dynamixel/``); or
+- **create a new** ``bam/<manufacturer>/`` **package** if your manufacturer is
+  not supported yet.
+
+Each manufacturer package is made of three modules:
+
+- ``actuator.py`` — the only hardware-specific part. It handles the
+  communication with the motor: reading position, speed and load, and sending
+  position or current commands. Your actuator class subclasses the base
+  classes provided in :mod:`bam.actuator`.
+- ``record.py`` — plays the trajectories on the motor and logs the resulting
+  data to JSON. It adapts the generic trajectories to the motor when needed
+  (for instance, scaling the velocity to stay within the actuator's limits).
+- ``all_record.py`` — a convenience script that runs a full recording session
+  for a given mass/arm configuration, automatically sweeping over all the
+  P-gain values.
+
+When writing your own package, the existing ``bam/dynamixel/`` implementation
+is a good reference to draw inspiration from.
+
+Once these modules are written, recording should be done using the following command:
+
+.. code-block:: text
+
+   uv run python -m bam.<manufacturer>.all_record \
        --port /dev/ttyUSB0 \
-       --motor xl330 \
-       --mass 0.567 \
-       --arm-mass 0.016 \
-       --length 0.17 \
-       --kp 400 \
+       --motor motor_name \
+       --mass 0.5 \
+       --arm-mass 0.02 \
+       --length 0.15 \
        --vin 7.5 \
-       --trajectory sin_time_square \
        --logdir data_raw
 
-``--port`` defaults to ``/dev/ttyUSB0``. ``--kp`` and ``--vin`` should match
-the values actually programmed in the firmware.
+with each length/mass combination. Don't forget to update the mass, length, and arm mass 
+parameters for each recording. 
 
-eRob (erob80\_50, erob80\_100)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. warning::
 
-eRob actuators are driven through an EtherBan server, which must be running
-before recording. The communication relies on generated protobuf bindings,
-so first compile the ``.proto`` files:
+   The P-gain values used in the ``<manufacturer>/record.py`` file are 
+   manufacturer-specific and must be adapted to your motor based on the 
+   manufacturer's specifications: a gain that is meaningful for one firmware 
+   may be far too high or too low for another.
 
-.. code-block:: bash
-
-   cd bam/erob/
-   bash generate_protobuf.sh
-
-You can then monitor the connected devices, which also reports the angular
-offset to use for the zero position:
-
-.. code-block:: bash
-
-   uv run python -m bam.erob.etherban
-
-Pass that value to ``--offset`` when recording:
-
-.. code-block:: bash
-
-   uv run python -m bam.erob.record \
-       --host 127.0.0.1 \
-       --motor erob80_100 \
-       --mass 1.2 \
-       --arm_mass 0.05 \
-       --length 0.25 \
-       --offset 0.0 \
-       --kp 10.0 \
-       --damping 2.0 \
-       --trajectory sin_time_square \
-       --logdir data_raw
-
-``--offset`` is the angular offset of the zero position in radians, used to
-compensate for mounting imprecision.
-
-Feetech (STS3215)
-~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   uv run python -m bam.feetech.record \
-       --port /dev/ttyUSB0 \
-       --id 1 \
-       --motor sts3215 \
-       --mass 0.3 \
-       --length 0.12 \
-       --kp 32 \
-       --vin 7.4 \
-       --trajectory sin_time_square \
-       --logdir data_raw
-
-Batch recording
-~~~~~~~~~~~~~~~
-
-To sweep multiple P-gain values and trajectories in one go:
-
-.. code-block:: bash
-
-   uv run python -m bam.dynamixel.all_record \
-       --port /dev/ttyUSB0 \
-       --motor xl330 \
-       --mass 0.567 \
-       --arm-mass 0.016 \
-       --length 0.17 \
-       --logdir data_raw
-
-This produces several files per combination and is the recommended starting
-point for a complete identification run.
-
-Recording strategy
-------------------
-
-Vary the P-gain across several values (e.g. 8, 16, 32 for Dynamixel). A
-higher gain increases the motor torque during tracking errors, exciting
-stronger load-dependent friction. One of these gain values should be set
-aside as a **validation set** (see :doc:`fitting`); the others form the
-training set.
-
-Record at least two or three different trajectories to cover a broad range
-of velocities and load conditions. The ``lift_and_drop`` trajectory is
-especially informative for identifying Stribeck and backdrive behavior, and
-should always be included.
+   To determine the appropriate P-gain values for your actuator, you can 
+   take the default P-gain value ``kp`` given by the manufacturer and test 
+   [kp/6, kp/4, kp/2, kp].
+   
 
 Raw data format
 ---------------
@@ -161,12 +136,12 @@ Each recording produces one JSON file:
 .. code-block:: json
 
    {
-     "mass": 0.567,
-     "arm_mass": 0.016,
-     "length": 0.17,
-     "kp": 400,
+     "mass": 0.5,
+     "arm_mass": 0.02,
+     "length": 0.15,
+     "kp": 50,
      "vin": 7.5,
-     "motor": "xl330",
+     "motor": "motor_name",
      "trajectory": "sin_time_square",
      "entries": [
        {
@@ -177,7 +152,8 @@ Each recording produces one JSON file:
          "input_volts": 7.5,
          "goal_position": 0.0,
          "torque_enable": true
-       }
+       },
+       ...
      ]
    }
 
@@ -200,14 +176,14 @@ Processing
 
 Resample raw logs to a constant timestep before fitting:
 
-.. code-block:: bash
+.. code-block:: text
 
    uv run python -m bam.process \
        --raw data_raw \
        --logdir data_processed \
        --dt 0.005
 
-``--dt`` is the target timestep in seconds (5 ms is a good default). The
+``--dt`` is the target timestep in seconds. The
 script linearly interpolates between consecutive entries and writes one
 processed JSON per raw file into ``data_processed/``.
 
@@ -221,3 +197,45 @@ You can plot the processed data using the following command:
    uv run python -m bam.plot \
        --actuator xl330 \
        --logdir data_processed 
+       
+Example: Dynamixel XL-330
+-------------------------
+
+The Dynamixel XL-330 is supported through the ``bam/dynamixel/``
+package. The physical test bench used for this motor is shown in
+:doc:`setup`.
+
+To record a full session for a 0.567 kg weight at the tip of a 0.17 m 
+arm weighing 0.016 kg, the following command is used:
+
+.. code-block:: text
+
+   uv run python -m bam.dynamixel.all_record \
+       --port /dev/ttyUSB0 \
+       --motor xl330 \
+       --mass 0.567 \
+       --arm-mass 0.016 \
+       --length 0.17 \
+       --vin 7.5 \
+       --logdir data_raw
+
+For the XL-330, ``all_record`` automatically sweeps the five P-gain values
+``[50, 100, 200, 300, 400]`` over the four trajectories, producing 20
+recordings in ``data_raw/``. By repeating the command for each mass/length 
+combination presented in :doc:`setup`, a complete dataset of 240 6s recordings is obtained.
+
+The video below shows the four trajectories being played on the XL-330 for a
+single P-gain value:
+
+.. raw:: html
+
+   <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0 2rem;">
+     <iframe src="https://www.youtube.com/embed/sWn3lr7Sf4I"
+             title="XL-330 trajectory acquisition"
+             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+             allowfullscreen></iframe>
+   </div>
+
+Once all sessions are recorded, the raw data are then processed into a fixed timestep as shown
+above.
