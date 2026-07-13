@@ -32,10 +32,18 @@ arg_parser.add_argument("--logdir", type=str, required=True,
                         help="Directory containing log files")
 arg_parser.add_argument("--reset_period", type=float, default=None,
                         help="Reset period for simulation rollouts (s)")
-arg_parser.add_argument("--sort", action="store_true", default=True,
-                        help="Sort bars by MAE (default: True)")
+arg_parser.add_argument("--sort", action="store_true", default=False,
+                        help="Sort bars by MAE (default: keep evaluation order)")
 arg_parser.add_argument("--no-sort", dest="sort", action="store_false")
+arg_parser.add_argument("--json", type=str, default=None,
+                        help="Write results to this JSON file instead of plotting")
+arg_parser.add_argument("--mujoco", action="store_true",
+                        help="Use the MuJoCo simulator backend instead of the reference one")
 args = arg_parser.parse_args()
+
+if args.mujoco:
+    # Imported lazily so the default (reference) backend doesn't require MuJoCo.
+    from bam import mujoco as mujoco_backend
 
 # ── Load logs ─────────────────────────────────────────────────────────────────
 logs = Logs(args.logdir)
@@ -51,10 +59,14 @@ print(f"Found {len(param_files)} param files: {[p.name for p in param_files]}")
 
 # ── MAE computation ───────────────────────────────────────────────────────────
 def compute_mae(model, log: dict) -> float:
-    simulator = simulate.Simulator(model)
-    positions, _, _ = simulator.rollout_log(
-        log, reset_period=args.reset_period, simulate_control=True
-    )
+    if args.mujoco:
+        simulator = mujoco_backend.Simulator(model)
+        positions, _, _ = simulator.rollout_log(log, reset_period=args.reset_period)
+    else:
+        simulator = simulate.Simulator(model)
+        positions, _, _ = simulator.rollout_log(
+            log, reset_period=args.reset_period, simulate_control=True
+        )
     log_positions = np.array([entry["position"] for entry in log["entries"]])
     return float(np.mean(np.abs(np.array(positions) - log_positions)))
 
@@ -80,25 +92,51 @@ for param_file in param_files:
     print(f"MAE = {mean_mae*1000:.2f} ± {std_mae*1000:.2f} mrad")
 
 
-# ── Bar plot ──────────────────────────────────────────────────────────────────
-labels = list(results.keys())
-means  = np.array([results[k]["mean"] for k in labels]) * 1000   # → mrad
-stds   = np.array([results[k]["std"]  for k in labels]) * 1000
+# ── JSON output ───────────────────────────────────────────────────────────────
+if args.json is not None:
+    with open(args.json, "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"Wrote results for {len(results)} models to {args.json}")
+    raise SystemExit(0)
+
+
+# ── Box plot ──────────────────────────────────────────────────────────────────
+labels  = list(results.keys())
+per_log = [np.array(results[k]["per_log"]) * 1000 for k in labels]   # → mrad
+means   = np.array([results[k]["mean"] for k in labels]) * 1000
+medians = np.array([np.median(d) for d in per_log])
 
 if args.sort:
-    order  = np.argsort(means)
-    labels = [labels[i] for i in order]
-    means  = means[order]
-    stds   = stds[order]
+    order   = np.argsort(means)
+    labels  = [labels[i] for i in order]
+    per_log = [per_log[i] for i in order]
+    means   = means[order]
+    medians = medians[order]
 
 fig, ax = plt.subplots(figsize=(max(6, len(labels) * 0.9 + 1), 5))
-bars = ax.bar(labels, means, yerr=stds, capsize=4,
-              color="steelblue", edgecolor="black", linewidth=0.7)
+positions = np.arange(1, len(labels) + 1)
+bp = ax.boxplot(
+    per_log,
+    positions=positions,
+    widths=0.6,
+    showmeans=True,
+    meanline=True,
+    patch_artist=True,
+    medianprops=dict(color="black"),
+    meanprops=dict(color="firebrick", linestyle="--"),
+)
+for patch in bp["boxes"]:
+    patch.set_facecolor("steelblue")
+    patch.set_alpha(0.6)
+    patch.set_edgecolor("black")
+    patch.set_linewidth(0.7)
 
-for bar, val, std in zip(bars, means, stds):
-    ax.text(bar.get_x() + bar.get_width() / 2, val + std + 0.3,
-            f"{val:.1f}", ha="center", va="bottom", fontsize=8)
+# Custom annotation: median MAE next to each box, at the median line's level.
+for pos, median in zip(positions, medians):
+    ax.text(pos + 0.35, median, f"{median:.1f}",
+            ha="left", va="center", fontsize=8, color="black")
 
+ax.set_xticks(positions, labels)
 ax.set_ylabel("MAE [mrad]")
 ax.set_xlabel("Model")
 ax.set_title(f"Model comparison — {len(logs.logs)} logs from {Path(args.logdir).name}")
