@@ -17,18 +17,26 @@ mjlab together with mujoco, mujoco-warp and torch:
 
 BAM is compatible with mjlab 1.3.
 
+Registering the BAM init event
+------------------------------
 
-Overview
---------
+First, be sure to register the ``bam_init`` function as a startup event in your environment:
+
+.. code-block:: python
+
+    from bam.mjlab import bam_init
+
+    # cfg is your mjlab task configuration
+    cfg.events["bam_init"] = EventTermCfg(func=bam_init, mode="startup")
+
+Instantiating the config
+------------------------
 
 :class:`~bam.mjlab.BamActuatorCfg` is a dataclass that plugs into mjlab's
 actuator system. When an ``Entity`` is built, it instantiates a
 :class:`~bam.mjlab.BamActuator` that runs the full BAM pipeline — voltage
 control law, DC motor torque, and BAM friction budget — fully vectorized
 over all parallel environments via PyTorch tensors.
-
-Instantiating the config
--------------------------
 
 Two approaches are available, mutually exclusive:
 
