@@ -15,15 +15,15 @@ Features
 --------
 
 - :doc:`Pre-identified friction models <usage/actuators>` for common servo-actuators (e.g., XL320, XL330, MX64, MX106...)
-- :doc:`API for direct integration of friction models <usage/index>` into MuJoCo CPU and mjlab (MuJoCo Warp)
-- **Extended friction models**, including Stribeck effect, load-dependance
-- **Instructions and process to identify** servo-actuator with friction models
+- **API for direct integration of friction models** into :doc:`MuJoCo CPU <usage/mujoco_cpu>` and :doc:`mjlab (MuJoCo Warp) <usage/mjlab_gpu>`
+- :doc:`Extended friction models <theory/index>`, including Stribeck effect, load-dependance
+- :doc:`Instructions and process to identify <identification/index>` servo-actuator with friction models
 
 Getting started
 ---------------
 
 **Your motor is in the bundled library** (``xl320``, ``xl330``, ``mx64``,
-``mx106``, ``erob80:50``, ``erob80:100``) — load the parameters and plug them into
+``mx106``, ...`) — load the parameters and plug them into
 your MuJoCo or mjlab simulation right away. Head to :doc:`usage/index`.
 
 **Your motor is not in the library** — you will need to build a simple pendulum
