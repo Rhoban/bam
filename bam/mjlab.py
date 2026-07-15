@@ -225,7 +225,6 @@ class BamActuator(Actuator):
 
         self.vin_tensor: torch.Tensor | None = None
         self.vin_drop_gain: torch.Tensor | None = None
-        self._prev_motor_torque: torch.Tensor | None = None
 
         self.kp_scale: torch.Tensor | None = None
         self.kd_scale: torch.Tensor | None = None
@@ -374,11 +373,6 @@ class BamActuator(Actuator):
         else:
             self.vin_drop_gain = None
 
-        # Previous motor torques for the voltage-drop computation (lagged 1 step)
-        self._prev_motor_torque = torch.zeros(
-            num_envs, num_joints, dtype=torch.float32, device=device
-        )
-
         vin_repr = (
             f"range={self.cfg.vin_range}"
             if self.cfg.vin_range is not None
@@ -406,12 +400,6 @@ class BamActuator(Actuator):
     def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
         super().reset(env_ids)
         # vin_tensor and vin_drop_gain are startup-randomized: do NOT re-sample on reset.
-        # Reset previous motor torques so the voltage-drop model starts clean.
-        if self._prev_motor_torque is not None:
-            if env_ids is None:
-                self._prev_motor_torque.zero_()
-            else:
-                self._prev_motor_torque[env_ids] = 0.0
 
     @property
     def command_field(self) -> CommandField:
@@ -627,10 +615,18 @@ class BamActuator(Actuator):
         assert self._data is not None and self._dof_ids is not None
         assert self._mjwarp_model is not None
 
+        # Actuator torque applied on the PREVIOUS solve (lagged one step). The BAM
+        # friction budget uses this (not the freshly-computed motor_torque) as the
+        # motor-side load, and the battery voltage-drop model reuses it as the
+        # current-draw proxy. Mirrors bam.mujoco.MujocoController.
+        prev_actuator_torque = self._as_tensor(self._data.qfrc_actuator)[
+            :, self._dof_ids
+        ]  # (N, J)
+
         # ── Per-env supply voltage (with optional battery drop) ──────────────
         vin = self.vin_tensor  # (N, 1)
-        if self.vin_drop_gain is not None and self._prev_motor_torque is not None:
-            load = self._prev_motor_torque.abs().sum(dim=-1, keepdim=True)  # (N, 1)
+        if self.vin_drop_gain is not None:
+            load = prev_actuator_torque.abs().sum(dim=-1, keepdim=True)  # (N, 1)
             vin = vin - self.vin_drop_gain * load  # (N, 1), broadcast safe
             if self.cfg.vin_min is not None:
                 vin = torch.clamp(vin, min=self.cfg.vin_min)
@@ -664,7 +660,6 @@ class BamActuator(Actuator):
         # themselves. This mirrors bam.mujoco.MujocoController.
         qfrc_bias = self._as_tensor(self._data.qfrc_bias)  # (N, nv)
         qfrc_constraint = self._as_tensor(self._data.qfrc_constraint)  # (N, nv)
-        qfrc_actuator = self._as_tensor(self._data.qfrc_actuator)  # (N, nv)
         nv = qfrc_bias.shape[-1]
         qfrc_friction = self._dof_friction_force(nv)  # (N, nv)
         external_torque = (
@@ -672,10 +667,6 @@ class BamActuator(Actuator):
             + qfrc_constraint[:, self._dof_ids]
             - qfrc_friction[:, self._dof_ids]
         )  # (N, J)
-        # Actuator torque applied on the PREVIOUS solve. The BAM friction budget
-        # uses this (not the freshly-computed motor_torque) as the motor-side load,
-        # matching bam.mujoco.MujocoController which reads data.qfrc_actuator.
-        prev_actuator_torque = qfrc_actuator[:, self._dof_ids]  # (N, J)
 
         # ── 4. Stribeck coefficient ───────────────────────────────────────────
         # (N, J); zero tensor when model has no stribeck (unused in budget)
@@ -696,10 +687,6 @@ class BamActuator(Actuator):
             prev_actuator_torque, external_torque, stribeck_coeff
         )  # (N, J)
         self._write_frictions(frictionloss, friction_viscous)
-
-        # Store motor torque for next step's voltage-drop computation
-        if self._prev_motor_torque is not None:
-            self._prev_motor_torque = motor_torque.detach()
 
         return motor_torque
 

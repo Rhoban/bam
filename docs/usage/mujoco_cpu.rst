@@ -14,6 +14,12 @@ MuJoCo dependency:
 
    pip install better-actuator-models[mujoco]
 
+Or, with `uv <https://docs.astral.sh/uv/>`_:
+
+.. code-block:: text
+
+   uv add "better-actuator-models[mujoco]"
+
 Overview
 --------
 
@@ -99,7 +105,6 @@ before every ``mj_step``:
 .. code-block:: python
 
    mujoco.mj_resetData(mj_model, mj_data)
-   controller.reset(mj_data.qpos)
 
    joint_names = ["joint_1", ..., "joint_n"]
    target_angles = [...]
@@ -109,9 +114,6 @@ before every ``mj_step``:
          controller.set_q_target(joint_name, target_angle)
       controller.update()
       mujoco.mj_step(mj_model, mj_data)
-
-:meth:`~bam.mujoco.MujocoController.reset` should be called after every
-``mj_resetData`` to clear the internal velocity and torque state.
 
 Voltage drop (optional)
 -----------------------

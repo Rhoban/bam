@@ -71,8 +71,6 @@ class MujocoController:
         )
         mujoco.mj_setConst(self.mujoco_model, self.mujoco_data)
 
-        self._prev_motor_torque = np.zeros(len(self.actuator))
-
     def get_q_target(self, name: str) -> float:
         """Return the current target position for a named actuator [rad].
 
@@ -87,18 +85,6 @@ class MujocoController:
         :param q_target: Desired joint angle [rad].
         """
         self.q_target[self.dof_to_q_target[name]] = q_target
-    
-    def reset(self, qpos):
-        """Reset the controller to a given joint position state.
-
-        Should be called after every ``mujoco.mj_resetData`` to clear the
-        internal target and voltage-drop state.
-
-        :param qpos: Full ``mj_data.qpos`` array. The controller extracts
-            the positions of its controlled joints.
-        """
-        self.q_target = qpos[self.qpos_indexes]
-        self._prev_motor_torque[:] = 0.0
 
     def update(self):
         """
@@ -110,11 +96,11 @@ class MujocoController:
         q = self.mujoco_data.qpos[self.qpos_indexes]
         dq = self.mujoco_data.qvel[self.dof_indexes]
 
-        # Apply voltage drop based on previous step's motor torques
+        # Apply voltage drop based on the previous step's actuator torques
         act = self.model.actuator
         vin_orig = act.vin
         if self.vin_drop_gain is not None:
-            load = np.sum(np.abs(self._prev_motor_torque))
+            load = np.sum(np.abs(self.mujoco_data.qfrc_actuator[self.dof_indexes]))
             vin_eff = vin_orig - self.vin_drop_gain * load
             if self.vin_min is not None:
                 vin_eff = max(vin_eff, self.vin_min)
@@ -129,10 +115,9 @@ class MujocoController:
         # Computing the applied torque
         torque = act.compute_torque(control, True, q, dq)
 
-        # Restore original vin and store motor torques for next step's drop computation
+        # Restore original vin
         if self.vin_drop_gain is not None:
             act.vin = vin_orig
-            self._prev_motor_torque = np.atleast_1d(torque).copy()
 
         # Applying the torque
         self.mujoco_data.ctrl[self.act_indexes] = torque
@@ -241,7 +226,8 @@ class Simulator:
             mujoco_data.qpos[controller.qpos_indexes] = q[i]
             mujoco_data.qvel[controller.dof_indexes] = dq[i]
             mujoco.mj_forward(mujoco_model, mujoco_data)
-            controller.reset(mujoco_data.qpos)
+            # Seed the target with the initial position so the arm starts at rest
+            controller.q_target = mujoco_data.qpos[controller.qpos_indexes]
             self.instances.append((mujoco_model, mujoco_data, controller))
 
         self.t = 0.0

@@ -15,6 +15,12 @@ mjlab together with mujoco, mujoco-warp and torch:
 
    pip install better-actuator-models[mjlab]
 
+Or, with `uv <https://docs.astral.sh/uv/>`_:
+
+.. code-block:: text
+
+   uv add "better-actuator-models[mjlab]"
+
 BAM is compatible with mjlab 1.3.
 
 Registering the BAM init event
