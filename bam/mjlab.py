@@ -46,7 +46,7 @@ from mjlab.utils.spec import create_motor_actuator
 from mjlab.scene import Scene, SceneCfg
 from mjlab.sim import MujocoCfg, Simulation, SimulationCfg
 from mjlab.entity import EntityArticulationInfoCfg, EntityCfg
-from mjlab.managers.event_manager import RecomputeLevel
+from mjlab.managers.event_manager import RecomputeLevel, requires_model_fields
 
 from .actuator import TorchBackend, VoltageControlledActuator
 from .model import Model, load_model, _resolve_json_path
@@ -54,6 +54,27 @@ from .testbench_mujoco import Pendulum
 
 if TYPE_CHECKING:
     from mjlab.entity import Entity
+
+
+@requires_model_fields("dof_frictionloss", "dof_damping")
+def bam_init(env, env_ids=None) -> None:
+    """Startup event that expands BamActuator's per-world friction fields.
+
+    :class:`BamActuator` writes a per-environment friction budget into MuJoCo's
+    ``dof_frictionloss`` and ``dof_damping`` model fields. Those fields must be
+    expanded per world (otherwise they alias one shared buffer and per-env writes
+    are invalid). Add this as a ``startup`` event and mjlab expands them for you::
+
+        from bam.mjlab import bam_init
+        from mjlab.managers.event_manager import EventTermCfg
+
+        events["bam_init"] = EventTermCfg(func=bam_init, mode="startup")
+
+    The body is intentionally a no-op: the ``@requires_model_fields`` decorator
+    does the work by registering the fields in the EventManager, which the env
+    then hands to ``sim.expand_model_fields()`` during setup.
+    """
+    del env, env_ids
 
 
 # MuJoCo constraint-type id for a per-DOF friction constraint. In MuJoCo Warp the
@@ -159,12 +180,15 @@ class BamActuator(Actuator):
     .. important::
         Because every environment carries a different friction budget, the
         ``dof_frictionloss`` and ``dof_damping`` model fields must be expanded
-        per world *before* stepping. After building the environment, call::
+        per world *before* stepping. The simplest way is to add the
+        :func:`bam_init` startup event::
 
-            env.sim.expand_model_fields(("dof_frictionloss", "dof_damping"))
+            from bam.mjlab import bam_init
+            events["bam_init"] = EventTermCfg(func=bam_init, mode="startup")
 
-        (or add a ``randomize_field`` event for those fields). Otherwise the
-        fields alias a single shared buffer and per-env writes are invalid.
+        (equivalently, call ``env.sim.expand_model_fields(("dof_frictionloss",
+        "dof_damping"))`` after building the environment). Otherwise the fields
+        alias a single shared buffer and per-env writes are invalid.
 
     Per-environment gain scaling is supported via :meth:`set_gains`.
     """
@@ -517,9 +541,14 @@ class BamActuator(Actuator):
                 raise RuntimeError(
                     "BamActuator writes per-environment dof_frictionloss/"
                     "dof_damping, but these model fields are not expanded per "
-                    "world. After building the environment, call "
+                    "world. Add the bam_init startup event so mjlab expands them "
+                    "automatically:\n"
+                    "    from bam.mjlab import bam_init\n"
+                    "    events['bam_init'] = EventTermCfg(func=bam_init, "
+                    "mode='startup')\n"
+                    "Alternatively, after building the environment, call "
                     "sim.expand_model_fields(('dof_frictionloss', "
-                    "'dof_damping')) (or add a randomize_field event for them)."
+                    "'dof_damping'))."
                 )
             self._friction_fields_checked = True
 
