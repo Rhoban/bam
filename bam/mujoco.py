@@ -23,8 +23,9 @@ class MujocoController:
     :param str actuator: Actuator to control. The actuated joint properties will be updated. This can be a list of actuators
     :param mujoco.MjModel mujoco_model: The mujoco model
     :param mujoco.MjData mujoco_data: The mujoco data
-    :param float | None vin_drop_gain: The voltage drop gain, if not None the voltage will be reduced by 
-        vin_drop_gain * load, where load is the sum of the absolute value of the motor torques
+    :param float | None vin_drop_resistance: The battery + wire resistance [Ohm], if not None the
+        voltage will be reduced by vin_drop_resistance * current, where the current [A] is estimated
+        from the actuator torques as sum(|torque|) / kt
     :param float | None vin_min: the minimum voltage, if not None the voltage will not go below this value
     """
 
@@ -34,14 +35,14 @@ class MujocoController:
         actuator: str,
         mujoco_model: mujoco.MjModel,
         mujoco_data: mujoco.MjData,
-        vin_drop_gain: float | None = None,
+        vin_drop_resistance: float | None = None,
         vin_min: float | None = None,
     ):
         self.model = model
         self.actuator = np.atleast_1d(actuator)
         self.mujoco_model = mujoco_model
         self.mujoco_data = mujoco_data
-        self.vin_drop_gain = vin_drop_gain
+        self.vin_drop_resistance = vin_drop_resistance
         self.vin_min = vin_min
 
         self.dofs = []
@@ -96,12 +97,14 @@ class MujocoController:
         q = self.mujoco_data.qpos[self.qpos_indexes]
         dq = self.mujoco_data.qvel[self.dof_indexes]
 
-        # Apply voltage drop based on the previous step's actuator torques
+        # Apply the voltage drop across the battery + wire resistance. The current
+        # draw is estimated from the previous step's actuator torques (I = torque / kt).
         act = self.model.actuator
         vin_orig = act.vin
-        if self.vin_drop_gain is not None:
-            load = np.sum(np.abs(self.mujoco_data.qfrc_actuator[self.dof_indexes]))
-            vin_eff = vin_orig - self.vin_drop_gain * load
+        if self.vin_drop_resistance is not None:
+            load_torque = np.sum(np.abs(self.mujoco_data.qfrc_actuator[self.dof_indexes]))
+            current = load_torque / self.model.kt.value
+            vin_eff = vin_orig - self.vin_drop_resistance * current
             if self.vin_min is not None:
                 vin_eff = max(vin_eff, self.vin_min)
             act.vin = vin_eff
@@ -116,7 +119,7 @@ class MujocoController:
         torque = act.compute_torque(control, True, q, dq)
 
         # Restore original vin
-        if self.vin_drop_gain is not None:
+        if self.vin_drop_resistance is not None:
             act.vin = vin_orig
 
         # Applying the torque

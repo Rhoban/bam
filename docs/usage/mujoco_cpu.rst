@@ -118,17 +118,21 @@ before every ``mj_step``:
 Voltage drop (optional)
 -----------------------
 
-Real batteries and cables introduce a voltage drop proportional to the total
-current draw. BAM models this as:
+Real batteries and cables have an internal resistance that causes a voltage
+drop under load. BAM models this as an equivalent resistor placed between the
+battery and the motors:
 
 .. math::
 
-   V_\text{eff} = V_\text{in} - g_\text{drop} \sum_i |\tau_i|
+   V_\text{eff} = V_\text{in} - R_\text{drop} \, I,
+   \qquad
+   I = \frac{1}{K_t} \sum_i |\tau_i|
 
-where :math:`g_\text{drop}` is ``vin_drop_gain`` (approximately
-:math:`R / K_t`) and the sum runs over all controlled joints.
-A hard lower bound ``vin_min`` can be set to prevent the effective voltage
-from collapsing under heavy load:
+where ``vin_drop_resistance`` is :math:`R_\text{drop}` (the combined battery +
+wire resistance, in ohms), and the current :math:`I` is estimated from the
+actuator torques using the torque constant :math:`K_t`, summed over all
+controlled joints. A hard lower bound ``vin_min`` can be set to prevent the
+effective voltage from collapsing under heavy load:
 
 .. code-block:: python
 
@@ -137,9 +141,18 @@ from collapsing under heavy load:
       actuator=["joint_1", ..., "joint_n"],
       mujoco_model=mj_model,
       mujoco_data=mj_data,
-      vin_drop_gain=0.5,   # [V/Nm]
-      vin_min=6.0,         # [V]
+      vin_drop_resistance=0.1,   # 100 mOhms of wire & battery resistance
+      vin_min=6.0,               # [V]
    )
+
+.. warning::
+
+   The voltage drop is computed independently by each
+   :class:`~bam.mujoco.MujocoController` from its own joints' current draw.
+   If several controllers share the same physical battery, their currents are
+   **not** summed together, so the modeled drop underestimates the real one.
+   Group all joints powered by the same battery under a single controller if you
+   need the shared-supply behavior.
 
 Multi-actuator config file
 --------------------------

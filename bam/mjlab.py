@@ -103,10 +103,10 @@ class BamActuatorCfg(ActuatorCfg):
     :param kp_fw: Firmware P-gain override. ``None`` → uses the value in the JSON.
     :param vin_range: If set, a per-env battery voltage is sampled uniformly from this
         range at startup and held constant across resets. Takes precedence over ``vin``.
-    :param vin_drop_gain_range: If set, a per-env internal-resistance gain [V/Nm] is sampled uniformly
-        from this range at startup. Models the voltage drop V_drop = gain * Σ|τ| due to
-        battery + cable resistance. Gain should be approximately resistance / Kt.
-        Held constant across resets.
+    :param vin_drop_resistance_range: If set, a per-env battery + wire resistance [Ohm] is sampled
+        uniformly from this range at startup. Models the voltage drop V_drop = R * I due to
+        battery + cable resistance, where the current I [A] is estimated from the actuator
+        torques as Σ|τ| / Kt. Held constant across resets.
     :param vin_min: Hard lower bound on the effective supply voltage [V] after applying the
         voltage drop. Ensures ``vin`` never falls below this value regardless of the load.
         ``None`` → no lower bound.
@@ -134,7 +134,7 @@ class BamActuatorCfg(ActuatorCfg):
     vin: float | None = None
     kp_fw: float | None = None
     vin_range: tuple[float, float] | None = None
-    vin_drop_gain_range: tuple[float, float] | None = None
+    vin_drop_resistance_range: tuple[float, float] | None = None
     vin_min: float | None = None
     stiff_frictionloss: bool = True
 
@@ -224,7 +224,7 @@ class BamActuator(Actuator):
         self._dof_ids: torch.Tensor | None = None
 
         self.vin_tensor: torch.Tensor | None = None
-        self.vin_drop_gain: torch.Tensor | None = None
+        self.vin_drop_resistance: torch.Tensor | None = None
 
         self.kp_scale: torch.Tensor | None = None
         self.kd_scale: torch.Tensor | None = None
@@ -365,13 +365,13 @@ class BamActuator(Actuator):
                 (num_envs, 1), act.vin, dtype=torch.float32, device=device
             )
 
-        # vin_drop_gain: (N, 1) — per-env resistance gain [V/Nm], constant across resets
-        if self.cfg.vin_drop_gain_range is not None:
-            self.vin_drop_gain = torch.empty(
+        # vin_drop_resistance: (N, 1) — per-env battery + wire resistance [Ohm], constant across resets
+        if self.cfg.vin_drop_resistance_range is not None:
+            self.vin_drop_resistance = torch.empty(
                 num_envs, 1, dtype=torch.float32, device=device
-            ).uniform_(*self.cfg.vin_drop_gain_range)
+            ).uniform_(*self.cfg.vin_drop_resistance_range)
         else:
-            self.vin_drop_gain = None
+            self.vin_drop_resistance = None
 
         vin_repr = (
             f"range={self.cfg.vin_range}"
@@ -379,8 +379,8 @@ class BamActuator(Actuator):
             else f"{act.vin:.1f}V"
         )
         drop_repr = (
-            f"drop_gain_range={self.cfg.vin_drop_gain_range}"
-            if self.cfg.vin_drop_gain_range is not None
+            f"drop_resistance_range={self.cfg.vin_drop_resistance_range}"
+            if self.cfg.vin_drop_resistance_range is not None
             else "no drop"
         )
         vin_for_limit = (
@@ -399,7 +399,7 @@ class BamActuator(Actuator):
 
     def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
         super().reset(env_ids)
-        # vin_tensor and vin_drop_gain are startup-randomized: do NOT re-sample on reset.
+        # vin_tensor and vin_drop_resistance are startup-randomized: do NOT re-sample on reset.
 
     @property
     def command_field(self) -> CommandField:
@@ -624,10 +624,14 @@ class BamActuator(Actuator):
         ]  # (N, J)
 
         # ── Per-env supply voltage (with optional battery drop) ──────────────
+        # V_drop = R * I, with the current I estimated from the actuator torques
+        # as Σ|τ| / kt across the controlled joints.
         vin = self.vin_tensor  # (N, 1)
-        if self.vin_drop_gain is not None:
-            load = prev_actuator_torque.abs().sum(dim=-1, keepdim=True)  # (N, 1)
-            vin = vin - self.vin_drop_gain * load  # (N, 1), broadcast safe
+        if self.vin_drop_resistance is not None:
+            current = (
+                prev_actuator_torque.abs().sum(dim=-1, keepdim=True) / bam.kt.value
+            )  # (N, 1)
+            vin = vin - self.vin_drop_resistance * current  # (N, 1), broadcast safe
             if self.cfg.vin_min is not None:
                 vin = torch.clamp(vin, min=self.cfg.vin_min)
 

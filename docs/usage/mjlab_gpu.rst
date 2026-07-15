@@ -110,15 +110,20 @@ at startup:
 
 ``vin_range`` takes precedence over ``vin`` when both are set.
 
-**Voltage drop gain** — model battery + cable resistance with a per-env
-internal-resistance gain:
+**Voltage drop resistance** — model battery + cable resistance with a per-env
+equivalent resistor between the battery and the motors:
 
 .. math::
 
-   V_\text{eff} = V_\text{in} - g_\text{drop} \sum_i |\tau_i|
+   V_\text{eff} = V_\text{in} - R_\text{drop} \, I,
+   \qquad
+   I = \frac{1}{K_t} \sum_i |\tau_i|
 
-where :math:`g_\text{drop} \approx R / K_t`. Randomizing this gain captures
-variability in cable length or connector quality across units:
+where :math:`R_\text{drop}` (``vin_drop_resistance_range``) is the combined
+battery + wire resistance in ohms, and the current :math:`I` is estimated from
+the actuator torques using the torque constant :math:`K_t`. Randomizing this
+resistance captures variability in cable length or connector quality across
+units:
 
 .. code-block:: python
 
@@ -127,12 +132,21 @@ variability in cable length or connector quality across units:
       model="m6",
       target_names_expr=(r".*",),
       vin_range=(7.0, 8.0),
-      vin_drop_gain_range=(0.3, 0.7),  # [V/Nm]
-      vin_min=6.0,                     # hard lower bound [V]
+      vin_drop_resistance_range=(0.05, 0.15),  # [Ohm] ~100 mOhms of wire & battery resistance
+      vin_min=6.0,                             # hard lower bound [V]
    )
 
 Both ranges are sampled once at initialization and held constant across
 episode resets.
+
+.. warning::
+
+   The voltage drop is computed independently by each
+   :class:`~bam.mjlab.BamActuator` from its own joints' current draw. If several
+   actuator configs share the same physical battery, their currents are **not**
+   summed together, so the modeled drop underestimates the real one. Group all
+   joints powered by the same battery under a single :class:`~bam.mjlab.BamActuatorCfg`
+   if you need the shared-supply behavior.
 
 Command delay
 -------------
@@ -170,7 +184,7 @@ Pass the config to the ``actuator_cfgs`` argument of an mjlab ``Entity``:
       target_names_expr=(r".*",),
       kp_fw=125,
       vin_range=(7.0, 8.0),
-      vin_drop_gain_range=(0.3, 0.7),
+      vin_drop_resistance_range=(0.05, 0.15),  # [Ohm]
       vin_min=6.0,
       delay_min_lag=1,
       delay_max_lag=3,
