@@ -537,7 +537,7 @@ class BamActuator(Actuator):
             # Per-env writes require truly per-world storage. A non-expanded
             # field aliases a single (1, nv) buffer (stride 0 on the world axis),
             # so writing distinct per-env values would be invalid.
-            if self._num_envs > 1 and fl_field.stride(0) == 0:
+            if self._num_envs > 1 and (fl_field.stride(0) == 0 or damping_field.stride(0) == 0):
                 raise RuntimeError(
                     "BamActuator writes per-environment dof_frictionloss/"
                     "dof_damping, but these model fields are not expanded per "
