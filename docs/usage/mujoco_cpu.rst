@@ -1,5 +1,5 @@
-Using BAM in MuJoCo (CPU)
-=========================
+MuJoCo (CPU)
+============
 
 This page explains how to plug BAM friction models into a standard MuJoCo
 simulation running on CPU. The entry point is :class:`bam.mujoco.MujocoController`.
@@ -42,9 +42,8 @@ servos:
 
    model = load_model(motor_name="xl330", model="m6")
 
-Supported motor names: ``"xl320"``, ``"xl330"``, ``"mx106"``, ``"mx64"``,
-``"erob80:50"``, ``"erob80:100"``.
-Supported model variants: ``"m1"`` through ``"m6"`` (see :doc:`../theory/models`).
+- Supported motor names: see the :doc:`list of identified actuators <actuators>`.
+- Supported model variants: ``"m1"`` through ``"m6"`` (see :doc:`../theory/models`).
 
 **Custom JSON** — parameters produced by your own identification run:
 
@@ -139,36 +138,6 @@ from collapsing under heavy load:
       vin_drop_gain=0.5,   # [V/Nm]
       vin_min=6.0,         # [V]
    )
-
-Current limiting
-----------------
-
-Servo firmwares try to cap the motor current to protect the hardware. The firmware
-can only act on the PWM duty cycle, though — it cannot synthesize a voltage the
-battery does not have — so a current limit is really a *duty-cycle constraint*, not
-a hard clamp on the output torque. BAM models it that way in
-:meth:`~bam.actuator.VoltageControlledActuator.compute_control`: from the motor
-relation :math:`I = (\texttt{duty}\cdot V_\text{in} - K_t\dot{q}) / R`, the
-constraint :math:`|I| \le \texttt{max\_current}` maps to the duty window
-
-.. math::
-
-   \frac{K_t\dot{q} - R\,\texttt{max\_current}}{V_\text{in}}
-   \le \texttt{duty} \le
-   \frac{K_t\dot{q} + R\,\texttt{max\_current}}{V_\text{in}}
-
-The commanded duty is clamped to this window and then to the physical
-``[-max_pwm, max_pwm]`` range, applied **last**. At high speed the back-EMF
-:math:`K_t\dot{q}` can push the window outside the achievable PWM range, in which
-case the limiter saturates and the current is *not* actually held at
-``max_current`` — exactly as the real firmware behaves when the battery cannot
-supply the required voltage.
-
-``max_current`` is a property of the actuator model (``VoltageControlledActuator``),
-not of the ``MujocoController``. It is set per motor family — for instance the
-``xl330`` uses ``max_current = 1.75`` A — so no controller configuration is
-required. Actuators whose ``max_current`` is ``None`` (default) perform no current
-limiting.
 
 Multi-actuator config file
 --------------------------

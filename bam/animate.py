@@ -186,17 +186,17 @@ class Pendulum:
         self.masses = []
         for alpha, z in ((0.5, 2), (1.0, 3)):
             (arm,) = ax.plot(
-                [], [], color=COL_ARM, lw=16, solid_capstyle="round",
+                [], [], color=COL_ARM, lw=22, solid_capstyle="round",
                 alpha=alpha, zorder=z,
             )
             mass = Circle(
-                (0, 0), 0.17, fc=COL_MASS, ec=COL_RING, lw=5,
+                (0, 0), 0.20, fc=COL_MASS, ec=COL_RING, lw=7,
                 alpha=alpha, zorder=z + 0.1,
             )
             ax.add_patch(mass)
             self.arms.append(arm)
             self.masses.append(mass)
-        ax.add_patch(Circle(tuple(self.pivot), 0.05, fc=COL_PIVOT, zorder=5))
+        ax.add_patch(Circle(tuple(self.pivot), 0.06, fc=COL_PIVOT, zorder=5))
 
     def _tip(self, q):
         theta = q + self.offset
@@ -225,8 +225,24 @@ class Pendulum:
 
 def build_figure(data):
     has_speed = data["has_speed"]
+    # Larger fonts and thicker lines so the figure stays legible on small
+    # devices / when the video is scaled down.
+    plt.rcParams.update(
+        {
+            "font.size": 18,
+            "axes.titlesize": 20,
+            "axes.labelsize": 18,
+            "xtick.labelsize": 15,
+            "ytick.labelsize": 15,
+            "legend.fontsize": 15,
+            "lines.linewidth": 3.0,
+            "axes.linewidth": 1.8,
+            "grid.linewidth": 1.2,
+        }
+    )
+
     n_right = 3 if has_speed else 2
-    fig = plt.figure(figsize=(13, 6))
+    fig = plt.figure(figsize=(16, 9))
     gs = GridSpec(n_right, 2, width_ratios=[1, 1.6], figure=fig)
 
     ax_pend = fig.add_subplot(gs[:, 0])
@@ -292,8 +308,8 @@ def build_figure(data):
     for ax in right_axes:
         ax.set_xlim(ts[0], ts[-1])
         ax.grid(True)
-        ax.legend(loc="upper right", fontsize=8)
-        cursors.append(ax.axvline(ts[0], color="0.4", lw=1, alpha=0.0))
+        ax.legend(loc="upper right")
+        cursors.append(ax.axvline(ts[0], color="0.4", lw=2.2, alpha=0.0))
 
     _set_ylim(ax1, [data["q"], data["goal_q"]] + [m["q"] for m in data["models"]])
     if has_speed:
@@ -352,7 +368,7 @@ def main():
             mae = float(np.mean(np.abs(sim_q[:upto] - data["q"][:upto])))
             pendulum.ax.set_title(
                 f'{data["models"][phase]["name"]} (MAE: {mae:.3f} rad)',
-                fontsize=14,
+                fontsize=24,
                 fontweight="bold",
             )
         else:

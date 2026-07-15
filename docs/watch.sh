@@ -22,7 +22,7 @@ cd ../..
 
 while true
 do
-    inotifywait */*.rst --recursive
+    inotifywait *.rst */*.rst --recursive
     make html
     sleep 0.5
 done

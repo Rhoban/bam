@@ -7,12 +7,12 @@ BAM supports six friction models of increasing expressiveness, denoted
 They are ordered from the simplest Coulomb-Viscous approximation to a richer
 directional and quadratic formulation that better captures gearbox behavior.
 
-- M1: Coulomb-Viscous
-- M2: Stribeck
-- M3: Load-dependent
-- M4: Stribeck + load-dependent
-- M5: Directional load-dependent
-- M6: Quadratic directional variant
+- :math:`\mathcal{M}_1`: Coulomb-Viscous
+- :math:`\mathcal{M}_2`: Stribeck
+- :math:`\mathcal{M}_3`: Load-dependent
+- :math:`\mathcal{M}_4`: Stribeck + load-dependent
+- :math:`\mathcal{M}_5`: Directional load-dependent
+- :math:`\mathcal{M}_6`: Quadratic directional variant
 
 Notation
 --------
@@ -27,8 +27,8 @@ In the equations below:
 The simulation then applies friction by clipping the stopping torque in
 :math:`[-\tau_{fm},\tau_{fm}]`.
 
-Model M1: Coulomb-Viscous
--------------------------
+Model :math:`\mathcal{M}_1`: Coulomb-Viscous
+--------------------------------------------
 
 .. math::
 
@@ -38,8 +38,8 @@ Model M1: Coulomb-Viscous
 This is the baseline model used in most physics simulators.
 It keeps only viscous damping and a constant Coulomb term.
 
-Model M2: Stribeck
-------------------
+Model :math:`\mathcal{M}_2`: Stribeck
+-------------------------------------
 
 .. math::
 
@@ -50,8 +50,8 @@ Model M2: Stribeck
 This adds higher friction near zero speed and smooth transition to sliding.
 It models the fact that static friction is usually stronger than sliding friction.
 
-Model M3: Load-dependent
-------------------------
+Model :math:`\mathcal{M}_3`: Load-dependent
+-------------------------------------------
 
 .. math::
 
@@ -61,8 +61,8 @@ Model M3: Load-dependent
 This captures the increase of friction with transmitted gearbox load.
 It is useful when the apparent resistance depends on how hard the transmission is loaded.
 
-Model M4: Stribeck + load-dependent
------------------------------------
+Model :math:`\mathcal{M}_4`: Stribeck + load-dependent
+------------------------------------------------------
 
 .. math::
 
@@ -74,8 +74,8 @@ Model M4: Stribeck + load-dependent
 This combines presliding dynamics with load dependence.
 It adds Stribeck smoothing on top of a load-sensitive friction budget.
 
-Model M5: Directional load-dependent
-------------------------------------
+Model :math:`\mathcal{M}_5`: Directional load-dependent
+-------------------------------------------------------
 
 .. math::
 
@@ -88,8 +88,8 @@ This separates motor-side and external-side contributions, which helps model
 directional efficiency/backdrivability asymmetry.
 It is appropriate when the gearbox behaves differently depending on the torque direction.
 
-Model M6: Quadratic directional
--------------------------------
+Model :math:`\mathcal{M}_6`: Quadratic directional
+--------------------------------------------------
 
 .. math::
 
