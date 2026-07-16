@@ -41,8 +41,8 @@ Each trajectory runs for 6 seconds.
        |traj_sin_time_square|
    * - ``lift_and_drop``
      - Cubic move to −π/2 over 2 s, then torque disabled — the arm falls
-       under gravity. Particularly useful for identifying backdrivability and
-       Stribeck effects at very low speed.
+       under gravity. Disabling the torque can allow to dissociate viscous friction
+       from the back-EMF induced damping.
 
        |traj_lift_and_drop|
    * - ``up_and_down``
