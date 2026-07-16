@@ -35,6 +35,8 @@ First, be sure to register the ``bam_init`` function as a startup event in your 
     # cfg is your mjlab task configuration
     cfg.events["bam_init"] = EventTermCfg(func=bam_init, mode="startup")
 
+
+
 Instantiating the config
 ------------------------
 
@@ -146,7 +148,9 @@ episode resets.
    actuator configs share the same physical battery, their currents are **not**
    summed together, so the modeled drop underestimates the real one. Group all
    joints powered by the same battery under a single :class:`~bam.mjlab.BamActuatorCfg`
-   if you need the shared-supply behavior.
+   if you need the shared-supply behavior. In the current implementation, only one model
+   can be used per actuator config, voltage drop will not function properly if different motors
+   are mixed in the same config.
 
 Command delay
 -------------
@@ -163,7 +167,9 @@ per environment:
       model="m6",
       target_names_expr=(r".*",),
       delay_min_lag=1,    # always at least 1 step of delay
+                          # = 5ms with mjlab's default 200Hz control loop
       delay_max_lag=3,    # up to 3 steps, randomized per env
+                          # = 15ms with mjlab's default 200Hz control loop
    )
 
 Setting ``delay_min_lag == delay_max_lag`` gives a fixed, deterministic delay.
