@@ -27,8 +27,37 @@ In the equations below:
 The simulation then applies friction by clipping the stopping torque in
 :math:`[-\tau_{fm},\tau_{fm}]`.
 
+Drive/backdrive diagrams
+------------------------
+
+The drive/backdrive diagrams help to visualize the effect of friction. Let's for example consider the :math:`\mathcal{M}_6` model:
+
+.. image:: ../_static/drive_backdrive_m6.png
+    :alt: Drive/backdrive diagram
+    :width: 500
+    :align: center
+
+Here:
+
+- Below the blue line, the motor is driving the system
+- Above the red line, the system is backdriving the motor
+- On the black dashed line, motor torque and external torque exacttly cancel out
+- In the middle, the friction budget is preventing motion in the system
+- The lines with less opacity depicts what happens when the system is moving (1 rad/s per step). As you can notice, the faster the system is moving, the less friction appears here.
+
+They can be obtained using ``bam.drive_backdrive`` command from the repository:
+
+.. code-block:: bash
+
+    uv run -m bam.drive_backdrive --params bam/params/erob80_100/m1.json  --max_torque 100
+
 Model :math:`\mathcal{M}_1`: Coulomb-Viscous
 --------------------------------------------
+
+.. image:: ../_static/drive_backdrive_m1.png
+    :alt: Drive/backdrive diagram
+    :width: 500
+    :align: center
 
 .. math::
 
@@ -40,6 +69,11 @@ It keeps only viscous damping and a constant Coulomb term.
 
 Model :math:`\mathcal{M}_2`: Stribeck
 -------------------------------------
+
+.. image:: ../_static/drive_backdrive_m2.png
+    :alt: Drive/backdrive diagram
+    :width: 500
+    :align: center
 
 .. math::
 
@@ -53,6 +87,11 @@ It models the fact that static friction is usually stronger than sliding frictio
 Model :math:`\mathcal{M}_3`: Load-dependent
 -------------------------------------------
 
+.. image:: ../_static/drive_backdrive_m3.png
+    :alt: Drive/backdrive diagram
+    :width: 500
+    :align: center
+
 .. math::
 
    \mathcal{M}_3:\quad
@@ -63,6 +102,11 @@ It is useful when the apparent resistance depends on how hard the transmission i
 
 Model :math:`\mathcal{M}_4`: Stribeck + load-dependent
 ------------------------------------------------------
+
+.. image:: ../_static/drive_backdrive_m4.png
+    :alt: Drive/backdrive diagram
+    :width: 500
+    :align: center
 
 .. math::
 
@@ -77,6 +121,11 @@ It adds Stribeck smoothing on top of a load-sensitive friction budget.
 Model :math:`\mathcal{M}_5`: Directional load-dependent
 -------------------------------------------------------
 
+.. image:: ../_static/drive_backdrive_m5.png
+    :alt: Drive/backdrive diagram
+    :width: 500
+    :align: center
+
 .. math::
 
    \mathcal{M}_5:\quad
@@ -90,6 +139,11 @@ It is appropriate when the gearbox behaves differently depending on the torque d
 
 Model :math:`\mathcal{M}_6`: Quadratic directional
 --------------------------------------------------
+
+.. image:: ../_static/drive_backdrive_m6.png
+    :alt: Drive/backdrive diagram
+    :width: 500
+    :align: center
 
 .. math::
 
