@@ -26,21 +26,41 @@ from bam.model import load_model
 from bam import simulate
 
 arg_parser = argparse.ArgumentParser(description="Compare BAM model MAEs")
-arg_parser.add_argument("--params", type=str, required=True,
-                        help="Directory containing *.json param files")
-arg_parser.add_argument("--logdir", type=str, required=True,
-                        help="Directory containing log files")
-arg_parser.add_argument("--reset_period", type=float, default=None,
-                        help="Reset period for simulation rollouts (s)")
-arg_parser.add_argument("--sort", action="store_true", default=False,
-                        help="Sort bars by MAE (default: keep evaluation order)")
+arg_parser.add_argument(
+    "--params", type=str, required=True, help="Directory containing *.json param files"
+)
+arg_parser.add_argument(
+    "--logdir", type=str, required=True, help="Directory containing log files"
+)
+arg_parser.add_argument(
+    "--reset_period",
+    type=float,
+    default=None,
+    help="Reset period for simulation rollouts (s)",
+)
+arg_parser.add_argument(
+    "--sort",
+    action="store_true",
+    default=False,
+    help="Sort bars by MAE (default: keep evaluation order)",
+)
 arg_parser.add_argument("--no-sort", dest="sort", action="store_false")
-arg_parser.add_argument("--json", type=str, default=None,
-                        help="Write results to this JSON file instead of plotting")
-arg_parser.add_argument("--mujoco", action="store_true",
-                        help="Use the MuJoCo (CPU) simulator backend instead of the reference one")
-arg_parser.add_argument("--mjlab", action="store_true",
-                        help="Use the mjlab (MuJoCo Warp / GPU) simulator backend, vectorized over all logs")
+arg_parser.add_argument(
+    "--json",
+    type=str,
+    default=None,
+    help="Write results to this JSON file instead of plotting",
+)
+arg_parser.add_argument(
+    "--mujoco",
+    action="store_true",
+    help="Use the MuJoCo (CPU) simulator backend instead of the reference one",
+)
+arg_parser.add_argument(
+    "--mjlab",
+    action="store_true",
+    help="Use the mjlab (MuJoCo Warp / GPU) simulator backend, vectorized over all logs",
+)
 args = arg_parser.parse_args()
 
 if args.mujoco:
@@ -118,9 +138,9 @@ for param_file in param_files:
         maes = [compute_mae(model, log) for log in logs.logs]
 
     mean_mae = float(np.mean(maes))
-    std_mae  = float(np.std(maes))
+    std_mae = float(np.std(maes))
     results[label] = {"mean": mean_mae, "std": std_mae, "per_log": maes}
-    print(f"MAE = {mean_mae*1000:.2f} ± {std_mae*1000:.2f} mrad")
+    print(f"MAE = {mean_mae * 1000:.2f} ± {std_mae * 1000:.2f} mrad")
 
 
 # ── JSON output ───────────────────────────────────────────────────────────────
@@ -132,16 +152,16 @@ if args.json is not None:
 
 
 # ── Box plot ──────────────────────────────────────────────────────────────────
-labels  = list(results.keys())
-per_log = [np.array(results[k]["per_log"]) * 1000 for k in labels]   # → mrad
-means   = np.array([results[k]["mean"] for k in labels]) * 1000
+labels = list(results.keys())
+per_log = [np.array(results[k]["per_log"]) * 1000 for k in labels]  # → mrad
+means = np.array([results[k]["mean"] for k in labels]) * 1000
 medians = np.array([np.median(d) for d in per_log])
 
 if args.sort:
-    order   = np.argsort(means)
-    labels  = [labels[i] for i in order]
+    order = np.argsort(means)
+    labels = [labels[i] for i in order]
     per_log = [per_log[i] for i in order]
-    means   = means[order]
+    means = means[order]
     medians = medians[order]
 
 fig, ax = plt.subplots(figsize=(max(6, len(labels) * 0.9 + 1), 5))
@@ -164,8 +184,15 @@ for patch in bp["boxes"]:
 
 # Custom annotation: median MAE next to each box, at the median line's level.
 for pos, median in zip(positions, medians):
-    ax.text(pos + 0.35, median, f"{median:.1f}",
-            ha="left", va="center", fontsize=8, color="black")
+    ax.text(
+        pos + 0.35,
+        median,
+        f"{median:.1f}",
+        ha="left",
+        va="center",
+        fontsize=8,
+        color="black",
+    )
 
 ax.set_xticks(positions, labels)
 ax.set_ylabel("MAE [mrad]")

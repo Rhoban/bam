@@ -36,8 +36,9 @@ for kp in kps:
         print(sentence)
 
         if args.speak:
-            from gtts import gTTS 
-            myobj = gTTS(text=sentence, lang='en', slow=False) 
+            from gtts import gTTS
+
+            myobj = gTTS(text=sentence, lang="en", slow=False)
             myobj.save("/tmp/message.mp3")
             os.system("mpg321 /tmp/message.mp3")
 

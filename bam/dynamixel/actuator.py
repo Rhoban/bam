@@ -12,6 +12,7 @@ from bam.actuator import VoltageControlledActuator, CurrentControlledActuator
 from bam.parameter import Parameter
 from bam.testbench import Testbench, Pendulum
 
+
 class MXActuator(VoltageControlledActuator):
     """
     Represents a Dynamixel MX-64 or MX-106 actuator
@@ -20,13 +21,13 @@ class MXActuator(VoltageControlledActuator):
     def __init__(self, testbench_class: Testbench):
         super().__init__(
             testbench_class,
-            vin = 15.0,
-            kp = 32.0,
+            vin=15.0,
+            kp=32.0,
             # This gain, if multiplied by a position error and firmware KP, gives duty cycle
             # It was determined using an oscilloscope and MX actuators
-            error_gain = 0.158,
-            # Maximum allowable duty cycle, also determined with oscilloscope   
-            max_pwm = 0.9625
+            error_gain=0.158,
+            # Maximum allowable duty cycle, also determined with oscilloscope
+            max_pwm=0.9625,
         )
 
     def initialize(self):
@@ -51,13 +52,13 @@ class XL320Actuator(VoltageControlledActuator):
     def __init__(self, testbench_class: Testbench):
         super().__init__(
             testbench_class,
-            vin = 7.5,
-            kp = 32.0,
+            vin=7.5,
+            kp=32.0,
             # This gain, if multiplied by a position error and firmware KP, gives duty cycle
             # It was determined using an oscilloscope and XL-320 actuators
-            error_gain = 0.05048199,
+            error_gain=0.05048199,
             # Maximum allowable duty cycle, also determined with oscilloscope
-            max_pwm = 1.0
+            max_pwm=1.0,
         )
 
     def initialize(self):
@@ -78,7 +79,7 @@ class XL320Actuator(VoltageControlledActuator):
 
 XL330_ENCODER_COUNTS_PER_REV = 4096
 XL330_KP_DIVISOR = 256  # Empirically observed for XL330 (manual mentions 128)
-XL330_PWM_LIMIT = 885   # Default Present PWM limit for XL330
+XL330_PWM_LIMIT = 885  # Default Present PWM limit for XL330
 
 
 class XL330Actuator(VoltageControlledActuator):

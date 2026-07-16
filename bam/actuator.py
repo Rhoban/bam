@@ -119,7 +119,11 @@ class Actuator:
         raise NotImplementedError
 
     def compute_torque(
-        self, control: ArrayLike | None, torque_enable: bool, q: ArrayLike, dq: ArrayLike
+        self,
+        control: ArrayLike | None,
+        torque_enable: bool,
+        q: ArrayLike,
+        dq: ArrayLike,
     ) -> ArrayLike:
         """Compute the motor torque from the control signal and current state.
 
@@ -265,7 +269,11 @@ class VoltageControlledActuator(DCMotorActuator):
         return self.vin * duty_cycle
 
     def compute_torque(
-        self, control: ArrayLike | None, torque_enable: bool, q: ArrayLike, dq: ArrayLike
+        self,
+        control: ArrayLike | None,
+        torque_enable: bool,
+        q: ArrayLike,
+        dq: ArrayLike,
     ) -> ArrayLike:
         """Compute motor torque using the DC motor equation with back-EMF.
 
@@ -350,7 +358,11 @@ class CurrentControlledActuator(DCMotorActuator):
         return current
 
     def compute_torque(
-        self, control: ArrayLike | None, torque_enable: bool, q: ArrayLike, dq: ArrayLike
+        self,
+        control: ArrayLike | None,
+        torque_enable: bool,
+        q: ArrayLike,
+        dq: ArrayLike,
     ) -> ArrayLike:
         """Compute motor torque from current command.
 
@@ -367,4 +379,3 @@ class CurrentControlledActuator(DCMotorActuator):
             - self.model.viscous_damping_with_torque.value * dq
         )
         return torque * torque_enable
-

@@ -91,17 +91,13 @@ def compute_series(log):
     ts = np.arange(len(log["entries"])) * log["dt"]
     q = np.array([e["position"] for e in log["entries"]])
     goal_q = np.array([e["goal_position"] for e in log["entries"]])
-    speed = np.array(
-        [e["speed"] if "speed" in e else 0.0 for e in log["entries"]]
-    )
+    speed = np.array([e["speed"] if "speed" in e else 0.0 for e in log["entries"]])
     has_speed = any("speed" in e for e in log["entries"])
 
     # Recorded control (reference), computed exactly like bam.plot.
     dummy = DummyModel()
     dummy.set_actuator(actuators[args.actuator]())
-    _, __, controls = simulate.Simulator(dummy).rollout_log(
-        log, simulate_control=False
-    )
+    _, __, controls = simulate.Simulator(dummy).rollout_log(log, simulate_control=False)
     controls = np.array([0.0 if c is None else c for c in controls])
     torque_enable = np.array([e["torque_enable"] for e in log["entries"]])
 
@@ -155,9 +151,7 @@ class Pendulum:
         px, py = self.pivot
 
         # Floor, vertical stand and top beam holding the pivot (static).
-        ax.add_patch(
-            Rectangle((-1.45, -1.45), 2.9, 0.34, color=COL_FLOOR, zorder=0)
-        )
+        ax.add_patch(Rectangle((-1.45, -1.45), 2.9, 0.34, color=COL_FLOOR, zorder=0))
         ax.add_patch(
             FancyBboxPatch(
                 (-1.30, -1.11),
@@ -186,12 +180,22 @@ class Pendulum:
         self.masses = []
         for alpha, z in ((0.5, 2), (1.0, 3)):
             (arm,) = ax.plot(
-                [], [], color=COL_ARM, lw=22, solid_capstyle="round",
-                alpha=alpha, zorder=z,
+                [],
+                [],
+                color=COL_ARM,
+                lw=22,
+                solid_capstyle="round",
+                alpha=alpha,
+                zorder=z,
             )
             mass = Circle(
-                (0, 0), 0.20, fc=COL_MASS, ec=COL_RING, lw=7,
-                alpha=alpha, zorder=z + 0.1,
+                (0, 0),
+                0.20,
+                fc=COL_MASS,
+                ec=COL_RING,
+                lw=7,
+                alpha=alpha,
+                zorder=z + 0.1,
             )
             ax.add_patch(mass)
             self.arms.append(arm)
@@ -275,8 +279,8 @@ def build_figure(data):
         ax1.plot([], [], label=f"{m['name']}_q")[0] for m in data["models"]
     ]
     ax1.set_title(
-        f'{data_log["motor"]}, {data_log["trajectory"]}, '
-        f'm={data_log["mass"]}, l={data_log["length"]}, k={data_log["kp"]}'
+        f"{data_log['motor']}, {data_log['trajectory']}, "
+        f"m={data_log['mass']}, l={data_log['length']}, k={data_log['kp']}"
     )
     ax1.set_ylabel("angle [rad]")
 
@@ -297,8 +301,13 @@ def build_figure(data):
     cmin = float(np.min(data["controls"])) - 0.02
     cmax = float(np.max(data["controls"])) + 0.02
     ax3.fill_between(
-        ts, cmin, cmax, where=~data["torque_enable"],
-        color="red", alpha=0.3, label="torque off",
+        ts,
+        cmin,
+        cmax,
+        where=~data["torque_enable"],
+        color="red",
+        alpha=0.3,
+        label="torque off",
     )
     ax3.set_ylabel(unit)
     ax3.set_xlabel(f"time [s] / simulator: reference")
@@ -367,7 +376,7 @@ def main():
             # Cumulated MAE (rad) between simulated and measured angle so far.
             mae = float(np.mean(np.abs(sim_q[:upto] - data["q"][:upto])))
             pendulum.ax.set_title(
-                f'{data["models"][phase]["name"]} (MAE: {mae:.3f} rad)',
+                f"{data['models'][phase]['name']} (MAE: {mae:.3f} rad)",
                 fontsize=24,
                 fontweight="bold",
             )

@@ -55,7 +55,9 @@ class UnitreeGo1Actuator(Actuator):
         self, q_target: ArrayLike, q: ArrayLike, dq: ArrayLike, dt: float
     ) -> Union[ArrayLike, None]:
         # Target velocity is assumed to be 0
-        torque = (q_target - q) * self.kp * self.model.ratio.value + self.damping * (0.0 - dq)
+        torque = (q_target - q) * self.kp * self.model.ratio.value + self.damping * (
+            0.0 - dq
+        )
         torque = self.backend.clamp(
             torque, -self.model.max_torque.value, self.model.max_torque.value
         )
@@ -63,7 +65,11 @@ class UnitreeGo1Actuator(Actuator):
         return torque
 
     def compute_torque(
-        self, control: ArrayLike | None, torque_enable: bool, q: ArrayLike, dq: ArrayLike
+        self,
+        control: ArrayLike | None,
+        torque_enable: bool,
+        q: ArrayLike,
+        dq: ArrayLike,
     ) -> ArrayLike:
         torques = control * torque_enable
 

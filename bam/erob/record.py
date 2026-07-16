@@ -15,7 +15,12 @@ from bam.trajectory import *
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--host", type=str, default="127.0.0.1")
-arg_parser.add_argument("--offset", type=float, required=True, help="Offset in radians for the zero position")
+arg_parser.add_argument(
+    "--offset",
+    type=float,
+    required=True,
+    help="Offset in radians for the zero position",
+)
 arg_parser.add_argument("--mass", type=float, required=True)
 arg_parser.add_argument("--arm_mass", type=float, required=True)
 arg_parser.add_argument("--length", type=float, required=True)
@@ -29,8 +34,10 @@ args = arg_parser.parse_args()
 if args.trajectory not in trajectories:
     raise ValueError(f"Unknown trajectory: {args.trajectory}")
 
+
 def angle_wrap(angle):
     return (angle + np.pi) % (2 * np.pi) - np.pi
+
 
 trajectory = trajectories[args.trajectory]
 
@@ -50,7 +57,7 @@ data = {
     "damping": args.damping,
     "motor": args.motor,
     "trajectory": args.trajectory,
-    "entries": []
+    "entries": [],
 }
 
 while time.time() - start < trajectory.duration:
@@ -79,7 +86,7 @@ while time.time() - start < trajectory.duration:
 eth.set_order(0, "torque", 0.0)
 eth.stop()
 
-#Format YYYY-MM-DD_HH:mm:ss"
+# Format YYYY-MM-DD_HH:mm:ss"
 date = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%S")
 
 filename = f"{args.logdir}/{date}.json"

@@ -18,6 +18,7 @@ from bam.testbench import Testbench, Pendulum
 if TYPE_CHECKING:
     from bam.actuator import ArrayLike
 
+
 class ErobActuator(Actuator):
     def __init__(self, testbench_class: Testbench, damping=2.0):
         super().__init__(testbench_class)
@@ -67,7 +68,11 @@ class ErobActuator(Actuator):
         return amps
 
     def compute_torque(
-        self, control: ArrayLike | None, torque_enable: bool, q: ArrayLike, dq: ArrayLike
+        self,
+        control: ArrayLike | None,
+        torque_enable: bool,
+        q: ArrayLike,
+        dq: ArrayLike,
     ) -> ArrayLike:
         # Computing the torque given the control signal
         # With eRob, control=None actually meany amps=0, and not a disconnection of the motor

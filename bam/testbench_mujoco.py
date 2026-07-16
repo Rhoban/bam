@@ -58,9 +58,13 @@ class Pendulum:
         total_mass = self.mass + self.arm_mass
         # Center of mass along the (downward) arm: rod contributes at l/2, the
         # tip mass at l.
-        com_z = -(self.mass * self.length + self.arm_mass * self.length / 2.0) / total_mass
+        com_z = (
+            -(self.mass * self.length + self.arm_mass * self.length / 2.0) / total_mass
+        )
         # Inertia about the pivot, shifted to the COM with the parallel axis theorem.
-        inertia_pivot = self.mass * self.length**2 + (self.arm_mass / 3.0) * self.length**2
+        inertia_pivot = (
+            self.mass * self.length**2 + (self.arm_mass / 3.0) * self.length**2
+        )
         inertia_com = inertia_pivot - total_mass * com_z**2
         # A point mass has zero inertia about its own COM, which MuJoCo would
         # reject; floor it. Only rotation about x (the hinge axis) matters.
@@ -159,8 +163,12 @@ class Pendulum:
             name="bob",
             type=mujoco.mjtGeom.mjGEOM_CYLINDER,
             fromto=[
-                0.0, 0.0, -length + bob_half,
-                0.0, 0.0, -length - bob_half,
+                0.0,
+                0.0,
+                -length + bob_half,
+                0.0,
+                0.0,
+                -length - bob_half,
             ],
             size=[max(length * 0.13, 2e-3), 0.0, 0.0],
             mass=0.0,

@@ -53,7 +53,12 @@ def voltage_controlled_to_mujoco(actuator: VoltageControlledActuator) -> dict:
     return {
         "forcerange": actuator.vin * kt / R,
         "armature": actuator.model.armature.value,
-        "kp": actuator.error_gain * actuator.kp * actuator.vin * actuator.max_pwm * kt / R,
+        "kp": actuator.error_gain
+        * actuator.kp
+        * actuator.vin
+        * actuator.max_pwm
+        * kt
+        / R,
         "damping": actuator.model.friction_viscous.value + kt**2 / R,
         "frictionloss": actuator.model.friction_base.value,
     }
@@ -113,9 +118,7 @@ def to_mujoco(actuator: Actuator) -> dict:
     elif isinstance(actuator, UnitreeGo1Actuator):
         return unitree_go1_to_mujoco(actuator)
 
-    raise NotImplementedError(
-        f"{type(actuator).__name__} doesn't support to_mujoco"
-    )
+    raise NotImplementedError(f"{type(actuator).__name__} doesn't support to_mujoco")
 
 
 if __name__ == "__main__":

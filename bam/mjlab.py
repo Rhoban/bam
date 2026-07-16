@@ -525,7 +525,9 @@ class BamActuator(Actuator):
             # Per-env writes require truly per-world storage. A non-expanded
             # field aliases a single (1, nv) buffer (stride 0 on the world axis),
             # so writing distinct per-env values would be invalid.
-            if self._num_envs > 1 and (fl_field.stride(0) == 0 or damping_field.stride(0) == 0):
+            if self._num_envs > 1 and (
+                fl_field.stride(0) == 0 or damping_field.stride(0) == 0
+            ):
                 raise RuntimeError(
                     "BamActuator writes per-environment dof_frictionloss/"
                     "dof_damping, but these model fields are not expanded per "
@@ -815,7 +817,10 @@ class Simulator:
 
             def _col(key, default=None):
                 return np.array(
-                    [e.get(key, default) if default is not None else e[key] for e in entries]
+                    [
+                        e.get(key, default) if default is not None else e[key]
+                        for e in entries
+                    ]
                 )
 
             gi = _col("goal_position")
@@ -871,7 +876,9 @@ class Simulator:
             if not te.all():
                 off = np.nonzero(~te)[0]
                 off_ids = torch.as_tensor(off, dtype=torch.long, device=dev)
-                zeros = torch.zeros((off_ids.numel(), ctrl_ids.numel()), dtype=f32, device=dev)
+                zeros = torch.zeros(
+                    (off_ids.numel(), ctrl_ids.numel()), dtype=f32, device=dev
+                )
                 entity.write_ctrl_to_sim(zeros, env_ids=off_ids)
 
             controls[k] = sim.data.ctrl[:, ctrl_ids][:, 0].detach().cpu().numpy()
@@ -930,7 +937,13 @@ class Simulator:
         scene.initialize(sim.mj_model, sim.model, sim.data)
         # BamActuator writes per-env friction; those fields must be per-world.
         sim.expand_model_fields(
-            ("body_mass", "body_ipos", "body_inertia", "dof_frictionloss", "dof_damping")
+            (
+                "body_mass",
+                "body_ipos",
+                "body_inertia",
+                "dof_frictionloss",
+                "dof_damping",
+            )
         )
         entity = scene[_ENTITY_NAME]
         bam_act = entity.actuators[0]

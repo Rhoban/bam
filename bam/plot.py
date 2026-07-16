@@ -111,10 +111,10 @@ for log in logs.logs:
         for model_name, sim_q in zip(all_names, all_sim_q):
             ax1.plot(ts, sim_q, label=f"{model_name}_q")
     ax1.legend()
-    title = f'{log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}'
+    title = f"{log['motor']}, {log['trajectory']}, m={log['mass']}, l={log['length']}, k={log['kp']}"
 
     ax1.set_title(
-        f'{log["motor"]}, {log["trajectory"]}, m={log["mass"]}, l={log["length"]}, k={log["kp"]}'
+        f"{log['motor']}, {log['trajectory']}, m={log['mass']}, l={log['length']}, k={log['kp']}"
     )
     ax1.set_ylabel("angle [rad]")
     ax1.grid()

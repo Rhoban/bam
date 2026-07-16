@@ -44,7 +44,9 @@ for logfile in glob.glob(f"{args.raw}/*.json"):
                 t - entry_1["timestamp"]
             ) / (entry_2["timestamp"] - entry_1["timestamp"])
 
-        new_entry["torque_enable"] = True if (new_entry["torque_enable"] > 0.5) else False
+        new_entry["torque_enable"] = (
+            True if (new_entry["torque_enable"] > 0.5) else False
+        )
         new_entry["timestamp"] = t
 
         data_output["entries"].append(new_entry)

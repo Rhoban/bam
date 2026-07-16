@@ -53,6 +53,7 @@ trajectory = trajectories[args.trajectory]
 # ── Controller initialisation ────────────────────────────────────────────────
 if args.motor in _XL330_MOTORS:
     from rustypot import Xl330PyController
+
     c = Xl330PyController(args.port, baudrate=1000000, timeout=0.01)
     ID = 1
 
@@ -84,7 +85,7 @@ data = {
     "vin": args.vin,
     "motor": args.motor,
     "trajectory": args.trajectory,
-    "entries": []
+    "entries": [],
 }
 
 while time.time() - start < trajectory.duration:

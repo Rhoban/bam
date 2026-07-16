@@ -13,7 +13,9 @@ import numpy as np
 import json
 
 arg_parser = argparse.ArgumentParser(description="Show jitter histogram across logs")
-arg_parser.add_argument("--logdir", type=str, required=True, help="Directory containing raw log json files")
+arg_parser.add_argument(
+    "--logdir", type=str, required=True, help="Directory containing raw log json files"
+)
 args = arg_parser.parse_args()
 
 filenames = sorted(glob.glob(os.path.join(args.logdir, "*.json")))

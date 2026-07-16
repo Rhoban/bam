@@ -23,10 +23,10 @@ arg_parser.add_argument("--speak", action="store_true")
 args = arg_parser.parse_args()
 
 KPS = {
-    "mx64":   [4, 8, 16, 32],
-    "mx106":  [4, 8, 16, 32],
-    "xl320":  [4, 8, 16, 32],
-    "xl330":  [50, 100, 200, 300, 400],
+    "mx64": [4, 8, 16, 32],
+    "mx106": [4, 8, 16, 32],
+    "xl320": [4, 8, 16, 32],
+    "xl330": [50, 100, 200, 300, 400],
     "xl330i": [50, 100, 200, 300, 400],
 }
 
@@ -37,7 +37,9 @@ kps = KPS[args.motor]
 trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
 
 command_base = f"uv run -m bam.dynamixel.record --mass {args.mass} --arm-mass {args.arm_mass} --length {args.length}"
-command_base += f" --port {args.port} --logdir {args.logdir} --motor {args.motor} --vin {args.vin}"
+command_base += (
+    f" --port {args.port} --logdir {args.logdir} --motor {args.motor} --vin {args.vin}"
+)
 
 
 for kp in kps:
@@ -47,7 +49,8 @@ for kp in kps:
 
         if args.speak:
             from gtts import gTTS
-            myobj = gTTS(text=sentence, lang='en', slow=False)
+
+            myobj = gTTS(text=sentence, lang="en", slow=False)
             myobj.save("/tmp/message.mp3")
             os.system("mpg321 /tmp/message.mp3")
 

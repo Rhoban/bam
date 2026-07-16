@@ -102,7 +102,9 @@ class MujocoController:
         act = self.model.actuator
         vin_orig = act.vin
         if self.vin_drop_resistance is not None:
-            load_torque = np.sum(np.abs(self.mujoco_data.qfrc_actuator[self.dof_indexes]))
+            load_torque = np.sum(
+                np.abs(self.mujoco_data.qfrc_actuator[self.dof_indexes])
+            )
             current = load_torque / self.model.kt.value
             vin_eff = vin_orig - self.vin_drop_resistance * current
             if self.vin_min is not None:
@@ -159,6 +161,7 @@ class MujocoController:
         # Updating damping and frictionloss
         self.mujoco_model.dof_frictionloss[self.dof_indexes] = frictionloss
         self.mujoco_model.dof_damping[self.dof_indexes] = damping
+
 
 class Simulator:
     """MuJoCo mirror of :class:`bam.simulate.Simulator`.
@@ -341,7 +344,7 @@ def load_config(
     mujoco_model: mujoco.MjModel,
     mujoco_data: mujoco.MjData,
     kp: float,
-    vin: float
+    vin: float,
 ) -> tuple:
     """
     Loads a BAM configuration file and returns the list of controllers and the mapping dicts.
@@ -364,14 +367,16 @@ def load_config(
             dofs = value["dofs"]
             for dof in dofs:
                 dof_to_bam_controller[dof] = key
-                
+
             model = load_model_from_dict(value["model"])
             model.actuator.kp = kp
             model.actuator.vin = vin
             model.actuator.error_gain = value["error_gain"]
             model.actuator.max_pwm = value["max_pwm"]
 
-            bam_controllers[key] = MujocoController(model, dofs, mujoco_model, mujoco_data)
+            bam_controllers[key] = MujocoController(
+                model, dofs, mujoco_model, mujoco_data
+            )
             bam_controllers[key].dofs = dofs
 
     return bam_controllers, dof_to_bam_controller

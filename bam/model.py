@@ -270,7 +270,9 @@ models = {
 }
 
 
-def _resolve_json_path(json_file: str | None, motor_name: str | None, model: str | None) -> str:
+def _resolve_json_path(
+    json_file: str | None, motor_name: str | None, model: str | None
+) -> str:
     if json_file is not None:
         return json_file
     if motor_name is None or model is None:
@@ -279,8 +281,16 @@ def _resolve_json_path(json_file: str | None, motor_name: str | None, model: str
     path = params_root / motor_name / f"{model}.json"
     if not path.exists():
         motor_dir = params_root / motor_name
-        available_models = sorted(p.stem for p in motor_dir.glob("*.json")) if motor_dir.exists() else []
-        available_motors = sorted(d.name for d in params_root.iterdir() if d.is_dir()) if params_root.exists() else []
+        available_models = (
+            sorted(p.stem for p in motor_dir.glob("*.json"))
+            if motor_dir.exists()
+            else []
+        )
+        available_motors = (
+            sorted(d.name for d in params_root.iterdir() if d.is_dir())
+            if params_root.exists()
+            else []
+        )
         raise FileNotFoundError(
             f"No bundled params for motor={motor_name!r} model={model!r}. "
             f"Available models for this motor: {available_models}. "
@@ -289,7 +299,9 @@ def _resolve_json_path(json_file: str | None, motor_name: str | None, model: str
     return str(path)
 
 
-def load_model(json_file: str = None, *, motor_name: str = None, model: str = None) -> Model:
+def load_model(
+    json_file: str = None, *, motor_name: str = None, model: str = None
+) -> Model:
     """Load a BAM friction model from a parameter file.
 
     Specify the source with **one** of two mutually exclusive approaches:
@@ -314,7 +326,8 @@ def load_model(json_file: str = None, *, motor_name: str = None, model: str = No
     with open(path) as f:
         data = json.load(f)
         return load_model_from_dict(data)
-    
+
+
 def load_model_from_dict(data: dict) -> Model:
     """Load a BAM friction model from a parameter dictionary.
 

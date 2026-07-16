@@ -22,11 +22,13 @@ args = arg_parser.parse_args()
 
 data = {}
 
+
 def read_float(prompt):
     try:
         return float(input(prompt))
     except ValueError:
         return None
+
 
 data["mass"] = args.mass
 data["length"] = args.length
@@ -43,13 +45,10 @@ for pos in "low", "high":
         status = client.get_statuses()[0]
         data[pos] = {
             "amps": status["current"],
-            "position": status["position"] - args.offset
+            "position": status["position"] - args.offset,
         }
     else:
-        data[pos] = {
-            "amps": None,
-            "position": None
-        }
+        data[pos] = {"amps": None, "position": None}
 
 # Slowly decreaing amps
 while amps > 0:
