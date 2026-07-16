@@ -16,7 +16,7 @@ arg_parser.add_argument("--params", type=str, default="params.json")
 arg_parser.add_argument("--max_torque", type=float, required=True)
 args = arg_parser.parse_args()
 
-plt.figure(figsize=(3, 2))
+plt.figure(figsize=(5, 4))
 
 model = load_model(args.params)
 for velocity in range(10):
