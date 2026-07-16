@@ -11,10 +11,8 @@ What to include
 A contribution consists of:
 
 - One JSON parameter file per model variant (at minimum M6; ideally M1–M6).
-- The motor name and a short description (bus type, reduction ratio if any,
-  nominal voltage).
-- The pendulum configuration used for identification (mass, arm mass, length)
-  and the recording conditions (voltage, P-gain values, trajectories).
+- Update in this documentation, adding your actuator to the :doc:`usage/actuators` page.
+- Ideally, provide raw data so that the fitting is reproducible
 
 Parameter file format
 ---------------------
