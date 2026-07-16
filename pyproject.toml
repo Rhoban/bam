@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "better-actuator-models"
-version = "1.0.1"
+version = "1.0.2"
 description = "BAM: Better Actuator Models is a Python library dedicated to the identification and simulation of advanced actuator models."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
