@@ -45,6 +45,7 @@ pygments_style = "friendly"
 pygments_dark_style = "monokai"
 html_static_path = ["_static"]
 html_css_files = ["bam.css"]
+html_js_files = ["motor_examples.js"]
 html_logo = "_static/BAM_logo.png"
 
 html_theme_options = {

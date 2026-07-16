@@ -46,7 +46,7 @@ servos:
 
    from bam.model import load_model
 
-   model = load_model(motor_name="xl330", model="m6")
+   model = load_model(motor_name="{actuator}", model="m6")
 
 - Supported motor names: see the :doc:`list of identified actuators <actuators>`.
 - Supported model variants: ``"m1"`` through ``"m6"`` (see :doc:`../theory/models`).

@@ -53,3 +53,39 @@ video {
 .bam-card .sd-card-footer {
     text-align: right;
 }
+
+/* "Use in simulation" buttons on the identified-actuators table */
+.actuators-table td {
+    vertical-align: middle;
+}
+
+.motor-btn {
+    display: block;
+    width: 100%;
+    margin: 0.25rem 0;
+    white-space: nowrap;
+}
+
+/* Banner shown on usage pages indicating the motor the examples target */
+.motor-banner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.motor-banner-img {
+    flex: 0 0 auto;
+    width: 90px;
+    height: auto;
+    margin: 0;
+    border-radius: 0.4rem;
+}
+
+.motor-banner-text {
+    flex: 1 1 auto;
+}
+
+.motor-banner-text p:last-child {
+    margin-bottom: 0;
+}

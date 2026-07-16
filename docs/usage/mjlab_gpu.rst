@@ -55,7 +55,7 @@ Two approaches are available, mutually exclusive:
    from bam.mjlab import BamActuatorCfg
 
    actuator_cfg = BamActuatorCfg(
-      motor_name="xl330",
+      motor_name="{actuator}",
       model="m6",
       target_names_expr=(r".*",),
    )
@@ -84,7 +84,7 @@ parameter JSON. They can be overridden at config level:
 .. code-block:: python
 
    actuator_cfg = BamActuatorCfg(
-      motor_name="xl330",
+      motor_name="{actuator}",
       model="m6",
       target_names_expr=(r".*",),
       vin=7.5,      # supply voltage [V]
@@ -104,7 +104,7 @@ at startup:
 .. code-block:: python
 
    actuator_cfg = BamActuatorCfg(
-      motor_name="xl330",
+      motor_name="{actuator}",
       model="m6",
       target_names_expr=(r".*",),
       vin_range=(7.0, 8.0),   # sampled uniformly at startup [V]
@@ -130,7 +130,7 @@ units:
 .. code-block:: python
 
    actuator_cfg = BamActuatorCfg(
-      motor_name="xl330",
+      motor_name="{actuator}",
       model="m6",
       target_names_expr=(r".*",),
       vin_range=(7.0, 8.0),
@@ -163,7 +163,7 @@ per environment:
 .. code-block:: python
 
    actuator_cfg = BamActuatorCfg(
-      motor_name="xl330",
+      motor_name="{actuator}",
       model="m6",
       target_names_expr=(r".*",),
       delay_min_lag=1,    # always at least 1 step of delay
@@ -185,7 +185,7 @@ Pass the config to the ``actuator_cfgs`` argument of an mjlab ``Entity``:
    import mjlab
 
    actuator_cfg = BamActuatorCfg(
-      motor_name="xl330",
+      motor_name="{actuator}",
       model="m6",
       target_names_expr=(r".*",),
       kp_fw=125,
