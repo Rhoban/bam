@@ -201,7 +201,7 @@ class VoltageControlledActuator(DCMotorActuator):
         testbench_class: Testbench,
         vin: float,
         kp: float,
-        error_gain: float,
+        error_gain: float = 1.0,
         max_pwm: float = 1.0,
         max_current: float | None = None,
     ):
@@ -301,7 +301,7 @@ class CurrentControlledActuator(DCMotorActuator):
     """
 
     def __init__(
-        self, testbench_class: Testbench, vin: float, kp: float, error_gain: float
+        self, testbench_class: Testbench, vin: float, kp: float, error_gain: float = 1.0
     ):
         super().__init__(testbench_class, vin, kp)
         self.error_gain = error_gain
