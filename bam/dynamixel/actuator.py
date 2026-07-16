@@ -126,7 +126,6 @@ class XL330CurrentActuator(CurrentControlledActuator):
         self.model.R = Parameter(2.6, 2.0, 5.0)
         self.model.armature = Parameter(0.005, 0.0001, 0.05)
         self.model.current_limit = Parameter(1.5, 1.0, 3.0)
-        self.model.viscous_damping_with_torque = Parameter(0.0, 0.0, 0.1)
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value

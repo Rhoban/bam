@@ -320,7 +320,6 @@ class CurrentControlledActuator(DCMotorActuator):
     def initialize(self):
         super().initialize()
         self.model.current_limit = Parameter(1.5, 0, 3)
-        self.model.viscous_damping_with_torque = Parameter(0.0, 0.0, 0.1)
 
     def compute_control(
         self, q_target: ArrayLike, q: ArrayLike, dq: ArrayLike, dt: float
@@ -366,16 +365,13 @@ class CurrentControlledActuator(DCMotorActuator):
     ) -> ArrayLike:
         """Compute motor torque from current command.
 
-        :math:`\\tau = k_t I - b_{\\text{active}} \\dot{q}`
+        :math:`\\tau = k_t I`
 
         :param control: Current command(s) [A].
         :param torque_enable: If ``False``, returns zero torque.
         :param q: Current joint angle(s) [rad] (unused here).
-        :param dq: Current joint velocity(ies) [rad/s].
+        :param dq: Current joint velocity(ies) [rad/s] (unused here).
         :returns: Motor torque [Nm].
         """
-        torque = (
-            self.model.kt.value * control
-            - self.model.viscous_damping_with_torque.value * dq
-        )
+        torque = self.model.kt.value * control
         return torque * torque_enable

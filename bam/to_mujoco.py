@@ -67,8 +67,7 @@ def voltage_controlled_to_mujoco(actuator: VoltageControlledActuator) -> dict:
 def current_controlled_to_mujoco(actuator: CurrentControlledActuator) -> dict:
     """Compute MuJoCo parameters for a current-controlled actuator.
 
-    ``forcerange`` accounts for both the voltage and the current limit, and the
-    torque-dependent viscous damping is approximated by a constant ``damping``.
+    ``forcerange`` accounts for both the voltage and the current limit.
     """
     if actuator.vin == 0 or actuator.kp == 0:
         print(yellow("WARNING: kp or vin are not set"))
@@ -82,10 +81,7 @@ def current_controlled_to_mujoco(actuator: CurrentControlledActuator) -> dict:
         "forcerange": forcerange,
         "armature": actuator.model.armature.value,
         "kp": actuator.error_gain * actuator.kp * kt,
-        "damping": (
-            actuator.model.friction_viscous.value
-            + actuator.model.viscous_damping_with_torque.value
-        ),
+        "damping": actuator.model.friction_viscous.value,
         "frictionloss": actuator.model.friction_base.value,
     }
 
