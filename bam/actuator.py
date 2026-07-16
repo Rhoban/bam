@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Union
 import numpy as np
 from .testbench import Testbench
 from bam.parameter import Parameter
-from .message import yellow, print_parameter
 
 if TYPE_CHECKING:
     import torch
@@ -138,9 +137,6 @@ class Actuator:
     def get_extra_inertia(self) -> float:
         """Return the actuator's apparent inertia added to the load [kg·m²]."""
         raise NotImplementedError
-
-    def to_mujoco(self):
-        raise NotImplementedError("This actuator doesn't support to_mujoco")
 
 
 class DCMotorActuator(Actuator):
@@ -291,24 +287,6 @@ class VoltageControlledActuator(DCMotorActuator):
         torque -= (self.model.kt.value**2) * dq / self.model.R.value
         return torque * torque_enable
 
-    def to_mujoco(self):
-        if self.vin == 0 or self.kp == 0:
-            print(yellow(f"WARNING: kp or vin are not set"))
-
-        kt = self.model.kt.value
-        R = self.model.R.value
-
-        kp = self.error_gain * self.kp * self.vin * self.max_pwm * kt / R
-        damping = self.model.friction_viscous.value + kt**2 / R
-
-        print_parameter("forcerange", self.vin * self.model.kt.value / R)
-        print_parameter("armature", self.model.armature.value)
-        print_parameter("kp", kp)
-        print_parameter("damping", damping)
-        print_parameter("frictionloss", self.model.friction_base.value)
-
-        print("")
-
 
 class CurrentControlledActuator(DCMotorActuator):
     """Current-controlled servo with a firmware P-position controller.
@@ -390,27 +368,3 @@ class CurrentControlledActuator(DCMotorActuator):
         )
         return torque * torque_enable
 
-    def to_mujoco(self):
-        if self.vin == 0 or self.kp == 0:
-            print(yellow(f"WARNING: kp or vin are not set"))
-
-        kt = self.model.kt.value
-
-        kp = self.error_gain * self.kp * kt
-        damping = (
-            self.model.friction_viscous.value
-            + self.model.viscous_damping_with_torque.value
-        )
-
-        forcerange = self.vin * self.model.kt.value / self.model.R.value
-        forcerange = min(
-            forcerange, self.model.current_limit.value * self.model.kt.value
-        )
-
-        print_parameter("forcerange", forcerange)
-        print_parameter("armature", self.model.armature.value)
-        print_parameter("kp", kp)
-        print_parameter("damping", damping)
-        print_parameter("frictionloss", self.model.friction_base.value)
-
-        print("")

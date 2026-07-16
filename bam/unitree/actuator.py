@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import numpy as np
 from typing import TYPE_CHECKING, Union
-from bam.message import yellow, print_parameter, bright
 from bam.actuator import Actuator
 from bam.parameter import Parameter
 from bam.testbench import Testbench, Pendulum
@@ -72,15 +71,3 @@ class UnitreeGo1Actuator(Actuator):
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
-
-    def to_mujoco(self):
-        if self.kp == 0:
-            print(yellow(f"WARNING: kp is not set"))
-
-        print_parameter("armature", self.model.armature.value)
-        print_parameter("kp", self.kp * self.model.ratio.value)
-        print_parameter("damping", self.model.friction_viscous.value)
-        print_parameter("frictionloss", self.model.friction_base.value)
-        print_parameter("forcerange", self.model.max_torque.value)
-
-        print("")
