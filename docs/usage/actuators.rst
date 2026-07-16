@@ -24,7 +24,8 @@ that motor.
       - ``mx64``
       - ROBOTIS Dynamixel MX-64 servo-actuator
         (`Parameters <https://github.com/Rhoban/bam/tree/main/bam/params/mx64>`__,
-        `model <https://github.com/Rhoban/bam/blob/main/bam/dynamixel/actuator.py>`__)
+        `model <https://github.com/Rhoban/bam/blob/main/bam/dynamixel/actuator.py>`__,
+        `raw data <https://huggingface.co/buckets/Gregwar/bam_data/resolve/mx64_raw.tgz?download=true>`__)
       - .. raw:: html
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mx64">Use in MuJoCo</a>
@@ -37,7 +38,8 @@ that motor.
       - ``mx106``
       - ROBOTIS Dynamixel MX-106 servo-actuator
         (`Parameters <https://github.com/Rhoban/bam/tree/main/bam/params/mx106>`__,
-        `model <https://github.com/Rhoban/bam/blob/main/bam/dynamixel/actuator.py>`__)
+        `model <https://github.com/Rhoban/bam/blob/main/bam/dynamixel/actuator.py>`__,
+        `raw data <https://huggingface.co/buckets/Gregwar/bam_data/resolve/mx106_raw.tgz?download=true>`__)
       - .. raw:: html
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mx106">Use in MuJoCo</a>
