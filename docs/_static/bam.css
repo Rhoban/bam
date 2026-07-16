@@ -27,3 +27,29 @@ video {
     margin-left: auto;
     margin-right: auto;
 }
+
+/* Getting started cards */
+.bam-getting-started {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.bam-card {
+    border-radius: 0.6rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.bam-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-color: var(--pst-color-primary);
+}
+
+.bam-card .sd-card-title {
+    font-size: 1.15rem;
+}
+
+/* Float the card footer link to the right */
+.bam-card .sd-card-footer {
+    text-align: right;
+}

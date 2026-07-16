@@ -11,7 +11,8 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.todo",
     "sphinx_copybutton",
-    "sphinxcontrib.video"
+    "sphinxcontrib.video",
+    "sphinx_design",
 ]
 
 templates_path = ["_templates"]

@@ -1,15 +1,31 @@
 Better Actuator Models (BAM)
 ============================
 
-.. video:: https://github.com/Rhoban/bam_media/raw/refs/heads/main/videos/m1_vs_m6.mp4
-        :autoplay:
-        :muted:
-        :loop:
+.. grid:: 1 2 2 2
+    :gutter: 2
 
-.. admonition:: Whas it it?
+    .. grid-item::
+
+        .. video:: https://github.com/Rhoban/bam_media/raw/refs/heads/main/videos/m1_vs_m6.mp4
+                :autoplay:
+                :muted:
+                :loop:
+
+    .. grid-item::
+
+        .. video:: https://github.com/Rhoban/bam_media/raw/refs/heads/main/videos/sin_sin.mp4
+                :autoplay:
+                :muted:
+                :loop:
+
+.. admonition:: What is it?
 
 
-    BAM (for Better Actuator Models) is a library to identify and use extended friction models for servo-actuators in simulation engines. It is designed to improve the fidelity of simulations by providing more accurate actuator models, particularly in scenarios where friction plays a significant role.
+    BAM (for Better Actuator Models) is a library to **identify** and **use** servo-actuator models in simulation
+    engines. In particular, it provides **extended friction models**, which are more accurate than the default friction
+    models used in most simulators (e.g., MuJoCo).
+
+    The animation above is a face-to-face comparison of the :doc:`default MuJoCo friction model (M1) <theory/models>` and an :doc:`extended friction model (M6) <theory/models>` identified for Dynamixel MX-64 and MX-106 servo-actuators lifting a load.
 
 Features
 --------
@@ -17,23 +33,56 @@ Features
 - :doc:`Pre-identified friction models <usage/actuators>` for common servo-actuators (e.g., XL320, XL330, MX64, MX106...)
 - **API for direct integration of friction models** into :doc:`MuJoCo CPU <usage/mujoco_cpu>` and :doc:`mjlab (MuJoCo Warp) <usage/mjlab_gpu>`
 - :doc:`Extended friction models <theory/index>`, including Stribeck effect, load-dependance
-- :doc:`Instructions and process to identify <identification/index>` servo-actuator with friction models
+- :doc:`Identification process <identification/index>` for servo-actuator with friction models
 
 Getting started
 ---------------
 
-**Your motor is in the bundled library** (``xl320``, ``xl330``, ``mx64``,
-``mx106``, ...`) — load the parameters and plug them into
-your MuJoCo or mjlab simulation right away. Head to :doc:`usage/index`.
+Pick the path that matches where you are:
 
-**Your motor is not in the library** — you will need to build a simple pendulum
-test bench, record a set of trajectories under varying load and conditions,
-and run the identification pipeline to fit a friction model. The whole process
-is documented step by step in :doc:`identification/index`. 
+.. grid:: 1 1 3 3
+    :gutter: 3
+    :class-container: bam-getting-started
 
-**You want to understand the modeling approach** — the :doc:`theory/index` section
-covers the pendulum dynamics, the friction-budget formulation, and the six model
-variants M1–M6.
+    .. grid-item-card:: 🔌 Use a bundled model
+        :link: usage/index
+        :link-type: doc
+        :class-card: bam-card
+
+        Your motor is already in the :doc:`library <usage/actuators>`
+        (``xl320``, ``xl330``, ``mx64``, ``mx106``, ...).
+
+        Load its parameters and plug them into your MuJoCo or mjlab simulation
+        right away.
+
+        +++
+        :doc:`Usage guide → <usage/index>`
+
+    .. grid-item-card:: 🔧 Identify a new motor
+        :link: identification/index
+        :link-type: doc
+        :class-card: bam-card
+
+        Your motor is not in the library yet.
+
+        Build a simple pendulum test bench, record trajectories under varying
+        load, and run the identification pipeline to fit a friction model.
+
+        +++
+        :doc:`Identification process → <identification/index>`
+
+    .. grid-item-card:: 📐 Understand the theory
+        :link: theory/index
+        :link-type: doc
+        :class-card: bam-card
+
+        You want to understand the modeling approach.
+
+        Dive into the pendulum dynamics, the friction-budget formulation, and
+        the six model variants M1–M6.
+
+        +++
+        :doc:`Theory → <theory/index>`
 
 Reference paper
 ---------------
