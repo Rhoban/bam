@@ -66,3 +66,12 @@ include = ["bam*"]
 
 [tool.setuptools.package-data]
 bam = ["params/**/*.json"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = ["docs/_build"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
