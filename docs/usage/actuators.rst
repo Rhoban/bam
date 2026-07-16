@@ -78,7 +78,12 @@ that motor.
       - ``feetech_sts3215_7_4V``
       - Feetech STS3215 servo-actuator (7.4V version)
         (`Parameters <https://github.com/Rhoban/bam/tree/main/bam/params/feetech_sts3215_7_4V>`__,
-        `model <https://github.com/Rhoban/bam/blob/main/bam/feetech/actuator.py>`__)
+        `model <https://github.com/Rhoban/bam/blob/main/bam/feetech/actuator.py>`__,
+        `raw data <https://huggingface.co/buckets/Gregwar/bam_data/resolve/feetech_sts3215_raw.zip?download=true>`__)
+
+        .. raw:: html
+
+           <p class="mini-warning">⚠ Only the <code>m1</code> model was identified for this actuator.</p>
       - .. raw:: html
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=feetech_sts3215_7_4V">Use in MuJoCo</a>

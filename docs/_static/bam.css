@@ -66,6 +66,18 @@ video {
     white-space: nowrap;
 }
 
+/* Compact inline warning that fits inside a table cell */
+.mini-warning {
+    margin: 0.5rem 0 0;
+    font-size: 0.8em;
+    line-height: 1.35;
+    color: var(--pst-color-warning, #966600);
+}
+
+.mini-warning code {
+    font-size: 0.9em;
+}
+
 /* Banner shown on usage pages indicating the motor the examples target */
 .motor-banner {
     display: flex;
