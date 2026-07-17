@@ -6,10 +6,10 @@ in subclassing BAM's :class:`~bam.actuator.Actuator` class and implementing the 
 questions need to be addressed:
 
 * How is the servomotor turning the state (encoder position, velocity) into **torque** ?
-  * What **control law** is in play ?
-  * What **limits** or **smoothing** is applied in the servo firmware ?
+    * What **control law** is in play ?
+    * What **limits** or **smoothing** is applied in the servo firmware ?
 * What important **values** need to be identified to model the actuator ? 
-  * In particular, you might want to have some initial guess ranges for those values
+    * In particular, you might want to have some initial guess ranges for those values
 
 Fortunately, the answers to those questions are often the same. That is why BAM already provides few
 subclasses of :class:`~bam.actuator.Actuator`:
