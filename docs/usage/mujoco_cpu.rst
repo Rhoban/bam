@@ -126,13 +126,13 @@ battery and the motors:
 
    V_\text{eff} = V_\text{in} - R_\text{drop} \, I,
    \qquad
-   I = \frac{1}{K_t} \sum_i |\tau_i|
+   I = \max\left(0, \; \frac{1}{K_t} \sum_i d_i \, \tau_i \right)
 
 where ``vin_drop_resistance`` is :math:`R_\text{drop}` (the combined battery +
-wire resistance, in ohms), and the current :math:`I` is estimated from the
-actuator torques using the torque constant :math:`K_t`, summed over all
-controlled joints. A hard lower bound ``vin_min`` can be set to prevent the
-effective voltage from collapsing under heavy load:
+wire resistance, in ohms), :math:`\tau_i` is the actuator torque on joint
+:math:`i`, :math:`d_i` its PWM duty cycle, and :math:`K_t` the torque constant.
+A hard lower bound ``vin_min`` can be set to prevent the effective voltage from
+collapsing under heavy load:
 
 .. code-block:: python
 
@@ -144,6 +144,35 @@ effective voltage from collapsing under heavy load:
       vin_drop_resistance=0.1,   # 100 mOhms of wire & battery resistance
       vin_min=6.0,               # [V]
    )
+
+Note that :math:`I` is the current drawn from the **battery**, which is not the
+motor current. An H-bridge in PWM behaves like a buck stage: the motor draws
+:math:`\tau_i / K_t` continuously, but the battery only sources it during the
+on-time of the PWM period, so the two are related by the duty cycle,
+
+.. math::
+
+   I_\text{bat} = d \, I_\text{motor},
+   \qquad
+   V_\text{bat} I_\text{bat} = V_\text{motor} I_\text{motor}.
+
+Two consequences are worth keeping in mind when fitting
+``vin_drop_resistance``:
+
+* **The product is signed.** When :math:`d_i` and :math:`\tau_i` have opposite
+  signs the joint is braking and pushing current *back* into the bus. Since all
+  joints of a controller share one supply, the per-joint currents are summed
+  **before** the clamp, so a regenerating joint offsets a driving one.
+* **Regeneration cannot raise the voltage.** The :math:`\max(0, \cdot)` discards
+  a net negative draw rather than modelling the bus voltage rising above
+  :math:`V_\text{in}`. This is deliberate — most drives dissipate that energy
+  instead of returning it to the pack — but it means the model is conservative
+  during aggressive decelerations.
+
+Both quantities are taken from the previous simulation step (the duty cycle from
+the last :meth:`~bam.mujoco.MujocoController.update` and the torque from the
+last solve), so the drop lags the load by one timestep and no algebraic loop is
+introduced.
 
 .. warning::
 

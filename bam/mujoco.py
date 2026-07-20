@@ -24,8 +24,11 @@ class MujocoController:
     :param mujoco.MjModel mujoco_model: The mujoco model
     :param mujoco.MjData mujoco_data: The mujoco data
     :param float | None vin_drop_resistance: The battery + wire resistance [Ohm], if not None the
-        voltage will be reduced by vin_drop_resistance * current, where the current [A] is estimated
-        from the actuator torques as sum(|torque|) / kt
+        voltage will be reduced by vin_drop_resistance * current, where the battery current [A] is
+        estimated from the previous step as max(0, sum(duty_cycle * torque) / kt). The duty cycle
+        factor converts motor current to supply current (the H-bridge acts as a buck stage); the
+        sum is taken over the shared bus before clamping, so a regenerating joint offsets a
+        driving one.
     :param float | None vin_min: the minimum voltage, if not None the voltage will not go below this value
     """
 
@@ -97,15 +100,23 @@ class MujocoController:
         q = self.mujoco_data.qpos[self.qpos_indexes]
         dq = self.mujoco_data.qvel[self.dof_indexes]
 
-        # Apply the voltage drop across the battery + wire resistance. The current
-        # draw is estimated from the previous step's actuator torques (I = torque / kt).
+        # Apply the voltage drop across the battery + wire resistance. The battery
+        # current is estimated from the previous step's actuator torques and duty
+        # cycles: the H-bridge is a buck stage, so the motor draws torque / kt
+        # continuously but the battery only sources it during the PWM on-time,
+        # giving I_bat = duty * torque / kt. The product is signed (duty and torque
+        # of opposite sign = the joint brakes and returns current to the bus), and
+        # the joints share a supply, so the sum is taken before clamping at zero.
         act = self.model.actuator
         vin_orig = act.vin
-        if self.vin_drop_resistance is not None:
-            load_torque = np.sum(
-                np.abs(self.mujoco_data.qfrc_actuator[self.dof_indexes])
+        duty_cycle = getattr(act, "duty_cycle", None)
+        if self.vin_drop_resistance is not None and duty_cycle is not None:
+            current = np.sum(
+                duty_cycle
+                * self.mujoco_data.qfrc_actuator[self.dof_indexes]
+                / self.model.kt.value
             )
-            current = load_torque / self.model.kt.value
+            current = max(current, 0.0)  # Only consider positive current draw
             vin_eff = vin_orig - self.vin_drop_resistance * current
             if self.vin_min is not None:
                 vin_eff = max(vin_eff, self.vin_min)

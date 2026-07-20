@@ -265,6 +265,7 @@ class VoltageControlledActuator(DCMotorActuator):
 
         # Physical PWM limit (voltage bounded by the battery) — applied last.
         duty_cycle = self.backend.clamp(duty_cycle, -self.max_pwm, self.max_pwm)
+        self.duty_cycle = duty_cycle  # for logging
 
         return self.vin * duty_cycle
 

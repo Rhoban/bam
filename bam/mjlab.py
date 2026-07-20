@@ -619,20 +619,31 @@ class BamActuator(Actuator):
 
         # Actuator torque applied on the PREVIOUS solve (lagged one step). The BAM
         # friction budget uses this (not the freshly-computed motor_torque) as the
-        # motor-side load, and the battery voltage-drop model reuses it as the
-        # current-draw proxy. Mirrors bam.mujoco.MujocoController.
+        # motor-side load, and the battery voltage-drop model combines it with the
+        # previous duty cycle to estimate the supply current. Mirrors
+        # bam.mujoco.MujocoController.
         prev_actuator_torque = self._as_tensor(self._data.qfrc_actuator)[
             :, self._dof_ids
         ]  # (N, J)
 
         # ── Per-env supply voltage (with optional battery drop) ──────────────
-        # V_drop = R * I, with the current I estimated from the actuator torques
-        # as Σ|τ| / kt across the controlled joints.
+        # V_drop = R * I, where I is the current drawn from the *battery*, not the
+        # motor current. The H-bridge is a buck stage: the motor draws τ / kt
+        # continuously but the battery only sources it during the PWM on-time, so
+        # I_bat = duty * τ / kt (equivalently V_bat I_bat = V_motor I_motor).
+        # The duty cycle is the one from the previous compute(), matching the lag
+        # of prev_actuator_torque. Signed: duty and τ of opposite sign means the
+        # joint is regenerating into the bus. Joints share a bus, so the per-joint
+        # currents are summed *before* clamping at zero — a braking joint offsets
+        # a driving one. The clamp discards regeneration raising the bus voltage,
+        # which is deliberate (see docs/usage/mjlab_gpu.rst).
         vin = self.vin_tensor  # (N, 1)
-        if self.vin_drop_resistance is not None:
-            current = (
-                prev_actuator_torque.abs().sum(dim=-1, keepdim=True) / bam.kt.value
+        duty_cycle = getattr(act, "duty_cycle", None)
+        if self.vin_drop_resistance is not None and duty_cycle is not None:
+            current = (duty_cycle * prev_actuator_torque / bam.kt.value).sum(
+                dim=-1, keepdim=True
             )  # (N, 1)
+            current = torch.clamp(current, min=0.0)  # only positive draw
             vin = vin - self.vin_drop_resistance * current  # (N, 1), broadcast safe
             if self.cfg.vin_min is not None:
                 vin = torch.clamp(vin, min=self.cfg.vin_min)

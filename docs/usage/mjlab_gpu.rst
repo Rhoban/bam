@@ -119,13 +119,13 @@ equivalent resistor between the battery and the motors:
 
    V_\text{eff} = V_\text{in} - R_\text{drop} \, I,
    \qquad
-   I = \frac{1}{K_t} \sum_i |\tau_i|
+   I = \max\left(0, \; \frac{1}{K_t} \sum_i d_i \, \tau_i \right)
 
 where :math:`R_\text{drop}` (``vin_drop_resistance_range``) is the combined
-battery + wire resistance in ohms, and the current :math:`I` is estimated from
-the actuator torques using the torque constant :math:`K_t`. Randomizing this
-resistance captures variability in cable length or connector quality across
-units:
+battery + wire resistance in ohms, :math:`\tau_i` is the actuator torque on
+joint :math:`i`, :math:`d_i` its PWM duty cycle, and :math:`K_t` the torque
+constant. Randomizing this resistance captures variability in cable length or
+connector quality across units:
 
 .. code-block:: python
 
@@ -140,6 +140,22 @@ units:
 
 Both ranges are sampled once at initialization and held constant across
 episode resets.
+
+:math:`I` is the current drawn from the **battery**, not the motor current: an
+H-bridge in PWM behaves like a buck stage, so the motor draws
+:math:`\tau_i / K_t` continuously while the battery only sources it during the
+PWM on-time, giving :math:`I_\text{bat} = d \, I_\text{motor}`. The product is
+signed — a joint whose duty cycle and torque disagree in sign is braking and
+returning current to the bus — and because all joints of a
+:class:`~bam.mjlab.BamActuator` share one supply, the per-joint currents are
+summed **before** the :math:`\max(0, \cdot)`. That clamp deliberately discards
+regeneration raising the bus voltage, so the model stays conservative during
+aggressive decelerations. Both the duty cycle and the torque are taken from the
+previous solve, so the drop lags the load by one timestep.
+
+This matches :class:`~bam.mujoco.MujocoController` exactly, so a policy trained
+here sees the same battery behaviour as the CPU rollout — see
+:doc:`mujoco_cpu` for the same derivation.
 
 .. warning::
 
