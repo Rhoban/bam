@@ -12,6 +12,8 @@
 Example::
 
     uv run python mae.py --params params/xl330/ --logdir data_processed/
+    uv run python mae.py --params params/xl330/m4.json params/xl330/m6.json \
+        --logdir data_processed/
 """
 
 import argparse
@@ -27,7 +29,11 @@ from bam import simulate
 
 arg_parser = argparse.ArgumentParser(description="Compare BAM model MAEs")
 arg_parser.add_argument(
-    "--params", type=str, required=True, help="Directory containing *.json param files"
+    "--params",
+    type=str,
+    required=True,
+    nargs="+",
+    help="Directories containing *.json param files, and/or param files themselves",
 )
 arg_parser.add_argument(
     "--logdir", type=str, required=True, help="Directory containing log files"
@@ -76,11 +82,26 @@ logs = Logs(args.logdir)
 print(f"Loaded {len(logs.logs)} logs from {args.logdir}")
 
 # ── Discover param files ──────────────────────────────────────────────────────
-params_dir = Path(args.params)
-param_files = sorted(params_dir.glob("*.json"))
-if not param_files:
-    raise FileNotFoundError(f"No *.json files found in {params_dir}")
+# Each --params entry is either a directory of *.json files, or a param file.
+param_files = []
+for params in args.params:
+    params_path = Path(params)
+    if params_path.is_dir():
+        found = sorted(params_path.glob("*.json"))
+        if not found:
+            raise FileNotFoundError(f"No *.json files found in {params_path}")
+        param_files += found
+    elif params_path.is_file():
+        param_files.append(params_path)
+    else:
+        raise FileNotFoundError(f"No such file or directory: {params_path}")
 print(f"Found {len(param_files)} param files: {[p.name for p in param_files]}")
+
+# Labels are the file stems (m4, m6, ...), unless two param files share the same
+# stem, in which case the paths are used to tell them apart.
+param_labels = [param_file.stem for param_file in param_files]
+if len(set(param_labels)) != len(param_labels):
+    param_labels = [str(param_file) for param_file in param_files]
 
 
 # ── MAE computation ───────────────────────────────────────────────────────────
@@ -123,13 +144,12 @@ def compute_maes_mjlab(param_file, all_logs: list) -> list:
 
 results = {}  # name → list of per-log MAEs
 
-for param_file in param_files:
+for param_file, label in zip(param_files, param_labels):
     try:
         model = load_model(str(param_file))
     except Exception as e:
-        print(f"  {'[SKIP] ' + param_file.stem:30s} ({e})")
+        print(f"  {'[SKIP] ' + label:30s} ({e})")
         continue
-    label = param_file.stem  # e.g. "m6", "m4", ...
     print(f"  {label:30s}", end="", flush=True)
 
     if args.mjlab:
