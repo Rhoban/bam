@@ -65,7 +65,8 @@ that motor.
       - ``xl330``
       - ROBOTIS Dynamixel XL-330 servo-actuator
         (`Parameters <https://github.com/Rhoban/bam/tree/main/bam/params/xl330>`__,
-        `model <https://github.com/Rhoban/bam/blob/main/bam/dynamixel/actuator.py>`__)
+        `model <https://github.com/Rhoban/bam/blob/main/bam/dynamixel/actuator.py>`__,
+        `raw data <https://huggingface.co/buckets/Gregwar/bam_data/resolve/xl330_raw.zip?download=true>`__)
       - .. raw:: html
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=xl330">Use in MuJoCo</a>
