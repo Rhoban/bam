@@ -95,14 +95,14 @@ class XL330Actuator(VoltageControlledActuator):
             error_gain=(XL330_ENCODER_COUNTS_PER_REV / (2 * np.pi))
             / (XL330_KP_DIVISOR * XL330_PWM_LIMIT),
             max_pwm=1.0,
+            # Firmware current limit [A] for the XL330
+            max_current=1.75,
         )
 
     def initialize(self):
         self.model.kt = Parameter(1.6, 0.1, 3.0)
         self.model.R = Parameter(2.6, 2.0, 5.0)
         self.model.armature = Parameter(0.005, 0.0001, 0.05)
-        # Firmware current limit [A] for the XL330 (identifiable)
-        self.model.max_current = Parameter(1.75, 0.5, 3.0)
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
