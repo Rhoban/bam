@@ -104,6 +104,14 @@ class UpAndDown(Trajectory):
         ]
         return cubic_interpolate(keyframes, t), True
 
+class HalfSine(Trajectory):
+    """Slow half-sine path 0 → π/2.
+    """
+
+    duration = 6.0
+
+    def __call__(self, t: float) -> tuple[float, bool]:
+        return np.sin(t/2), True
 
 class SinSin(Trajectory):
     """Multi-frequency trajectory: :math:`\\sin(t)\\cdot\\pi/2 + \\sin(5t)\\cdot 0.5\\cdot\\sin(2t)`.
