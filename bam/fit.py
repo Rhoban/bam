@@ -7,6 +7,7 @@
 #     http://www.apache.org/licenses/LICENSE-2.0
 
 import argparse
+import os
 import socket
 from datetime import datetime
 import sys
@@ -127,6 +128,13 @@ def monitor(study, trial):
                 "hostname": socket.gethostname(),
             },
         )
+        # Upload the params as params.json at the root of the wandb files,
+        # re-syncing it each time it is rewritten below.
+        wandb.save(
+            os.path.join(wandb_run.dir, "params.json"),
+            base_path=wandb_run.dir,
+            policy="live",
+        )
 
     if elapsed > 0.2:
         last_log = time.time()
@@ -147,6 +155,8 @@ def monitor(study, trial):
         data["actuator"] = args.actuator
 
         json.dump(data, open(params_json_filename, "w"))
+        if wandb_run is not None:
+            json.dump(data, open(os.path.join(wandb_run.dir, "params.json"), "w"))
 
         if args.validation_kp > 0:
             val_model = load_model(params_json_filename)
