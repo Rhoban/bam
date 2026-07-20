@@ -164,6 +164,8 @@ trajectories: dict[str, Trajectory] = {
     "sin_time_square": SinusTimeSquare(),
     "up_and_down": UpAndDown(),
     "sin_sin": SinSin(),
+    "half_sine": HalfSine(),
+    "steps": Steps(),
     "nothing": Nothing(),
 }
 
