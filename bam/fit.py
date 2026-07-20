@@ -109,11 +109,31 @@ def objective(trial):
 
 
 last_log = time.time()
+last_params_sync = time.time()
 wandb_run = None
 
 
+def sync_params_to_files():
+    """Copy the current best params into the run's Files tab as params.json.
+
+    Writes params.json into the run directory (same path each time, so the Files
+    tab shows a single file that is updated in place, no version history) and
+    uploads it immediately with ``policy="now"``. ``now`` is used rather than a
+    ``live`` watcher because the file is (re)created after ``wandb.init`` and a
+    live glob registered at init does not reliably pick that up.
+    """
+    if wandb_run is None:
+        return
+    dst = os.path.join(wandb_run.dir, "params.json")
+    with open(params_json_filename) as src:
+        content = src.read()
+    with open(dst, "w") as out:
+        out.write(content)
+    wandb.save(dst, base_path=wandb_run.dir, policy="now")
+
+
 def monitor(study, trial):
-    global last_log, wandb_run
+    global last_log, last_params_sync, wandb_run
     elapsed = time.time() - last_log
 
     if args.wandb and wandb_run is None:
@@ -128,14 +148,6 @@ def monitor(study, trial):
                 "hostname": socket.gethostname(),
             },
         )
-        # Upload the params as params.json at the root of the wandb files,
-        # re-syncing it each time it is rewritten below.
-        wandb.save(
-            os.path.join(wandb_run.dir, "params.json"),
-            base_path=wandb_run.dir,
-            policy="live",
-        )
-
     if elapsed > 0.2:
         last_log = time.time()
         data = deepcopy(study.best_params)
@@ -155,8 +167,6 @@ def monitor(study, trial):
         data["actuator"] = args.actuator
 
         json.dump(data, open(params_json_filename, "w"))
-        if wandb_run is not None:
-            json.dump(data, open(os.path.join(wandb_run.dir, "params.json"), "w"))
 
         if args.validation_kp > 0:
             val_model = load_model(params_json_filename)
@@ -184,6 +194,11 @@ def monitor(study, trial):
 
         if wandb_run is not None:
             wandb.log(wandb_log)
+
+            # Refresh the Files-tab params.json at most ~once a minute.
+            if time.time() - last_params_sync > 60:
+                last_params_sync = time.time()
+                sync_params_to_files()
     sys.stdout.flush()
 
 
@@ -229,3 +244,8 @@ else:
         p.start()
 
     optuna_run(True)
+
+    # Final flush: make sure the last best params reach the Files tab.
+    if args.wandb and wandb_run is not None:
+        sync_params_to_files()
+        wandb.finish()
