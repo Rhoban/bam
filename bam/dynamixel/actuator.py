@@ -94,9 +94,7 @@ class XL330Actuator(VoltageControlledActuator):
             kp=400,
             error_gain=(XL330_ENCODER_COUNTS_PER_REV / (2 * np.pi))
             / (XL330_KP_DIVISOR * XL330_PWM_LIMIT),
-            max_pwm=1.0,
-            # Firmware current limit [A] for the XL330
-            max_current=1.75,
+            max_pwm=1.0
         )
 
     def initialize(self):
