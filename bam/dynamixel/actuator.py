@@ -125,5 +125,57 @@ class XL330CurrentActuator(CurrentControlledActuator):
         self.model.armature = Parameter(0.005, 0.0001, 0.05)
         self.model.current_limit = Parameter(1.5, 1.0, 3.0)
 
+    def compute_torque(self, control, torque_enable, q, dq):
+        """Torque from the regulated **bus** current (XL330-specific).
+
+        Unlike the standard current-controlled servo (which senses and regulates
+        the motor *phase* current, so ``torque = kt * current``), the XL330
+        measures current on the *input/bus* side of the H-bridge. Its current
+        loop therefore regulates the bus current, whose magnitude relates to the
+        phase current through the PWM duty by power balance:
+
+        .. math::
+
+            I_\\text{bus} = \\text{duty} \\cdot I_\\text{phase},
+            \\qquad I_\\text{phase} = \\frac{\\text{duty}\\,v_\\text{in} - k_t\\dot q}{R}
+
+        Given the commanded bus current (``control``, signed by drive direction),
+        we recover the duty that produces it — the positive root of
+        ``vin*duty^2 - kt*dq*duty - R*|I_bus| = 0`` in the drive direction — clamp
+        it to the PWM limit, and return ``torque = kt * I_phase``. This makes the
+        delivered torque duty-dependent (``~sqrt(I_bus)`` at stall) rather than
+        linear in the command, which is the behaviour observed in the data.
+
+        .. warning::
+
+            UNTESTED. The bus-current hypothesis is inferred from position-mode
+            data (the ``|duty| ~ sqrt(|error|)`` relationship), not yet confirmed
+            by a direct torque measurement, and this model has not been validated
+            by a full identification against held-out xl330i data. The math is
+            unit-tested for self-consistency and the numpy path runs, but the
+            torch/mjlab path has not been executed on a real tensor backend.
+            Treat the resulting parameters and simulations as provisional.
+        """
+        if control is None:
+            return 0.0
+
+        kt = self.model.kt.value
+        R = self.model.R.value
+        vin = self.vin
+
+        # Solve the power-balance quadratic for the duty in the drive direction.
+        # Uses the backend (numpy / torch) so it also runs under mjlab on tensors;
+        # ``abs`` and ``**`` dispatch correctly for floats, ndarrays and tensors.
+        sign = self.backend.sign(control)
+        disc = (kt * dq) ** 2 + 4.0 * vin * R * abs(control)
+        duty = (kt * dq + sign * disc**0.5) / (2.0 * vin)
+
+        # PWM saturation (XL330 PWM Limit, full 885 range -> duty in [-1, 1]).
+        duty = self.backend.clamp(duty, -1.0, 1.0)
+
+        phase_current = (duty * vin - kt * dq) / R
+        torque = kt * phase_current
+        return torque * torque_enable
+
     def get_extra_inertia(self) -> float:
         return self.model.armature.value

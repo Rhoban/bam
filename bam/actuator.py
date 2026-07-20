@@ -35,10 +35,16 @@ class Backend:
     def clamp(self, x: ArrayLike, low: ArrayLike, high: ArrayLike) -> ArrayLike:
         raise NotImplementedError
 
+    def sign(self, x: ArrayLike) -> ArrayLike:
+        raise NotImplementedError
+
 
 class NumpyBackend(Backend):
     def clamp(self, x: ArrayLike, low: ArrayLike, high: ArrayLike) -> ArrayLike:
         return np.clip(x, low, high)
+
+    def sign(self, x: ArrayLike) -> ArrayLike:
+        return np.sign(x)
 
 
 class TorchBackend(Backend):
@@ -46,6 +52,11 @@ class TorchBackend(Backend):
         import torch
 
         return torch.clamp(x, low, high)
+
+    def sign(self, x: ArrayLike) -> ArrayLike:
+        import torch
+
+        return torch.sign(x)
 
 
 class Actuator:
