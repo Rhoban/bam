@@ -93,6 +93,17 @@ for log in logs.logs:
     speed = [entry["speed"] if "speed" in entry else 0.0 for entry in log["entries"]]
     has_speed = any("speed" in entry for entry in log["entries"])
 
+    # MAE of each simulated model against the recorded data. The params file is
+    # shown, since several of them can share the same model.
+    if do_sim:
+        for params_file, name, sim_q, sim_speeds in zip(
+            model_names, all_names, all_sim_q, all_sim_speeds
+        ):
+            mae = f"q {np.mean(np.abs(sim_q - np.array(q))):.6f} rad"
+            if has_speed:
+                mae += f", speed {np.mean(np.abs(sim_speeds - np.array(speed))):.6f} rad/s"
+            print(f"  {params_file} ({name}) MAE: {mae}")
+
     dummy = DummyModel()
     dummy.set_actuator(actuators[args.actuator]())
     simulator = simulate.Simulator(dummy)
