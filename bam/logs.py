@@ -36,7 +36,8 @@ class Logs:
                 data = json.load(f)
                 data["filename"] = json_file
                 if "arm_mass" not in data:
-                    data["arm_mass"] = 0.0
+                    # The Dynamixel recorder writes the hyphenated key
+                    data["arm_mass"] = data.pop("arm-mass", 0.0)
                 self.logs.append(data)
 
     def split(self, selector_kp: int) -> "Logs":
