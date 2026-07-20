@@ -34,7 +34,7 @@ if args.motor not in KPS:
     raise ValueError(f"Unknown motor '{args.motor}'. Known motors: {list(KPS.keys())}")
 
 kps = KPS[args.motor]
-trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
+trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square", "half_sine", "steps"]
 
 command_base = f"uv run -m bam.dynamixel.record --mass {args.mass} --arm-mass {args.arm_mass} --length {args.length}"
 command_base += (
