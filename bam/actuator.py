@@ -191,13 +191,16 @@ class VoltageControlledActuator(DCMotorActuator):
     :param error_gain: Converts ``kp * Δq`` to a duty cycle in [−1, 1].
         Depends on the servo's internal encoder resolution and gain scaling.
     :param max_pwm: Maximum duty cycle magnitude (default 1.0).
-    :param max_current: Firmware current limit [A]. If not None, the firmware
-        limiter is modelled in :meth:`compute_control` as a constraint on the PWM
-        duty cycle that *attempts* to keep the motor current within
-        ``[-max_current, max_current]``. Because the firmware can only bound the
-        duty cycle (not synthesize arbitrary voltage), the limit is only reached
-        when the battery voltage allows it; at high speed the back-EMF can make
-        it unreachable. ``None`` (default) → no current limiting.
+
+    The firmware current limiter is optional and opt-in: a subclass enables it by
+    creating a ``max_current`` :class:`~bam.parameter.Parameter` [A] on the model
+    in its :meth:`initialize`. When present, :meth:`compute_control` models the
+    limiter as a constraint on the PWM duty cycle that *attempts* to keep the
+    motor current within ``[-max_current, max_current]``. Because the firmware can
+    only bound the duty cycle (not synthesize arbitrary voltage), the limit is
+    only reached when the battery voltage allows it; at high speed the back-EMF
+    can make it unreachable. Subclasses that do not create the parameter get no
+    current limiting.
     """
 
     def __init__(
@@ -207,12 +210,10 @@ class VoltageControlledActuator(DCMotorActuator):
         kp: float,
         error_gain: float = 1.0,
         max_pwm: float = 1.0,
-        max_current: float | None = None,
     ):
         super().__init__(testbench_class, vin, kp)
         self.error_gain = error_gain
         self.max_pwm = max_pwm
-        self.max_current = max_current
 
     def control_unit(self) -> str:
         return "volts"
@@ -222,7 +223,8 @@ class VoltageControlledActuator(DCMotorActuator):
     ) -> ArrayLike | None:
         """Compute the voltage command from position error.
 
-        When ``max_current`` is set, the firmware current limiter is modelled as
+        When the model defines a ``max_current`` parameter, the firmware current
+        limiter is modelled as
         a constraint on the duty cycle rather than a clamp on the output torque.
         The firmware can only act on the PWM duty cycle, so the achievable
         current is bounded by the battery voltage: solving :math:`|I| \\le
@@ -251,13 +253,15 @@ class VoltageControlledActuator(DCMotorActuator):
         duty_cycle = (q_target - q) * self.kp * self.error_gain
 
         # Firmware current limiter: bound the duty cycle so the motor current
-        # I = (duty * vin - kt * dq) / R stays within [-max_current, max_current].
+        # I = (duty * vin - kt * dq) / R stays within [-max_current, max_current]
+        # (max_current is an optional model parameter; skipped when absent).
         # This is only an attempt: the physical PWM clamp below is applied last,
         # so if the required duty falls outside [-max_pwm, max_pwm] the current
         # limit is not actually reached (the battery cannot supply the voltage).
-        if self.max_current is not None:
+        max_current = getattr(self.model, "max_current", None)
+        if max_current is not None:
             back_emf = self.model.kt.value * dq
-            duty_span = self.model.R.value * self.max_current / self.vin
+            duty_span = self.model.R.value * max_current.value / self.vin
             duty_center = back_emf / self.vin
             duty_cycle = self.backend.clamp(
                 duty_cycle, duty_center - duty_span, duty_center + duty_span
