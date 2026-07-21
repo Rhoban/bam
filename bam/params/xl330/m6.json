@@ -1,1 +1,19 @@
-{"kt": 0.3378911401596897, "R": 2.298787399903471, "armature": 0.0021173123765794786, "q_offset": 0.008058730308779322, "friction_base": 0.006576901417600614, "friction_stribeck": 0.007681868702239284, "load_friction_motor": 0.3363970560797436, "load_friction_external": 0.09177792244604617, "load_friction_motor_stribeck": 3.946840800336075e-06, "load_friction_external_stribeck": 0.12734082688777074, "load_friction_motor_quad": 0.0062496927653033895, "load_friction_external_quad": 0.003186138690282794, "dtheta_stribeck": 0.10006137222378013, "alpha": 3.26446295899839, "friction_viscous": 0.009476979761376654, "model": "m6", "actuator": "xl330"}
+{
+  "kt": 0.28638649600668775,
+  "R": 2.000017119760972,
+  "armature": 0.002569774737524995,
+  "q_offset": 0.01553585638800363,
+  "friction_base": 0.0023258418670152347,
+  "friction_stribeck": 0.0001856264715700908,
+  "load_friction_motor": 0.23063000784446322,
+  "load_friction_external": 0.26077932692372613,
+  "load_friction_motor_stribeck": 1.9157733081388423e-06,
+  "load_friction_external_stribeck": 0.15158776983752117,
+  "load_friction_motor_quad": 0.005595958708218643,
+  "load_friction_external_quad": 0.0037747149629857673,
+  "dtheta_stribeck": 0.11532863880939243,
+  "alpha": 1.000022697315946,
+  "friction_viscous": 0.0185448141303962,
+  "model": "m6",
+  "actuator": "xl330"
+}
