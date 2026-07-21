@@ -40,6 +40,8 @@ arg_parser.add_argument("--wandb", action="store_true")
 arg_parser.add_argument("--set", type=str, default="")
 arg_parser.add_argument("--validation_kp", type=int, default=0)
 arg_parser.add_argument("--eval", action="store_true")
+# Comma-separated trajectory names to drop from the fit (e.g. "lift_and_drop").
+arg_parser.add_argument("--exclude_trajectories", type=str, default="")
 args = arg_parser.parse_args()
 
 if not args.eval:
@@ -50,6 +52,17 @@ if not args.eval:
     json.dump({}, open(params_json_filename, "w"))
 
 logs = Logs(args.logdir)
+if args.exclude_trajectories:
+    excluded = {t for t in args.exclude_trajectories.split(",") if t}
+    before = len(logs.logs)
+    keep = [
+        i for i, log in enumerate(logs.logs) if log["trajectory"] not in excluded
+    ]
+    logs.logs = [logs.logs[i] for i in keep]
+    logs.json_files = [logs.json_files[i] for i in keep]
+    print(f"Excluded trajectories {sorted(excluded)}: {before} -> {len(logs.logs)} logs")
+    if len(logs.logs) == 0:
+        raise ValueError("No logs left after excluding trajectories")
 if not args.eval and args.validation_kp > 0:
     validation_logs = logs.split(args.validation_kp)
     validation_batch = validation_logs.make_batch()
