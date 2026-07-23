@@ -1,0 +1,102 @@
+{
+  "model": "m5",
+  "actuator": "xl330",
+  "params": "bam/params/xl330/m5.json",
+  "logdir": "data/xl330",
+  "base_mae": 0.021675588911885247,
+  "tolerance": 0.03,
+  "threshold_mae": 0.022325856579241805,
+  "sensitivity": {
+    "kt": {
+      "value": 0.3387881101585224,
+      "lower": 0.3279728453052279,
+      "upper": 0.34870184147669414,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "R": {
+      "value": 2.3371346612159773,
+      "lower": 2.278962429509466,
+      "upper": 2.4027528529240483,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "armature": {
+      "value": 0.002107333326728293,
+      "lower": 0.001869126056776601,
+      "upper": 0.002359764566652172,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "q_offset": {
+      "value": 0.008956294605195383,
+      "lower": -0.004726444435367589,
+      "upper": 0.022285619064995682,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "friction_base": {
+      "value": 0.00606303776928581,
+      "lower": 0.004754543190364634,
+      "upper": 0.0070631758516428965,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "friction_stribeck": {
+      "value": 0.0072508811182012385,
+      "lower": 0.002970331733178845,
+      "upper": 0.010126847179436772,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "load_friction_motor": {
+      "value": 0.3233873254278101,
+      "lower": 0.30627684322173887,
+      "upper": 0.34215791137174206,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "load_friction_external": {
+      "value": 0.10147129879956913,
+      "lower": 0.07949294017871962,
+      "upper": 0.12560958782804132,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "load_friction_motor_stribeck": {
+      "value": 2.871881759851801e-09,
+      "lower": 0.0,
+      "upper": 0.10788156050349547,
+      "lower_clamped": true,
+      "upper_clamped": false
+    },
+    "load_friction_external_stribeck": {
+      "value": 0.18994963638875817,
+      "lower": 0.0,
+      "upper": 0.30860076811712733,
+      "lower_clamped": true,
+      "upper_clamped": false
+    },
+    "dtheta_stribeck": {
+      "value": 0.10000000828098855,
+      "lower": 0.1,
+      "upper": 0.13530415496123277,
+      "lower_clamped": true,
+      "upper_clamped": false
+    },
+    "alpha": {
+      "value": 3.999999704597713,
+      "lower": 1.0,
+      "upper": 4.0,
+      "lower_clamped": true,
+      "upper_clamped": true
+    },
+    "friction_viscous": {
+      "value": 0.009696819153987467,
+      "lower": 0.00895126213540669,
+      "upper": 0.01051506160068915,
+      "lower_clamped": false,
+      "upper_clamped": false
+    }
+  }
+}
