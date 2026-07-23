@@ -3,70 +3,70 @@
   "actuator": "xl330",
   "params": "bam/params/xl330/m2.json",
   "logdir": "data/xl330",
-  "base_mae": 0.03168424792428117,
+  "base_mae": 0.03188405080512187,
   "tolerance": 0.03,
-  "threshold_mae": 0.03263477536200961,
+  "threshold_mae": 0.03284057232927553,
   "sensitivity": {
     "kt": {
-      "value": 0.3828035994756994,
-      "lower": 0.3657068780058427,
-      "upper": 0.4014544599825979,
+      "value": 0.38082604009581533,
+      "lower": 0.36832045026062865,
+      "upper": 0.4067163045856548,
       "lower_clamped": false,
       "upper_clamped": false
     },
     "R": {
-      "value": 3.5977874337978566,
-      "lower": 3.4229305787228066,
-      "upper": 3.7760512714571215,
+      "value": 3.6075906414207095,
+      "lower": 3.378593510181398,
+      "upper": 3.7420033850865164,
       "lower_clamped": false,
       "upper_clamped": false
     },
     "armature": {
-      "value": 0.0019447947707346733,
-      "lower": 0.001684678235899985,
-      "upper": 0.0021768548575037206,
+      "value": 0.0019147219169590663,
+      "lower": 0.0016859165092648434,
+      "upper": 0.0021615217244286156,
       "lower_clamped": false,
       "upper_clamped": false
     },
     "q_offset": {
-      "value": 0.018513125207515246,
-      "lower": -0.0006182279960264129,
-      "upper": 0.037627818312010314,
+      "value": 0.027299660077914623,
+      "lower": 8.297098276816944e-05,
+      "upper": 0.03976643765089777,
       "lower_clamped": false,
       "upper_clamped": false
     },
     "friction_base": {
-      "value": 0.017862485055596004,
-      "lower": 0.01691386856710575,
-      "upper": 0.018897595149988546,
+      "value": 0.018601492795417476,
+      "lower": 0.01758772399116908,
+      "upper": 0.01942731786983412,
       "lower_clamped": false,
       "upper_clamped": false
     },
     "friction_stribeck": {
-      "value": 0.001219077474887715,
+      "value": 0.0011012778060184916,
       "lower": 0.0,
-      "upper": 0.008391909466277818,
+      "upper": 0.006908529422633702,
       "lower_clamped": true,
       "upper_clamped": false
     },
     "dtheta_stribeck": {
-      "value": 0.23498464441923786,
+      "value": 0.2612676462986131,
       "lower": 0.1,
       "upper": 1.0,
       "lower_clamped": true,
       "upper_clamped": true
     },
     "alpha": {
-      "value": 3.9999999978585206,
+      "value": 3.9999999983129455,
       "lower": 1.0,
       "upper": 4.0,
       "lower_clamped": true,
       "upper_clamped": true
     },
     "friction_viscous": {
-      "value": 0.004518092968061638,
-      "lower": 0.004032663521981819,
-      "upper": 0.005128502367600615,
+      "value": 0.004047971379756858,
+      "lower": 0.0035733129025286563,
+      "upper": 0.004554661461417916,
       "lower_clamped": false,
       "upper_clamped": false
     }
