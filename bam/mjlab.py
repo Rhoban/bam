@@ -32,6 +32,7 @@ Usage example — custom JSON path::
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -126,6 +127,14 @@ class BamActuatorCfg(ActuatorCfg):
         joint creeps; this is the GPU-side substitute. Uses MuJoCo's direct
         (timestep-independent) solref form so it works regardless of the sim ``dt``.
         Set ``False`` to keep MuJoCo's soft defaults.
+    :param sensitivity_randomization: When ``True``, load the ``_sensitivity.json``
+        file matching the resolved params path (produced by ``bam.sensitivity``) and
+        randomize each BAM parameter *per environment* by sampling uniformly within
+        its ``[lower, upper]`` sensitivity range. The sampled values are re-drawn on
+        every environment reset. Requires the sensitivity file to exist next to the
+        params JSON (``<params>_sensitivity.json``). ``armature`` and ``q_offset`` are
+        excluded (the former is baked into the MuJoCo model at build, the latter is
+        unused by the mjlab path).
     """
 
     motor_name: str | None = None
@@ -137,6 +146,7 @@ class BamActuatorCfg(ActuatorCfg):
     vin_drop_resistance_range: tuple[float, float] | None = None
     vin_min: float | None = None
     stiff_frictionloss: bool = True
+    sensitivity_randomization: bool = False
 
     def __post_init__(self) -> None:
         if self.json_path is not None and (
@@ -237,6 +247,65 @@ class BamActuator(Actuator):
         self._num_envs: int = 0
         self._friction_fields_checked: bool = False
 
+        # Sensitivity-based per-env parameter randomization.
+        # _rand_ranges: {param_name: (lower, upper)} loaded from the sensitivity file.
+        # _rand_values: {param_name: (N, 1) tensor} of the current per-env samples.
+        # _rand_param_objs: {param_name: Parameter} cached to write the tensors onto.
+        self._rand_ranges: dict[str, tuple[float, float]] = {}
+        self._rand_values: dict[str, torch.Tensor] = {}
+        self._rand_param_objs: dict = {}
+        if cfg.sensitivity_randomization:
+            self._rand_ranges = self._load_sensitivity_ranges()
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Sensitivity-based parameter randomization
+    # ─────────────────────────────────────────────────────────────────────────
+
+    # Parameters excluded from sensitivity randomization: ``armature`` is baked
+    # into the MuJoCo model (dof_armature) at build time and not read per-step,
+    # and ``q_offset`` is unused by the mjlab path (gravity is handled by the
+    # pendulum geometry).
+    _RANDOMIZE_SKIP = ("armature", "q_offset")
+
+    def _load_sensitivity_ranges(self) -> dict[str, tuple[float, float]]:
+        """Load ``[lower, upper]`` ranges from the params' ``_sensitivity.json``.
+
+        The file is expected next to the resolved params JSON, with the same stem
+        and a ``_sensitivity.json`` suffix (as written by ``bam.sensitivity``).
+        Only parameters that (a) exist on the model, (b) are not in
+        :attr:`_RANDOMIZE_SKIP`, and (c) have a non-empty range are kept.
+        """
+        params_path = Path(self.cfg._resolved_json_path)
+        sens_path = params_path.with_name(params_path.stem + "_sensitivity.json")
+        if not sens_path.exists():
+            raise FileNotFoundError(
+                f"sensitivity_randomization is enabled but no sensitivity file "
+                f"was found at {sens_path}. Generate it with:\n"
+                f"    uv run python -m bam.sensitivity "
+                f"--params {params_path} --logdir <logs> --save"
+            )
+        data = json.load(open(sens_path))
+        sensitivity = data.get("sensitivity", {})
+        model_params = self._bam_model.get_parameters()
+        ranges: dict[str, tuple[float, float]] = {}
+        for name, info in sensitivity.items():
+            if name in self._RANDOMIZE_SKIP or name not in model_params:
+                continue
+            lower, upper = float(info["lower"]), float(info["upper"])
+            if upper > lower:
+                ranges[name] = (lower, upper)
+        return ranges
+
+    def _sample_sensitivity(self, env_ids: torch.Tensor | slice | None) -> None:
+        """Draw fresh uniform per-env parameter values for ``env_ids``."""
+        selection = slice(None) if env_ids is None else env_ids
+        for name, (lower, upper) in self._rand_ranges.items():
+            target = self._rand_values[name]
+            shape = target[selection].shape
+            target[selection] = torch.empty(
+                shape, dtype=target.dtype, device=target.device
+            ).uniform_(lower, upper)
+
     # ─────────────────────────────────────────────────────────────────────────
     # mjlab interface
     # ─────────────────────────────────────────────────────────────────────────
@@ -268,6 +337,13 @@ class BamActuator(Actuator):
         act = bam.actuator
         kt = bam.kt.value
         R = bam.R.value
+        # Under sensitivity randomization kt/R vary per env; use the worst-case
+        # (max kt, min R) so the forcerange stays a safe ceiling for every env.
+        if self.cfg.sensitivity_randomization:
+            if "kt" in self._rand_ranges:
+                kt = self._rand_ranges["kt"][1]
+            if "R" in self._rand_ranges:
+                R = self._rand_ranges["R"][0]
         armature = act.get_extra_inertia()
         # Use upper bound of vin_range for force_limit so MuJoCo's forcerange
         # is always a safe ceiling regardless of per-env voltage.
@@ -373,6 +449,24 @@ class BamActuator(Actuator):
         else:
             self.vin_drop_resistance = None
 
+        # Sensitivity randomization: allocate per-env (N, 1) tensors for each
+        # randomized parameter, cache the Parameter objects to write onto, and
+        # draw the first sample for all environments.
+        if self.cfg.sensitivity_randomization and self._rand_ranges:
+            model_params = bam.get_parameters()
+            self._rand_param_objs = {
+                name: model_params[name] for name in self._rand_ranges
+            }
+            self._rand_values = {
+                name: torch.empty(num_envs, 1, dtype=torch.float32, device=device)
+                for name in self._rand_ranges
+            }
+            self._sample_sensitivity(None)
+            print(
+                f"[BamActuator] sensitivity randomization over "
+                f"{list(self._rand_ranges)}"
+            )
+
         vin_repr = (
             f"range={self.cfg.vin_range}"
             if self.cfg.vin_range is not None
@@ -400,6 +494,9 @@ class BamActuator(Actuator):
     def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
         super().reset(env_ids)
         # vin_tensor and vin_drop_resistance are startup-randomized: do NOT re-sample on reset.
+        # Sensitivity-randomized parameters ARE re-sampled on every reset.
+        if self.cfg.sensitivity_randomization and self._rand_ranges:
+            self._sample_sensitivity(env_ids)
 
     @property
     def command_field(self) -> CommandField:
@@ -452,7 +549,9 @@ class BamActuator(Actuator):
         * **m6**: m5 + quadratic Stribeck load term (``quadratic=True``)
         """
         bam = self._bam_model
-        frictionloss = torch.full_like(motor_torque, bam.friction_base.value)
+        # ``+`` (not ``full_like``) so a tensor-valued friction_base (per-env
+        # sensitivity randomization) broadcasts to (N, J) rather than erroring.
+        frictionloss = torch.zeros_like(motor_torque) + bam.friction_base.value
 
         if bam.stribeck:
             frictionloss = frictionloss + stribeck_coeff * bam.friction_stribeck.value
@@ -616,6 +715,14 @@ class BamActuator(Actuator):
         assert self.kp_scale is not None and self.kd_scale is not None
         assert self._data is not None and self._dof_ids is not None
         assert self._mjwarp_model is not None
+
+        # Inject the per-env sensitivity-randomized parameters. Each Parameter's
+        # ``value`` becomes an (N, 1) tensor; the friction budget and the delegated
+        # compute_control / compute_torque then broadcast it over (N, J), exactly
+        # like the per-env vin / kp below.
+        if self.cfg.sensitivity_randomization and self._rand_values:
+            for name, parameter in self._rand_param_objs.items():
+                parameter.value = self._rand_values[name]
 
         # Actuator torque applied on the PREVIOUS solve (lagged one step). The BAM
         # friction budget uses this (not the freshly-computed motor_torque) as the

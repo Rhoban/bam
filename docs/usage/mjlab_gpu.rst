@@ -94,9 +94,10 @@ parameter JSON. They can be overridden at config level:
 Domain randomization
 --------------------
 
-:class:`~bam.mjlab.BamActuatorCfg` supports per-environment randomization
-of two physical quantities that are naturally variable across hardware units
-or charge states.
+:class:`~bam.mjlab.BamActuatorCfg` supports per-environment randomization of two
+physical quantities that are naturally variable across hardware units or charge
+states (battery voltage and supply resistance), plus randomization of the
+identified model parameters themselves via their sensitivity ranges.
 
 **Battery voltage** — sample a different supply voltage for each environment
 at startup:
@@ -167,6 +168,40 @@ here sees the same battery behaviour as the CPU rollout — see
    if you need the shared-supply behavior. In the current implementation, only one model
    can be used per actuator config, voltage drop will not function properly if different motors
    are mixed in the same config.
+
+**Model parameter randomization** — randomize the identified BAM parameters
+themselves (``kt``, ``R``, and the friction terms) per environment, within the
+range over which each one only mildly affects the fit. The ranges are read from
+a ``<model>_sensitivity.json`` file that must be generated first with
+:mod:`bam.sensitivity` — see :ref:`the identification guide <parameter-sensitivity>`.
+Enable the randomization with a single flag:
+
+.. code-block:: python
+
+   actuator_cfg = BamActuatorCfg(
+      json_path="params/xl330/m4.json",
+      target_names_expr=(r".*",),
+      sensitivity_randomization=True,
+   )
+
+The flag loads the ``_sensitivity.json`` matching the resolved params path (same
+stem, ``_sensitivity.json`` suffix) and, unlike ``vin_range`` /
+``vin_drop_resistance_range``, **re-samples the parameters on every environment
+reset** — each episode sees a slightly different motor. Sampling is uniform and
+**per environment** (one draw shared across all joints of the config, i.e. shape
+``(num_envs, 1)``), not per joint. ``armature`` and ``q_offset`` are excluded:
+the former is baked into the MuJoCo model at build time, the latter is unused by
+the mjlab path. If the sensitivity file is missing, a :class:`FileNotFoundError`
+points to :mod:`bam.sensitivity`.
+
+.. note::
+
+   The sensitivity ranges are computed **one parameter at a time**, so
+   randomizing all of them jointly compounds: at the default 3% tolerance the
+   resulting MAE increase has a median around +7% (with a longer tail), because
+   several friction parameters are weakly identified and trade off against each
+   other. Regenerate the file at a tighter or looser tolerance to scale the
+   randomization band.
 
 Command delay
 -------------

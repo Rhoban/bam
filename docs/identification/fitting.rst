@@ -152,6 +152,30 @@ To plot measured versus simulated trajectories:
 Several ``--params`` files can be given to overlay multiple models on the
 same plot, which is useful for comparing M1 through M6 side by side.
 
+.. _parameter-sensitivity:
+
+Parameter sensitivity
+---------------------
+
+Once a model is identified, :mod:`bam.sensitivity` reports how tightly each
+parameter is constrained by the data. It varies every parameter independently
+and finds the ``[lower, upper]`` range over which the MAE stays within a
+tolerance (``--tolerance``, default 3%) of the fitted value:
+
+.. code-block:: text
+
+   uv run python -m bam.sensitivity \
+       --params params/xl330/m6.json \
+       --logdir data_processed \
+       --save
+
+With ``--save`` (or a directory passed to ``--params``) the result is written
+next to each input as ``<model>_sensitivity.json``; otherwise ``--output`` sets
+the path. A wide range flags a weakly identified parameter. Lowering
+``--tolerance`` tightens every range (and vice versa). The file is also consumed
+by mjlab's ``sensitivity_randomization`` for per-environment domain
+randomization (see :doc:`../usage/mjlab_gpu`).
+
 Weights & Biases logging
 ------------------------
 

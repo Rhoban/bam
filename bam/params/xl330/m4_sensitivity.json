@@ -1,0 +1,88 @@
+{
+  "model": "m4",
+  "actuator": "xl330",
+  "params": "bam/params/xl330/m4.json",
+  "logdir": "data/xl330",
+  "base_mae": 0.022474810906915742,
+  "tolerance": 0.03,
+  "threshold_mae": 0.023149055234123216,
+  "sensitivity": {
+    "kt": {
+      "value": 0.3561922406972633,
+      "lower": 0.3441453508021405,
+      "upper": 0.365501579865707,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "R": {
+      "value": 2.683342742910402,
+      "lower": 2.6163221605130023,
+      "upper": 2.7637084360952993,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "armature": {
+      "value": 0.0022063924524511006,
+      "lower": 0.0019800919095083816,
+      "upper": 0.0024642281960931553,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "q_offset": {
+      "value": 0.009345745046786022,
+      "lower": -0.0033679932182610773,
+      "upper": 0.02379655968482352,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "friction_base": {
+      "value": 0.005553428832472521,
+      "lower": 0.004422937702401831,
+      "upper": 0.006821179351744117,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "friction_stribeck": {
+      "value": 0.008243104059769897,
+      "lower": 0.0045343900058410595,
+      "upper": 0.012172937142743366,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "load_friction_base": {
+      "value": 0.20076013599005496,
+      "lower": 0.1898585037582603,
+      "upper": 0.21399925605021303,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "load_friction_stribeck": {
+      "value": 0.030438592858099342,
+      "lower": 0.0,
+      "upper": 0.15029074382480542,
+      "lower_clamped": true,
+      "upper_clamped": false
+    },
+    "dtheta_stribeck": {
+      "value": 0.10002306779267715,
+      "lower": 0.1,
+      "upper": 0.13863782513122253,
+      "lower_clamped": true,
+      "upper_clamped": false
+    },
+    "alpha": {
+      "value": 2.7525613317226925,
+      "lower": 1.0,
+      "upper": 4.0,
+      "lower_clamped": true,
+      "upper_clamped": true
+    },
+    "friction_viscous": {
+      "value": 0.008890650044869402,
+      "lower": 0.008068668018336018,
+      "upper": 0.009776992386136829,
+      "lower_clamped": false,
+      "upper_clamped": false
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "model": "m1",
+  "actuator": "xl330",
+  "params": "bam/params/xl330/m1.json",
+  "logdir": "data/xl330",
+  "base_mae": 0.03172556536520317,
+  "tolerance": 0.03,
+  "threshold_mae": 0.03267733232615927,
+  "sensitivity": {
+    "kt": {
+      "value": 0.38429302034033563,
+      "lower": 0.367180384384961,
+      "upper": 0.40283534083096734,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "R": {
+      "value": 3.588951206604558,
+      "lower": 3.415485826796389,
+      "upper": 3.768490021924692,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "armature": {
+      "value": 0.0019509450453526137,
+      "lower": 0.0016828512706579574,
+      "upper": 0.002188796261033553,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "q_offset": {
+      "value": 0.019559708719558894,
+      "lower": 0.0006309816933000576,
+      "upper": 0.03753868809095298,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "friction_base": {
+      "value": 0.0189381330982326,
+      "lower": 0.017891236600386287,
+      "upper": 0.01982342001302498,
+      "lower_clamped": false,
+      "upper_clamped": false
+    },
+    "friction_viscous": {
+      "value": 0.004035456621843853,
+      "lower": 0.003532434133549484,
+      "upper": 0.004562238917953167,
+      "lower_clamped": false,
+      "upper_clamped": false
+    }
+  }
+}
