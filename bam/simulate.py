@@ -11,6 +11,31 @@ from copy import copy
 from .model import Model
 
 
+def fractional_delay_shift(goal: np.ndarray, delay: float, dt: float) -> np.ndarray:
+    """Shift a goal sequence backward in time by ``delay`` seconds.
+
+    The shift is fractional: linear interpolation between the two neighbouring
+    samples, so a delay that is not an integer number of timesteps is honoured.
+    Indices that fall before the start are held at the first sample. This is the
+    single implementation of the command-delay shift, shared by the reference,
+    MuJoCo and mjlab simulators so they stay consistent.
+
+    :param goal: Array whose first axis is time, shape ``(n_steps, ...)``. Any
+        trailing axes (e.g. a batch/environment axis) are carried through untouched.
+    :param delay: Delay in seconds (``>= 0``).
+    :param dt: Timestep in seconds.
+    :returns: Array of the same shape as ``goal``, delayed in time.
+    """
+    n = goal.shape[0]
+    d = delay / dt
+    d0 = int(np.floor(d))
+    frac = d - d0
+    idx = np.arange(n)
+    i0 = np.clip(idx - d0, 0, n - 1)
+    i1 = np.clip(idx - d0 - 1, 0, n - 1)
+    return (1.0 - frac) * goal[i0] + frac * goal[i1]
+
+
 class Simulator:
     """Single-axis pendulum simulator used during identification.
 
@@ -75,7 +100,7 @@ class Simulator:
 
         self.dq += angular_acceleration * dt
         self.dq = np.clip(self.dq, -100.0, 100.0)
-        self.q += self.dq * dt + 0.5 * angular_acceleration * dt**2
+        self.q += self.dq * dt
         self.t += dt
 
     def rollout_log(
@@ -121,14 +146,7 @@ class Simulator:
             # batched rollouts; all logs share the same dt).
             dt_scalar = float(np.asarray(dt).reshape(-1)[0])
             goal = np.stack([e["goal_position"] for e in log["entries"]])
-            n = len(log["entries"])
-            d = cmd_delay.value / dt_scalar
-            d0 = int(np.floor(d))
-            frac = d - d0
-            idx = np.arange(n)
-            i0 = np.clip(idx - d0, 0, n - 1)
-            i1 = np.clip(idx - d0 - 1, 0, n - 1)
-            delayed_goal = (1.0 - frac) * goal[i0] + frac * goal[i1]
+            delayed_goal = fractional_delay_shift(goal, cmd_delay.value, dt_scalar)
 
         for k, entry in enumerate(log["entries"]):
             reset_period_t += dt

@@ -50,6 +50,7 @@ from mjlab.managers.event_manager import RecomputeLevel, requires_model_fields
 
 from .actuator import TorchBackend, VoltageControlledActuator
 from .model import Model, load_model, _resolve_json_path
+from .simulate import fractional_delay_shift
 from .testbench_mujoco import Pendulum
 
 if TYPE_CHECKING:
@@ -753,6 +754,10 @@ class Simulator:
     :param stiff_frictionloss: Forwarded to :class:`BamActuatorCfg`. When ``True``
         (default), the joint-friction constraint is stiffened to counter MuJoCo
         Warp's lack of a noslip solver (see :attr:`BamActuatorCfg.stiff_frictionloss`).
+    :param command_delay: If ``True``, apply the model's ``command_delay`` parameter
+        (the rig transport lag) by shifting the recorded goal-position sequence in
+        time, exactly as the reference simulator does. Defaults to ``False`` so the
+        raw goals are used unless a caller opts in.
     """
 
     def __init__(
@@ -764,10 +769,19 @@ class Simulator:
         device: str | None = None,
         integrator: str = "euler",
         stiff_frictionloss: bool = True,
+        command_delay: bool = False,
     ) -> None:
         self._params_path = _resolve_json_path(json_path, motor_name, model)
         # Default supply voltage from the JSON, used for logs that don't carry vin.
-        self._default_vin = load_model(self._params_path).actuator.vin
+        _m = load_model(self._params_path)
+        self._default_vin = _m.actuator.vin
+        # Command delay [s] read from the params; applied only when opted in.
+        self.command_delay = command_delay
+        _cd = getattr(_m, "command_delay", None)
+        self._command_delay_value = _cd.value if _cd is not None else 0.0
+        # Testbench q_offset [rad]: always applied to the validation pendulum spec
+        # (it matches the reference simulator's gravity evaluation).
+        self._q_offset = _m.q_offset.value
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
@@ -842,6 +856,11 @@ class Simulator:
             torque_en[:length, i], torque_en[length:, i] = ti, ti[-1]
             log_pos[:length, i], log_pos[length:, i] = pi, pi[-1]
             log_speed[:length, i], log_speed[length:, i] = si, si[-1]
+
+        # Optional command delay: shift the goal columns in time (single scalar
+        # delay from the params, shared by all envs), same as the reference sim.
+        if self.command_delay and self._command_delay_value > 0.0:
+            goals = fractional_delay_shift(goals, self._command_delay_value, dt)
 
         # ── Build the scene / sim / actuator ─────────────────────────────────
         scene, sim, entity, bam_act, body_id = self._build(logs[0], n, dt)
@@ -920,7 +939,9 @@ class Simulator:
             "length": base_log["length"],
         }
         ent_cfg = EntityCfg(
-            spec_fn=lambda: Pendulum(base).build_spec(_JOINT_NAME),
+            spec_fn=lambda: Pendulum(base).build_spec(
+                _JOINT_NAME, q_offset=self._q_offset
+            ),
             articulation=EntityArticulationInfoCfg(actuators=(bam_cfg,)),
             init_state=EntityCfg.InitialStateCfg(
                 joint_pos={_JOINT_NAME: 0.0}, joint_vel={".*": 0.0}

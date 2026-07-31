@@ -11,6 +11,7 @@ import mujoco
 import json
 from copy import copy
 from .model import Model, load_model_from_dict
+from .simulate import fractional_delay_shift
 from .testbench_mujoco import Pendulum
 
 
@@ -190,11 +191,18 @@ class Simulator:
     :param model: BAM friction model to simulate.
     :param actuator: Name used for the hinge joint and the motor actuator in
         the generated spec (and the name the :class:`MujocoController` controls).
+    :param command_delay: If ``True``, apply the model's ``command_delay``
+        parameter (the rig transport lag) by shifting the recorded goal-position
+        sequence in time, exactly as the reference simulator does. Defaults to
+        ``False`` so the raw goals are used unless a caller opts in.
     """
 
-    def __init__(self, model: Model, actuator: str = "pendulum"):
+    def __init__(
+        self, model: Model, actuator: str = "pendulum", command_delay: bool = False
+    ):
         self.model = model
         self.actuator = actuator
+        self.command_delay = command_delay
         # One entry per environment: (mujoco_model, mujoco_data, controller)
         self.instances: list[tuple] = []
         self.t = 0.0
@@ -213,7 +221,9 @@ class Simulator:
                 "length": testbench.length,
             }
         )
-        return pendulum.build_spec(self.actuator)
+        return pendulum.build_spec(
+            self.actuator, q_offset=self.model.q_offset.value
+        )
 
     def reset(self, q: float = 0.0, dq: float = 0.0):
         """(Re)build the environments and reset them to a given state.
@@ -329,8 +339,17 @@ class Simulator:
             first_entry["speed"] if "speed" in first_entry else 0.0,
         )
 
+        # Optional command delay: shift the recorded goal sequence in time, same
+        # as the reference simulator (:class:`bam.simulate.Simulator`).
+        cmd_delay = getattr(self.model, "command_delay", None)
+        delayed_goal = None
+        if self.command_delay and cmd_delay is not None and cmd_delay.value > 0.0:
+            dt_scalar = float(np.asarray(dt).reshape(-1)[0])
+            goal = np.stack([e["goal_position"] for e in log["entries"]])
+            delayed_goal = fractional_delay_shift(goal, cmd_delay.value, dt_scalar)
+
         reset_period_t = 0.0
-        for entry in log["entries"]:
+        for k, entry in enumerate(log["entries"]):
             reset_period_t += dt
             if reset_period is not None and reset_period_t > reset_period:
                 reset_period_t = 0.0
@@ -339,13 +358,15 @@ class Simulator:
             positions.append(copy(self.q))
             velocities.append(copy(self.dq))
 
-            # Control recomputed the same way the controller does, for reference.
-            control = self.model.actuator.compute_control(
-                entry["goal_position"], self.q, self.dq, dt
+            goal_k = (
+                delayed_goal[k] if delayed_goal is not None else entry["goal_position"]
             )
+
+            # Control recomputed the same way the controller does, for reference.
+            control = self.model.actuator.compute_control(goal_k, self.q, self.dq, dt)
             controls.append(copy(control))
 
-            self.step(entry["goal_position"], entry["torque_enable"], dt)
+            self.step(goal_k, entry["torque_enable"], dt)
 
         return positions, velocities, controls
 

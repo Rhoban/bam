@@ -112,7 +112,7 @@ def _mae(positions, log: dict) -> float:
 
 def compute_mae(model, log: dict) -> float:
     if args.mujoco:
-        simulator = mujoco_backend.Simulator(model)
+        simulator = mujoco_backend.Simulator(model, command_delay=True)
         positions, _, _ = simulator.rollout_log(log, reset_period=args.reset_period)
     else:
         simulator = simulate.Simulator(model)
@@ -128,7 +128,7 @@ def compute_maes_mjlab(param_file, all_logs: list) -> list:
     Logs are grouped by ``dt`` (a batch must share a single MuJoCo timestep) and
     each group is rolled out in a single parallel ``rollout_logs`` call.
     """
-    simulator = mjlab_backend.Simulator(json_path=str(param_file))
+    simulator = mjlab_backend.Simulator(json_path=str(param_file), command_delay=True)
     groups: dict[float, list[int]] = {}
     for i, log in enumerate(all_logs):
         groups.setdefault(log["dt"], []).append(i)

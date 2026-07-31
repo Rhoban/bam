@@ -69,12 +69,14 @@ for log in logs.logs:
             model = load_model(model_name)
             all_names.append(model.name)
             if args.sim_mujoco:
-                simulator = mujoco_backend.Simulator(model)
+                simulator = mujoco_backend.Simulator(model, command_delay=True)
                 sim_q, sim_speed, sim_controls = simulator.rollout_log(
                     log, reset_period=args.reset_period
                 )
             elif args.sim_mjlab:
-                simulator = mjlab_backend.Simulator(json_path=model_name)
+                simulator = mjlab_backend.Simulator(
+                    json_path=model_name, command_delay=True
+                )
                 sim_q, sim_speed, sim_controls = simulator.rollout_log(
                     log, reset_period=args.reset_period
                 )
