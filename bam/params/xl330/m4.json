@@ -1,15 +1,1 @@
-{
-  "kt": 0.3660777779176254,
-  "R": 2.962373622882612,
-  "armature": 0.0021084682533593566,
-  "q_offset": 0.012508510368656856,
-  "friction_base": 0.011026973218043799,
-  "friction_stribeck": 0.00302123811876044,
-  "load_friction_base": 0.13773740446744118,
-  "load_friction_stribeck": 0.03352520676420554,
-  "dtheta_stribeck": 0.22687169539648988,
-  "alpha": 3.999999999479969,
-  "friction_viscous": 0.006369840834147654,
-  "model": "m4",
-  "actuator": "xl330"
-}
+{"kt": 0.34267894008942335, "R": 2.6514380628907297, "armature": 0.001605950344738964, "q_offset": 0.014344041823022596, "command_delay": 0.011711700927201195, "friction_base": 0.010986475260608343, "friction_stribeck": 0.0030848742827147536, "load_friction_base": 0.15160666599463818, "load_friction_stribeck": 0.040944737327275216, "dtheta_stribeck": 0.2286857043015872, "alpha": 1.8275000854763743, "friction_viscous": 0.0057436938205074175, "model": "m4", "actuator": "xl330"}
