@@ -77,6 +77,13 @@ class Model:
         # Offset of the motor (testbench error)
         self.q_offset = Parameter(0.0, -0.1, 0.1)
 
+        # Command delay [s]: transport/communication lag between the commanded goal
+        # position and the actuator response (serial-bus round-trip + firmware
+        # control period). Like q_offset, this is a rig-level nuisance parameter
+        # that is always identified. Applied in bam.simulate.Simulator.rollout_log
+        # by fractionally shifting the recorded goal-position sequence.
+        self.command_delay = Parameter(0.0, 0.0, 0.05)
+
         # Base friction is always here, stribeck friction is added when not moving [Nm]
         self.friction_base = Parameter(0.05, 0.0, self.max_friction_base)
         if self.stribeck:

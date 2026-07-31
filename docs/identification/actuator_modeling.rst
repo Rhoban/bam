@@ -93,3 +93,64 @@ Apparent inertia is the rotor inertia of the motor, which is multiplied by the s
 This value can typically be adjusted across multiple BAM fits, monitor if the value saturates either up or low during
 identification and ajust the range accordingly.
 
+Rig-specific parameters
+-----------------------
+
+Beyond the motor parameters above, every BAM model carries parameters that describe the
+**test bench** rather than the motor. You do not need to declare them:
+they are added by default to all models (``m1`` through ``m6``), always identified, and
+written to the output JSON like any other parameter.
+
+Position offset :math:`q_{offset}`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The zero of the servo encoder rarely coincides exactly with the physical reference of
+the pendulum (the vertical). :math:`q_{offset}` is a constant angle added to the
+measured position everywhere the model sees the joint angle, so that gravity and the
+control law are evaluated at the true physical angle:
+
+.. code-block:: python
+
+   # Offset of the motor (test bench calibration error) [rad]
+   self.q_offset = Parameter(0.0, -0.1, 0.1)
+
+It is a rig calibration term, not a motor property: it captures how the actuator was
+mounted on that particular bench. Fitting it (typically a few tens of milliradians)
+prevents a mounting misalignment from being wrongly compensated by the friction terms.
+
+.. note::
+
+   :math:`q_{offset}` is a single value fitted **globally across all logs**, which
+   assumes the whole dataset shares the same mounting bias. If the actuator is
+   remounted between recordings, that assumption no longer holds.
+
+Command delay
+~~~~~~~~~~~~~
+
+There is always some latency between the moment a target position is commanded and the
+moment the actuator actually reacts to it: the serial-bus round-trip plus the servo's
+internal control period. This transport delay is not part of the motor equation, but
+it does shift the whole response in time, so BAM models it as a rig-level parameter:
+
+.. code-block:: python
+
+   # Command/communication delay [s]
+   self.command_delay = Parameter(0.0, 0.0, 0.05)
+
+During a rollout the recorded goal-position sequence is delayed by ``command_delay``
+seconds before being fed to the control law. The shift is fractional (linear
+interpolation between the two neighbouring samples), so the delay can be identified to
+sub-timestep precision; a value of ``0`` reduces exactly to the undelayed goal, which
+keeps older parameter files backward-compatible.
+
+This is a property of the communication bus and firmware scheduling of the rig, not of
+the motor. Identifying it prevents the phase lag it introduces from being wrongly
+absorbed by the apparent inertia or the viscous friction.
+
+.. note::
+
+   The electronics and communication hardware used during identification are usually
+   different from those of the real system (bus, baud rate, controller, cabling, control
+   period). The identified delay can sometimes be reused, but it will generally differ on
+   the target setup and may need to be re-estimated there.
+

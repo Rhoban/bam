@@ -107,7 +107,30 @@ class Simulator:
         )
         self.model.actuator.load_log(log)
 
-        for entry in log["entries"]:
+        # Command delay: a rig-level transport lag between the commanded goal
+        # position and the actuator response. The goal sequence is known in advance
+        # (log data), so the delayed goal is precomputed once by fractionally
+        # shifting the sequence (linear interpolation between the two neighbouring
+        # samples). command_delay is a base Model parameter (always present); when
+        # it is 0 this reduces to the original, unshifted goal. Works for scalar
+        # (per-log) and vector (batched) goals, broadcasting over the batch axis.
+        cmd_delay = getattr(self.model, "command_delay", None)
+        delayed_goal = None
+        if cmd_delay is not None and cmd_delay.value > 0.0 and simulate_control:
+            # Scalar timestep for the delay index math (dt is a per-log vector in
+            # batched rollouts; all logs share the same dt).
+            dt_scalar = float(np.asarray(dt).reshape(-1)[0])
+            goal = np.stack([e["goal_position"] for e in log["entries"]])
+            n = len(log["entries"])
+            d = cmd_delay.value / dt_scalar
+            d0 = int(np.floor(d))
+            frac = d - d0
+            idx = np.arange(n)
+            i0 = np.clip(idx - d0, 0, n - 1)
+            i1 = np.clip(idx - d0 - 1, 0, n - 1)
+            delayed_goal = (1.0 - frac) * goal[i0] + frac * goal[i1]
+
+        for k, entry in enumerate(log["entries"]):
             reset_period_t += dt
             if reset_period is not None and reset_period_t > reset_period:
                 reset_period_t = 0.0
@@ -116,8 +139,13 @@ class Simulator:
             velocities.append(copy(self.dq))
 
             if simulate_control:
+                goal_k = (
+                    delayed_goal[k]
+                    if delayed_goal is not None
+                    else entry["goal_position"]
+                )
                 control = self.model.actuator.compute_control(
-                    entry["goal_position"], self.q, self.dq, dt
+                    goal_k, self.q, self.dq, dt
                 )
             else:
                 if "control" in entry:
