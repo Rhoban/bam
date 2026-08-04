@@ -58,11 +58,15 @@ class Model:
         self.max_load_friction = 0.5
         self.max_viscous_friction = 1.0
 
-    def reset(self) -> None:
+    def reset(self, env_ids=...) -> None:
         """
         Resets the model internal state
+
+        :param env_ids: Environments to reset when the model is evaluated over a
+            batch, see :meth:`bam.actuator.Actuator.reset`. Defaults to ``...``
+            (all of them).
         """
-        self.actuator.reset()
+        self.actuator.reset(env_ids)
 
     def set_actuator(self, actuator: Actuator) -> None:
         """Attach an actuator to this model and initialize its parameters.
