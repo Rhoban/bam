@@ -89,3 +89,17 @@ that motor.
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=feetech_sts3215_7_4V">Use in MuJoCo</a>
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=feetech_sts3215_7_4V">Use in mjlab</a>
+
+    * - **ST3025**
+      - .. image:: ../_static/actuator_waveshare_st3025.png
+            :width: 120px
+
+      - ``waveshare_st3025``
+      - Waveshare ST3025 12 V serial bus servo-actuator
+        (`Parameters <https://github.com/Rhoban/bam/tree/main/bam/params/waveshare_st3025>`__,
+        `model <https://github.com/Rhoban/bam/blob/main/bam/waveshare/actuator.py>`__,
+        `raw data <https://github.com/i1Cps/duck_mini_pro_headless/releases/download/st3025-bam-data-v1/waveshare_st3025_raw.zip>`__)
+      - .. raw:: html
+
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=waveshare_st3025">Use in MuJoCo</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=waveshare_st3025">Use in mjlab</a>

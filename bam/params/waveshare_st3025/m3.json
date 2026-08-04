@@ -1,0 +1,1 @@
+{"kt": 1.5993719647776499, "error_gain_ratio": 1.171470209640715, "R": 3.3727429293700872, "armature": 0.004014311974909914, "q_offset": 0.007521179298092262, "max_velocity": 34.55444961053978, "friction_base": 0.04998663280439736, "load_friction_base": 0.05399514429099444, "friction_viscous": 0.01631873442076473, "model": "m3", "actuator": "waveshare_st3025"}
