@@ -50,6 +50,11 @@ class MujocoController:
 
         self.dofs = []
         self.q_target = np.zeros(len(self.actuator))
+        # Control signal computed by the last update(), and internal state of the
+        # actuator control law. Both are kept per controller, since several
+        # controllers may share the same Model (see Actuator.stateful and reset())
+        self.control = None
+        self.actuator_state = None
         self.dof_to_q_target = {}
         for i, name in enumerate(self.actuator):
             self.dof_to_q_target[name] = i
@@ -74,6 +79,19 @@ class MujocoController:
             model.actuator.get_extra_inertia()
         )
         mujoco.mj_setConst(self.mujoco_model, self.mujoco_data)
+
+    def reset(self) -> None:
+        """Reset the state this controller keeps across updates.
+
+        Call it whenever the simulation state is reset (the actuator's control
+        law can be stateful, see :attr:`bam.actuator.Actuator.stateful`). This is
+        what makes a reset effective here: the state is kept per controller (see
+        :meth:`update`), so resetting the shared :class:`~bam.model.Model` alone
+        would be overwritten by this controller at the next update.
+        """
+        self.actuator_state = None
+        self.control = None
+        self.last_ts = self.mujoco_data.time
 
     def get_q_target(self, name: str) -> float:
         """Return the current target position for a named actuator [rad].
@@ -126,7 +144,17 @@ class MujocoController:
         # the firmware current limiter is applied here as a duty-cycle constraint)
         dt = self.mujoco_data.time - self.last_ts
         self.last_ts = self.mujoco_data.time
+        # A stateful control law keeps its state on the actuator, which is shared
+        # with any other controller using the same Model: swap in our own state
+        # around the call.
+        if act.stateful:
+            act.set_state(self.actuator_state)
         control = act.compute_control(self.q_target, q, dq, dt)
+        if act.stateful:
+            self.actuator_state = act.get_state()
+        # Kept for inspection: compute_control must not be called a second time
+        # just to know what was applied, as that would advance the state twice.
+        self.control = control
 
         # Computing the applied torque
         torque = act.compute_torque(control, True, q, dq)
@@ -269,6 +297,18 @@ class Simulator:
             [data.qvel[ctrl.dof_indexes][0] for _, data, ctrl in self.instances]
         )
 
+    @property
+    def control(self):
+        """Control signal applied at the last :meth:`step` (scalar if single env).
+
+        ``None`` before the first step, or if the actuator's control law returns
+        ``None`` (e.g. a torque-controlled actuator).
+        """
+        controls = [ctrl.control for _, _, ctrl in self.instances]
+        if any(control is None for control in controls):
+            return None
+        return self._pack([control[0] for control in controls])
+
     def step(self, goal_position, torque_enable, dt: float):
         """Advance every environment by one timestep.
 
@@ -339,13 +379,13 @@ class Simulator:
             positions.append(copy(self.q))
             velocities.append(copy(self.dq))
 
-            # Control recomputed the same way the controller does, for reference.
-            control = self.model.actuator.compute_control(
-                entry["goal_position"], self.q, self.dq, dt
-            )
-            controls.append(copy(control))
-
             self.step(entry["goal_position"], entry["torque_enable"], dt)
+
+            # Control applied by the controller during this step (computed from the
+            # pre-step state). It is read back rather than recomputed here: the
+            # actuator control law can be stateful, and calling it twice per
+            # timestep would advance that state twice.
+            controls.append(copy(self.control))
 
         return positions, velocities, controls
 

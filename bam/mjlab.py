@@ -350,6 +350,9 @@ class BamActuator(Actuator):
         # Delegate the control law / torque equation to the BAM actuator, run on
         # the Torch backend so its clamps are vectorized over (num_envs, num_joints).
         act.backend = TorchBackend()
+        # Drop any internal firmware state left over from a previous sim: it is
+        # shaped after the old (N, J).
+        bam.reset()
         # Base firmware gain and physics timestep, captured before compute() starts
         # overwriting act.kp / act.vin with per-env tensors each step.
         self._base_kp = float(act.kp)
@@ -400,6 +403,13 @@ class BamActuator(Actuator):
     def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
         super().reset(env_ids)
         # vin_tensor and vin_drop_resistance are startup-randomized: do NOT re-sample on reset.
+
+        # A reset teleports the joints, so any internal state the firmware keeps
+        # for those environments has to follow (a stateful control law otherwise
+        # keeps driving them from the state of their previous episode). The BAM
+        # actuator applies it at the next compute(), where the joint state is
+        # available; the other environments are left untouched.
+        self._bam_model.reset(... if env_ids is None else env_ids)
 
     @property
     def command_field(self) -> CommandField:

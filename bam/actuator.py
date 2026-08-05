@@ -72,6 +72,15 @@ class Actuator:
         is loaded (typically :class:`~bam.testbench.Pendulum`).
     """
 
+    #: Whether :meth:`compute_control` carries an internal state from one call to
+    #: the next (e.g. a firmware that rate-limits its internal target position).
+    #: Such an actuator must be called exactly once per timestep, in
+    #: chronological order. Callers that drive several *independent* simulations
+    #: with the same model instance must give each of them its own state, by
+    #: saving and restoring it around the call with :meth:`get_state` /
+    #: :meth:`set_state` (this is what :class:`bam.mujoco.MujocoController` does).
+    stateful: bool = False
+
     def __init__(self, testbench_class: Testbench):
         self.testbench_class = testbench_class
         self.testbench: Testbench | None = None
@@ -85,7 +94,32 @@ class Actuator:
         self.model = model
         self.initialize()
 
-    def reset(self):
+    def reset(self, env_ids=...) -> None:
+        """Reset the actuator's internal state (see :attr:`stateful`).
+
+        When the actuator is evaluated over a batch of environments (torch
+        backend), only part of them may be reset at a time. Because the state is
+        expressed in terms of the environment state (positions, velocities …),
+        which is not known here, the reset is expected to be *deferred*: the
+        actuator records which environments are pending and applies it at the
+        next :meth:`compute_control` call.
+
+        :param env_ids: Index of the environments to reset, in any form the
+            backend accepts (integer array/tensor, slice, mask). Defaults to
+            ``...``, which selects all of them.
+        """
+        pass
+
+    def get_state(self):
+        """Return the internal state of the control law, ``None`` if stateless.
+
+        The value is opaque and only meant to be handed back to
+        :meth:`set_state`. Only relevant when :attr:`stateful` is ``True``.
+        """
+        return None
+
+    def set_state(self, state) -> None:
+        """Restore an internal state previously returned by :meth:`get_state`."""
         pass
 
     def load_log(self, log: dict):
