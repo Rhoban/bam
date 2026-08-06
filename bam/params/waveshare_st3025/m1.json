@@ -1,1 +1,1 @@
-{"kt": 1.5714327675742241, "error_gain_ratio": 1.1462725931602669, "R": 3.5100609089412966, "armature": 0.004359994356621656, "q_offset": -0.0006459681709636844, "friction_base": 0.05190235981643807, "friction_viscous": 0.02010674010510222, "model": "m1", "actuator": "waveshare_st3025"}
+{"kt": 1.6200337810059249, "error_gain_ratio": 1.1817243228436516, "R": 3.7305355605629233, "armature": 0.004359994356622052, "q_offset": -0.0006459681707173953, "friction_base": 0.05190235981642619, "friction_viscous": 0.020106740105122846, "model": "m1", "actuator": "waveshare_st3025"}

@@ -19,16 +19,18 @@ class ST3025Actuator(VoltageControlledActuator):
             testbench_class,
             vin=12.0,
             kp=32,
+            # Inherited from STS3215; error_gain_ratio is fitted for ST3025.
             error_gain=0.166,
-            max_pwm=0.97,
+            max_pwm=1.0,  # BAM default; ST3025 limit not measured
         )
 
     def initialize(self):
-        self.model.kt = Parameter(0.784532, 0.05, 2.5)
+        # Datasheet: 9 kgf.cm/A = 0.8825985 Nm/A.
+        self.model.kt = Parameter(0.8825985, 0.05, 2.5)
         self.model.error_gain_ratio = Parameter(1.0, 0.1, 10.0)
-        self.model.R = Parameter(2.0, 0.1, 10.0)
+        # Estimated from 12 V / 4.4 A locked-rotor current.
+        self.model.R = Parameter(2.7272727, 0.1, 10.0)
         self.model.armature = Parameter(0.0001, 0.00001, 0.04)
-        self.model.q_offset = Parameter(0, -0.2, 0.2)
 
     def get_extra_inertia(self) -> float:
         return self.model.armature.value
