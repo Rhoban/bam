@@ -213,7 +213,9 @@ class Simulator:
                 "length": testbench.length,
             }
         )
-        return pendulum.build_spec(self.actuator)
+        return pendulum.build_spec(
+            self.actuator, q_offset=self.model.q_offset.value
+        )
 
     def reset(self, q: float = 0.0, dq: float = 0.0):
         """(Re)build the environments and reset them to a given state.

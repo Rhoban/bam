@@ -766,8 +766,12 @@ class Simulator:
         stiff_frictionloss: bool = True,
     ) -> None:
         self._params_path = _resolve_json_path(json_path, motor_name, model)
+        _m = load_model(self._params_path)
         # Default supply voltage from the JSON, used for logs that don't carry vin.
-        self._default_vin = load_model(self._params_path).actuator.vin
+        self._default_vin = _m.actuator.vin
+        # Testbench q_offset [rad]: always applied to the validation pendulum spec
+        # (it matches the reference simulator's gravity evaluation).
+        self._q_offset = _m.q_offset.value
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
@@ -920,7 +924,9 @@ class Simulator:
             "length": base_log["length"],
         }
         ent_cfg = EntityCfg(
-            spec_fn=lambda: Pendulum(base).build_spec(_JOINT_NAME),
+            spec_fn=lambda: Pendulum(base).build_spec(
+                _JOINT_NAME, q_offset=self._q_offset
+            ),
             articulation=EntityArticulationInfoCfg(actuators=(bam_cfg,)),
             init_state=EntityCfg.InitialStateCfg(
                 joint_pos={_JOINT_NAME: 0.0}, joint_vel={".*": 0.0}
