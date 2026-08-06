@@ -75,7 +75,7 @@ class Simulator:
 
         self.dq += angular_acceleration * dt
         self.dq = np.clip(self.dq, -100.0, 100.0)
-        self.q += self.dq * dt + 0.5 * angular_acceleration * dt**2
+        self.q += self.dq * dt
         self.t += dt
 
     def rollout_log(
