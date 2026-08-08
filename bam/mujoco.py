@@ -402,10 +402,6 @@ class Simulator:
                 delayed_goal[k] if delayed_goal is not None else entry["goal_position"]
             )
 
-            # Control recomputed the same way the controller does, for reference.
-            control = self.model.actuator.compute_control(goal_k, self.q, self.dq, dt)
-            controls.append(copy(control))
-
             self.step(goal_k, entry["torque_enable"], dt)
 
             # Control applied by the controller during this step (computed from the
