@@ -111,6 +111,11 @@ class BamActuatorCfg(ActuatorCfg):
     :param vin_min: Hard lower bound on the effective supply voltage [V] after applying the
         voltage drop. Ensures ``vin`` never falls below this value regardless of the load.
         ``None`` → no lower bound.
+    :param friction_scale_range: If set, a per-env friction scale is sampled uniformly from
+        this range (e.g. ``(0.8, 1.2)``) at startup and held constant across resets. The scale
+        multiplies the whole friction budget (the ``frictionloss`` written into MuJoCo), so
+        every friction term (Coulomb, Stribeck, load-dependent) is scaled together.
+        ``None`` → no randomization (scale 1.0).
     :param delay_min_lag: Minimum command delay in simulation steps. Models the latency
         between the policy output and the motor response. ``0`` → no delay.
     :param delay_max_lag: Maximum command delay in simulation steps. Set greater than
@@ -137,6 +142,7 @@ class BamActuatorCfg(ActuatorCfg):
     vin_range: tuple[float, float] | None = None
     vin_drop_resistance_range: tuple[float, float] | None = None
     vin_min: float | None = None
+    friction_scale_range: tuple[float, float] | None = None
     stiff_frictionloss: bool = True
 
     def __post_init__(self) -> None:
@@ -226,6 +232,7 @@ class BamActuator(Actuator):
 
         self.vin_tensor: torch.Tensor | None = None
         self.vin_drop_resistance: torch.Tensor | None = None
+        self.friction_scale: torch.Tensor | None = None
 
         self.kp_scale: torch.Tensor | None = None
         self.kd_scale: torch.Tensor | None = None
@@ -377,6 +384,14 @@ class BamActuator(Actuator):
         else:
             self.vin_drop_resistance = None
 
+        # friction_scale: (N, 1) — per-env friction budget scale, constant across resets
+        if self.cfg.friction_scale_range is not None:
+            self.friction_scale = torch.empty(
+                num_envs, 1, dtype=torch.float32, device=device
+            ).uniform_(*self.cfg.friction_scale_range)
+        else:
+            self.friction_scale = None
+
         vin_repr = (
             f"range={self.cfg.vin_range}"
             if self.cfg.vin_range is not None
@@ -386,6 +401,11 @@ class BamActuator(Actuator):
             f"drop_resistance_range={self.cfg.vin_drop_resistance_range}"
             if self.cfg.vin_drop_resistance_range is not None
             else "no drop"
+        )
+        friction_scale_repr = (
+            f"friction_scale_range={self.cfg.friction_scale_range}"
+            if self.cfg.friction_scale_range is not None
+            else "friction_scale=1.0"
         )
         vin_for_limit = (
             max(self.cfg.vin_range) if self.cfg.vin_range is not None else act.vin
@@ -398,12 +418,14 @@ class BamActuator(Actuator):
             f"vin={vin_repr} {drop_repr} force_limit=±{force_limit:.2f}Nm "
             f"friction_base={bam.friction_base.value:.4f} "
             f"friction_viscous={bam.friction_viscous.value:.4f} "
+            f"{friction_scale_repr} "
             f"envs={num_envs} device={device}"
         )
 
     def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
         super().reset(env_ids)
-        # vin_tensor and vin_drop_resistance are startup-randomized: do NOT re-sample on reset.
+        # vin_tensor, vin_drop_resistance and friction_scale are startup-randomized:
+        # do NOT re-sample on reset.
 
         # A reset teleports the joints, so any internal state the firmware keeps
         # for those environments has to follow (a stateful control law otherwise
@@ -461,6 +483,10 @@ class BamActuator(Actuator):
         * **m4**: m3 + Stribeck load friction
         * **m5**: directional load friction (``directional=True``)
         * **m6**: m5 + quadratic Stribeck load term (``quadratic=True``)
+
+        When ``cfg.friction_scale_range`` is set, the resulting budget is
+        multiplied by the per-env friction scale (broadcast over the joints), so
+        all friction terms are scaled together.
         """
         bam = self._bam_model
         frictionloss = torch.full_like(motor_torque, bam.friction_base.value)
@@ -515,6 +541,9 @@ class BamActuator(Actuator):
                         * bam.load_friction_stribeck.value
                         * gearbox_torque
                     )
+
+        if self.friction_scale is not None:
+            frictionloss = frictionloss * self.friction_scale  # (N, 1) broadcast
 
         return frictionloss
 

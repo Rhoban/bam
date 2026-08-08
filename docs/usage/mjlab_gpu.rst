@@ -95,8 +95,8 @@ Domain randomization
 --------------------
 
 :class:`~bam.mjlab.BamActuatorCfg` supports per-environment randomization
-of two physical quantities that are naturally variable across hardware units
-or charge states.
+of physical quantities that are naturally variable across hardware units,
+wear or charge states.
 
 **Battery voltage** — sample a different supply voltage for each environment
 at startup:
@@ -138,7 +138,30 @@ connector quality across units:
       vin_min=6.0,                             # hard lower bound [V]
    )
 
-Both ranges are sampled once at initialization and held constant across
+**Friction scale** — scale the whole friction budget per environment, capturing
+unit-to-unit spread in gearbox friction (wear, lubrication, assembly):
+
+.. math::
+
+   \tau_\text{frictionloss} \;\leftarrow\; s \, \tau_\text{frictionloss}
+
+where :math:`s` (``friction_scale_range``) is sampled uniformly per environment.
+It multiplies the friction budget written into ``dof_frictionloss``, so all
+friction terms (Coulomb, Stribeck, load-dependent) are scaled together:
+
+.. code-block:: python
+
+   actuator_cfg = BamActuatorCfg(
+      motor_name="{actuator}",
+      model="m6",
+      target_names_expr=(r".*",),
+      friction_scale_range=(0.8, 1.2),  # ±20% on the friction budget
+   )
+
+``None`` (default) disables the randomization, i.e. a scale of 1.0. The viscous
+term (``dof_damping``) is left untouched.
+
+All these ranges are sampled once at initialization and held constant across
 episode resets.
 
 :math:`I` is the current drawn from the **battery**, not the motor current: an
