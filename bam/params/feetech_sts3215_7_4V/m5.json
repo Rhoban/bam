@@ -1,0 +1,20 @@
+{
+    "kt": 1.2717402321162192,
+    "error_gain_ratio": 1.1558830785746244,
+    "R": 2.74580169718352,
+    "armature": 0.02160563221423854,
+    "q_offset": -0.06816285987597887,
+    "max_velocity": 5.1109355980623965,
+    "command_delay": 0.005192230394620662,
+    "friction_base": 0.05286249893910219,
+    "friction_stribeck": 7.453456393946817e-09,
+    "load_friction_motor": 0.03890079636876726,
+    "load_friction_external": 0.24078091046614414,
+    "load_friction_motor_stribeck": 1.103364634592961e-08,
+    "load_friction_external_stribeck": 0.14920078266091807,
+    "dtheta_stribeck": 0.3714206936630544,
+    "alpha": 9.999957365013934,
+    "friction_viscous": 0.02875750675061869,
+    "model": "m5",
+    "actuator": "sts3215"
+}

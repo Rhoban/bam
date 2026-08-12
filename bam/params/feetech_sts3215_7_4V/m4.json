@@ -1,0 +1,18 @@
+{
+    "kt": 1.2652576224140986,
+    "error_gain_ratio": 1.179917121362492,
+    "R": 2.4723714900674616,
+    "armature": 0.02335771893803744,
+    "q_offset": -0.06594814555776674,
+    "max_velocity": 5.071148781184456,
+    "command_delay": 0.004944939195123091,
+    "friction_base": 0.05185523033166987,
+    "friction_stribeck": 0.011100113067732035,
+    "load_friction_base": 0.20787198380836144,
+    "load_friction_stribeck": 4.889373048017924e-05,
+    "dtheta_stribeck": 0.4432191636630576,
+    "alpha": 9.985595141530244,
+    "friction_viscous": 0.03382996203412605,
+    "model": "m4",
+    "actuator": "sts3215"
+}
