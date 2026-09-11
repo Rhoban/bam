@@ -87,7 +87,8 @@ that motor.
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=feetech_sts3215_7_4V">Use in mjlab</a>
 
     * - **HLS2915**
-      -
+      - .. image:: ../_static/actuator_feetech_hls.png
+            :width: 120px
 
       - ``feetech_hls``
       - Feetech HLS2915 12 V serial bus servo
