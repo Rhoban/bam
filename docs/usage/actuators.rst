@@ -97,7 +97,6 @@ that motor.
       - .. raw:: html
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=feetech_hls">Use in MuJoCo</a>
-           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=feetech_hls">Use in mjlab</a>
 
     * - **ST3025**
       - .. image:: ../_static/actuator_waveshare_st3025.png

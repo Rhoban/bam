@@ -199,7 +199,7 @@ def main():
     # bam's other recorders. No per-run startup offset: gearbox stiction lets the
     # arm rest anywhere in a band (13 degrees wide on this rig), so "wherever it
     # happens to be" would inject a differently-phased gravity term into every
-    # log. Run tools/calibrate_zero.py once instead, with the arm held vertical.
+    # log. Calibrate the electrical zero once with the arm held vertical.
     init_st = driver.read_status(args.id)
     # The supply voltage sets the current loop's voltage-limited window in the
     # model, so record what the servo actually sees instead of a fixed default.
@@ -210,9 +210,12 @@ def main():
     # comparable to the gravity torque), so only a start angle far outside that
     # band indicates a zero that was never calibrated at all.
     if abs(start_angle) > 1.5:
-        print(f"* 警告: 起始角度 {start_angle:+.3f} rad 远超静摩擦带 —— 零点很可能还没校准。")
-        print("         请先把摆杆扶正，运行: python3 tools/calibrate_zero.py")
-    print(f"* 起始角度 {start_angle:+.4f} rad (舵机自身零点)")
+        print(
+            f"* warning: start angle {start_angle:+.3f} rad is well outside the "
+            "stiction band — the electrical zero is probably uncalibrated. "
+            "Hold the arm vertical and set the servo zero before recording."
+        )
+    print(f"* start angle {start_angle:+.4f} rad (servo-native zero)")
     print(f"* Supply voltage: {vin:.1f} V (servo bus reads {init_st['input_volts']:.1f} V)")
 
     # Bring the arm to the trajectory's starting angle before logging anything.

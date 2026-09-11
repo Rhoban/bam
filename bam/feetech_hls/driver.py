@@ -68,9 +68,9 @@ class FeetechHLSDriver:
 
     # The HLS memory table quotes 6.5 mA/LSB for the current registers (0x1C /
     # 0x2C / 0x45), but that table is a family-wide document and the HLS2915
-    # does not use it: measured on hardware with tools/calibrate_current.py
-    # (100% duty, stalled, bench-supply ammeter reading the phase current
-    # directly) 408 register steps drew 0.64 A, i.e. 1.569 mA/LSB — the table
+    # does not use it: measured on hardware (100% duty, stalled, bench-supply
+    # ammeter reading the phase current directly) 408 register steps drew
+    # 0.64 A, i.e. 1.569 mA/LSB — the table
     # value is 4.14x too coarse. Cross-checks that confirm it:
     #
     #   * winding resistance 4.8 V / 0.64 A = 7.56 ohm, versus 7.06 ohm from an
@@ -266,7 +266,7 @@ class FeetechHLSDriver:
 
         At duty 1000 the bridge is fully on and the chopping factor disappears,
         which is what makes a stalled 100%-duty run measurable with a plain
-        supply ammeter (see tools/calibrate_current.py).
+        supply ammeter.
 
         :param duty: Duty in per-mille of full scale, -1000..1000 (1000 = 100%).
         """
