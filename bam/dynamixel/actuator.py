@@ -172,6 +172,9 @@ class XL330CurrentActuator(CurrentControlledActuator):
 
         # PWM saturation (XL330 PWM Limit, full 885 range -> duty in [-1, 1]).
         duty = self.backend.clamp(duty, -1.0, 1.0)
+        # Overrides the phase-current duty stored by compute_control: this is the
+        # one actually applied (used by the battery drop model)
+        self.duty_cycle = duty
 
         phase_current = (duty * vin - kt * dq) / R
         torque = kt * phase_current

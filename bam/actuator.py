@@ -346,19 +346,27 @@ class CurrentControlledActuator(DCMotorActuator):
     """Current-controlled servo with a firmware P-position controller.
 
     The controller outputs a target current proportional to position error,
-    clipped by both the voltage limits and a user-configurable current cap.
+    clipped by a user-configurable current cap, then by what the H-bridge can
+    physically deliver.
 
     :param testbench_class: Testbench class (see :class:`Actuator`).
     :param vin: Supply voltage [V], used to compute the current saturation.
     :param kp: Firmware proportional gain.
     :param error_gain: Converts ``kp * Δq`` to a target current [A].
+    :param max_pwm: Maximum duty cycle magnitude (default 1.0).
     """
 
     def __init__(
-        self, testbench_class: Testbench, vin: float, kp: float, error_gain: float = 1.0
+        self,
+        testbench_class: Testbench,
+        vin: float,
+        kp: float,
+        error_gain: float = 1.0,
+        max_pwm: float = 1.0,
     ):
         super().__init__(testbench_class, vin, kp)
         self.error_gain = error_gain
+        self.max_pwm = max_pwm
 
     def control_unit(self) -> str:
         return "amps"
@@ -372,10 +380,8 @@ class CurrentControlledActuator(DCMotorActuator):
     ) -> ArrayLike | None:
         """Compute the current command from position error.
 
-        Clips the P-controller output by both the back-EMF voltage limit and
-        the ``current_limit`` parameter. The voltage-limit bounds are themselves
-        elementwise (they depend on ``dq``), so with the torch backend the clamp
-        broadcasts per environment.
+        Clips the P-controller output by the ``current_limit`` parameter, then
+        by what the H-bridge can deliver given the supply voltage.
 
         :param q_target: Target joint angle(s) [rad].
         :param q: Current joint angle(s) [rad].
@@ -383,24 +389,26 @@ class CurrentControlledActuator(DCMotorActuator):
         :param dt: Timestep [s] (unused here).
         :returns: Target current [A].
         """
+        kt = self.model.kt.value
+        R = self.model.R.value
+
         # Target current using simple P controller
         current = (q_target - q) * self.kp * self.error_gain
-
-        # Maximum allowable current due to voltage limits
-        current_limit_low = (1 / self.model.R.value) * (
-            self.vin - self.model.kt.value * dq
-        )
-        current_limit_high = (1 / self.model.R.value) * (
-            -self.vin - self.model.kt.value * dq
-        )
-        current = self.backend.clamp(current, current_limit_high, current_limit_low)
 
         # Maximum current allowed by the user to avoid heating
         current = self.backend.clamp(
             current, -self.model.current_limit.value, self.model.current_limit.value
         )
 
-        return current
+        # Physical PWM limit (voltage bounded by the battery) — applied last, since
+        # the firmware can't limit the current beyond it. The duty cycle feeding
+        # the current, from I = (duty * vin - kt * dq) / R, is clamped and the
+        # current recomputed from it.
+        duty_cycle = (R * current + kt * dq) / self.vin
+        duty_cycle = self.backend.clamp(duty_cycle, -self.max_pwm, self.max_pwm)
+        self.duty_cycle = duty_cycle  # for logging (and the battery drop model)
+
+        return (duty_cycle * self.vin - kt * dq) / R
 
     def compute_torque(
         self,

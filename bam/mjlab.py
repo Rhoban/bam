@@ -48,7 +48,7 @@ from mjlab.sim import MujocoCfg, Simulation, SimulationCfg
 from mjlab.entity import EntityArticulationInfoCfg, EntityCfg
 from mjlab.managers.event_manager import RecomputeLevel, requires_model_fields
 
-from .actuator import TorchBackend, VoltageControlledActuator
+from .actuator import DCMotorActuator, TorchBackend
 from .model import Model, load_model, _resolve_json_path
 from .simulate import fractional_delay_shift
 from .testbench_mujoco import Pendulum
@@ -96,7 +96,7 @@ class BamActuatorCfg(ActuatorCfg):
     * **Custom JSON**: set ``json_path`` to a BAM params JSON file produced by
       ``bam.fit``.
 
-    :param motor_name: Name of the bundled motor. Currently supported: "xl330", "xl320", "mx106", "mx64", "erob80:50", and "erob80:100". Mutually exclusive with ``json_path``.
+    :param motor_name: Name of the bundled motor (e.g. "xl330", "xl320", "mx106", "mx64"). Any voltage- or current-controlled actuator (:class:`~bam.actuator.DCMotorActuator`) is supported. Mutually exclusive with ``json_path``.
     :param model: Model variant to use with ``motor_name``, one of "m1"–"m6". Mutually exclusive with ``json_path``.
     :param json_path: Path to a custom BAM params JSON file produced by ``bam.fit``. Mutually exclusive with ``motor_name`` and ``model``.
     :param target_names_expr: Tuple of regex patterns to match actuated joint names.
@@ -219,9 +219,9 @@ class BamActuator(Actuator):
         if cfg.kp_fw is not None:
             self._bam_model.actuator.kp = cfg.kp_fw
 
-        if not isinstance(self._bam_model.actuator, VoltageControlledActuator):
+        if not isinstance(self._bam_model.actuator, DCMotorActuator):
             raise NotImplementedError(
-                f"BamActuator only supports VoltageControlledActuator, "
+                f"BamActuator only supports DCMotorActuator, "
                 f"got {type(self._bam_model.actuator).__name__}"
             )
 
