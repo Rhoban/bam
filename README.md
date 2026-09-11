@@ -16,7 +16,7 @@ The friction model generally implemented in widely used simulators like MuJoCo o
   - Dynamixel MX-64
   - Dynamixel MX-106
   - Dynamixel XL-320
-  - Dynamixel XL330-288-T
+  - Dynamixel XL330-M288-T
   - eRob80:50
   - eRob80:100
   - Feetech STS3215
