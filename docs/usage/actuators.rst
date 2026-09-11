@@ -86,6 +86,18 @@ that motor.
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=feetech_sts3215_7_4V">Use in MuJoCo</a>
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=feetech_sts3215_7_4V">Use in mjlab</a>
 
+    * - **HLS2915**
+      -
+
+      - ``feetech_hls``
+      - Feetech HLS2915 12 V serial bus servo
+        (`Parameters <https://github.com/Rhoban/bam/tree/main/bam/params/feetech_hls>`__,
+        `model <https://github.com/Rhoban/bam/blob/main/bam/feetech_hls/actuator.py>`__)
+      - .. raw:: html
+
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=feetech_hls">Use in MuJoCo</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=feetech_hls">Use in mjlab</a>
+
     * - **ST3025**
       - .. image:: ../_static/actuator_waveshare_st3025.png
             :width: 120px

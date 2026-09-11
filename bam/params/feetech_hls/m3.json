@@ -1,0 +1,1 @@
+{"kt": 1.5174411494322464, "armature": 0.002621604009522529, "q_offset": -0.0925165067694887, "command_delay": 1.3151429110474344e-09, "friction_base": 0.05071401352829752, "load_friction_base": 0.016197087573837577, "friction_viscous": 2.8010130222705035e-09, "R": 7.5, "current_limit": 1.37, "model": "m3", "actuator": "feetech_hls"}
