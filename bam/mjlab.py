@@ -262,6 +262,18 @@ class BamActuator(Actuator):
             joint.solref_friction = self._STIFF_SOLREF_FRICTION
             joint.solimp_friction = self._STIFF_SOLIMP_FRICTION
 
+    @staticmethod
+    def _disable_limits(mjact: "mujoco.MjsActuator") -> None:
+        """Remove MuJoCo's force and control limits from a motor actuator.
+
+        The torque written into ``ctrl`` is already bounded by the BAM actuator
+        model (duty-cycle / current clamps), so no extra clipping is applied,
+        matching the CPU backend (:mod:`bam.mujoco`). A leftover ``ctrlrange``
+        from a converted position actuator would otherwise clip the torque.
+        """
+        mjact.forcelimited = False
+        mjact.ctrllimited = False
+
     def edit_spec(self, spec: mujoco.MjSpec, target_names: list[str]) -> None:
         """Convert position actuators to motor mode and zero MuJoCo friction.
 
@@ -274,15 +286,7 @@ class BamActuator(Actuator):
         """
         bam = self._bam_model
         act = bam.actuator
-        kt = bam.kt.value
-        R = bam.R.value
         armature = act.get_extra_inertia()
-        # Use upper bound of vin_range for force_limit so MuJoCo's forcerange
-        # is always a safe ceiling regardless of per-env voltage.
-        vin_for_limit = (
-            max(self.cfg.vin_range) if self.cfg.vin_range is not None else act.vin
-        )
-        force_limit = vin_for_limit * kt / R
 
         target_set = set(target_names)
         converted: set[str] = set()
@@ -292,8 +296,7 @@ class BamActuator(Actuator):
             tgt_name = tgt.name if hasattr(tgt, "name") else (str(tgt) if tgt else None)
             if tgt_name in target_set:
                 mjact.set_to_motor()
-                mjact.forcelimited = True
-                mjact.forcerange = (-force_limit, force_limit)
+                self._disable_limits(mjact)
                 mjact.gear = [1.0, 0, 0, 0, 0, 0]
                 for joint in spec.joints:
                     if joint.name == tgt_name:
@@ -307,14 +310,16 @@ class BamActuator(Actuator):
 
         for target_name in target_names:
             if target_name not in converted:
+                # effort_limit is required by mjlab but discarded right after
                 mjact = create_motor_actuator(
                     spec,
                     target_name,
-                    effort_limit=force_limit,
+                    effort_limit=0.0,
                     armature=armature,
                     frictionloss=0.0,
                     transmission_type=self.cfg.transmission_type,
                 )
+                self._disable_limits(mjact)
                 self._mjs_actuators.append(mjact)
                 for joint in spec.joints:
                     if joint.name == target_name:
@@ -407,15 +412,11 @@ class BamActuator(Actuator):
             if self.cfg.friction_scale_range is not None
             else "friction_scale=1.0"
         )
-        vin_for_limit = (
-            max(self.cfg.vin_range) if self.cfg.vin_range is not None else act.vin
-        )
-        force_limit = vin_for_limit * bam.kt.value / bam.R.value
         print(
             f"[BamActuator] model={bam.name!r} "
             f"joints={num_joints} "
             f"kt={bam.kt.value:.4f} R={bam.R.value:.4f} "
-            f"vin={vin_repr} {drop_repr} force_limit=±{force_limit:.2f}Nm "
+            f"vin={vin_repr} {drop_repr} "
             f"friction_base={bam.friction_base.value:.4f} "
             f"friction_viscous={bam.friction_viscous.value:.4f} "
             f"{friction_scale_repr} "
