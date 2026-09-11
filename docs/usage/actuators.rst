@@ -92,7 +92,8 @@ that motor.
       - ``feetech_hls``
       - Feetech HLS2915 12 V serial bus servo
         (`Parameters <https://github.com/Rhoban/bam/tree/main/bam/params/feetech_hls>`__,
-        `model <https://github.com/Rhoban/bam/blob/main/bam/feetech_hls/actuator.py>`__)
+        `model <https://github.com/Rhoban/bam/blob/main/bam/feetech_hls/actuator.py>`__,
+        `raw data <https://github.com/Seamus-Z/bam/raw/feetech-hls-data/feetech_hls_raw.zip>`__)
       - .. raw:: html
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=feetech_hls">Use in MuJoCo</a>
