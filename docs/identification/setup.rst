@@ -43,7 +43,7 @@ Example: Dynamixel XL-330
 
 Here is an example of a test bench for the Dynamixel XL-330 actuator. 
 The pendulum arms are 3D printed; you can refer to the 3D model for inspiration 
-`here <https://cad.onshape.com/documents/c132b33797dc72aa58be8a7c/v/d9921c19039fee61b5e51bba/e/8e6b266057c61625732fd9b0?renderMode=0&uiState=6a447ab873e2fce629279db5>`_.
+`here <https://cad.onshape.com/documents/c132b33797dc72aa58be8a7c/v/9bb6aabfc542c5f6e9dabb39/e/8e6b266057c61625732fd9b0?renderMode=0&uiState=6aa652907763f03146730fae>`_.
 
 .. image:: /_static/hardware_1.png
    :width: 80%
