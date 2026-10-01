@@ -1,0 +1,21 @@
+{
+    "armature": 0.0005421235101980928,
+    "q_offset": 0.02214836661463923,
+    "command_delay": 0.0019653521821170693,
+    "friction_base": 0.01639904913420256,
+    "friction_stribeck": 0.006688669537747824,
+    "load_friction_motor": 0.05462506735186419,
+    "load_friction_external": 0.28105660804524446,
+    "load_friction_motor_stribeck": 0.001563852307200564,
+    "load_friction_external_stribeck": 0.2150304632846964,
+    "dtheta_stribeck": 0.76889619607066,
+    "alpha": 1.0006239838422488,
+    "friction_viscous": 0.0036393859586340335,
+    "kt": 0.554,
+    "R": 2.809017979556792,
+    "ke": 0.72,
+    "torque_limit": 1.0019035865982293,
+    "speed_filter_tau": 0.015297988886194542,
+    "model": "m5",
+    "actuator": "unitree_j288"
+}
