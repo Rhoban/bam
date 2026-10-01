@@ -12,6 +12,7 @@
     xl320: "XL-320",
     xl330: "XL-330",
     feetech_sts3215_7_4V: "STS3215 (7.4V)",
+    unitree_j288: "J288",
   };
   var DEFAULT_MOTOR = "xl330";
   var PLACEHOLDER = "{actuator}";

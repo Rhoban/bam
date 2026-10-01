@@ -99,3 +99,18 @@ that motor.
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=waveshare_st3025">Use in MuJoCo</a>
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=waveshare_st3025">Use in mjlab</a>
+
+    * - **J288**
+      - .. image:: ../_static/actuator_unitree_j288.png
+            :width: 120px
+
+      - ``unitree_j288``
+      - Unitree J288 digital servo (FOC current control with a hybrid PD law in
+        firmware)
+        (`Parameters <https://github.com/Rhoban/bam/tree/main/bam/params/unitree_j288>`__,
+        `model <https://github.com/Rhoban/bam/blob/main/bam/unitree/actuator.py>`__,
+        `raw data <https://github.com/lachlanhurst/bam/releases/download/unitree-j288-v1.0.0/unitree_j288_raw.zip>`__)
+      - .. raw:: html
+
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=unitree_j288">Use in MuJoCo</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=unitree_j288">Use in mjlab</a>
