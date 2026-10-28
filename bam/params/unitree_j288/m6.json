@@ -1,0 +1,23 @@
+{
+    "armature": 0.000626594471453521,
+    "q_offset": 0.019696430967716602,
+    "command_delay": 1.5531422846814754e-05,
+    "friction_base": 0.011974112551526464,
+    "friction_stribeck": 0.011924919218266886,
+    "load_friction_motor": 0.06492633555459115,
+    "load_friction_external": 0.26484243948252806,
+    "load_friction_motor_stribeck": 2.112935276548591e-05,
+    "load_friction_external_stribeck": 0.21596332875015445,
+    "load_friction_motor_quad": 0.009942355797966953,
+    "load_friction_external_quad": 0.007288325393876927,
+    "dtheta_stribeck": 0.9500936877310967,
+    "alpha": 1.000173811887329,
+    "friction_viscous": 0.005324083066311552,
+    "kt": 0.554,
+    "R": 2.809017979556792,
+    "ke": 0.72,
+    "torque_limit": 1.0019035865982293,
+    "speed_filter_tau": 0.015297988886194542,
+    "model": "m6",
+    "actuator": "unitree_j288"
+}
