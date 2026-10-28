@@ -66,7 +66,7 @@ class MujocoController:
         self.act_indexes = [
             self.mujoco_model.actuator(name).id for name in self.actuator
         ]
-        # Joint indexes (efc_id)
+        # Joint indexes of each actuator's transmission
         # Retrieved using the first element of the trnid
         self.joint_indexes = [
             self.mujoco_model.actuator(name).trnid[0] for name in self.actuator
@@ -179,7 +179,7 @@ class MujocoController:
         )
         # Repeat the indexes (now N_id x N_efc)
         id_repeated = np.repeat(
-            [self.joint_indexes], len(self.mujoco_data.efc_id), axis=0
+            [self.dof_indexes], len(self.mujoco_data.efc_id), axis=0
         ).T
         # Do the batched test (element wise)
         selector = efc_id_repeated == id_repeated
