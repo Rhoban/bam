@@ -86,6 +86,20 @@ that motor.
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=feetech_sts3215_7_4V">Use in MuJoCo</a>
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=feetech_sts3215_7_4V">Use in mjlab</a>
 
+    * - **STS3215 (12V)**
+      - .. image:: ../_static/actuator_feetech_sts3215_12V.png
+            :width: 120px
+
+      - ``feetech_sts3215_12V``
+      - Feetech STS3215 servo-actuator (12V version)
+        (`Parameters <https://github.com/Rhoban/bam/tree/main/bam/params/feetech_sts3215_12V>`__,
+        `model <https://github.com/Rhoban/bam/blob/main/bam/feetech/actuator.py>`__,
+        `raw data <https://github.com/T-K-233/bam/releases/download/sts3215-12v-bam-data-v1/feetech_sts3215_12V_raw.zip>`__)
+      - .. raw:: html
+
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=feetech_sts3215_12V">Use in MuJoCo</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=feetech_sts3215_12V">Use in mjlab</a>
+
     * - **ST3025**
       - .. image:: ../_static/actuator_waveshare_st3025.png
             :width: 120px
