@@ -616,6 +616,20 @@ class BamActuator(Actuator):
         efc_force = self._as_tensor(efc.force)  # (N, njmax) float
         nefc = self._as_tensor(self._data.nefc)  # (N,) int
 
+        if efc_force.is_cuda and efc_force.dtype == torch.float32 and all(
+            value.is_contiguous() for value in (efc_type, efc_id, efc_force, nefc)
+        ):
+            # Triton is optional: retain the portable Torch implementation below.
+            try:
+                from ._mjlab_friction import friction_force
+            except ModuleNotFoundError as error:
+                if error.name != "triton":
+                    raise
+            else:
+                return friction_force(
+                    efc_type, efc_id, efc_force, nefc, nv, _FRICTION_DOF_CONSTRAINT
+                )
+
         n_worlds, n_max = efc_type.shape
         # Only the first nefc[w] rows of each world are valid; the rest is stale.
         valid = torch.arange(n_max, device=efc_type.device).unsqueeze(
