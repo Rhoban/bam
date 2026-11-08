@@ -12,6 +12,15 @@
     xl320: "XL-320",
     xl330: "XL-330",
     feetech_sts3215_7_4V: "STS3215 (7.4V)",
+    mangdang_md300_abd: "MD-300-150 (abduction)",
+    mangdang_md300_hip: "MD-300-150 (hip)",
+    mangdang_md300_knee: "MD-300-150 (knee)",
+  };
+  // Motors whose image is not "actuator_<name>.png".
+  var IMAGES = {
+    mangdang_md300_abd: "actuator_mangdang_md300.jpg",
+    mangdang_md300_hip: "actuator_mangdang_md300.jpg",
+    mangdang_md300_knee: "actuator_mangdang_md300.jpg",
   };
   var DEFAULT_MOTOR = "xl330";
   var PLACEHOLDER = "{actuator}";
@@ -59,7 +68,7 @@
       document.querySelector("main") ||
       document.body;
     var heading = article.querySelector("h1");
-    var img = staticBase() + "actuator_" + motor + ".png";
+    var img = staticBase() + (IMAGES[motor] || "actuator_" + motor + ".png");
 
     var banner = document.createElement("div");
     banner.className = "admonition tip motor-banner";

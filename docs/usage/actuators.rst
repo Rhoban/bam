@@ -99,3 +99,26 @@ that motor.
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=waveshare_st3025">Use in MuJoCo</a>
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=waveshare_st3025">Use in mjlab</a>
+
+    * - **MD-300-150**
+      - .. image:: ../_static/actuator_mangdang_md300.jpg
+            :width: 120px
+
+      - | ``mangdang_md300_abd``
+        | ``mangdang_md300_hip``
+        | ``mangdang_md300_knee``
+      - MangDang MD-300-150 three-output leg module (abduction, hip, knee),
+        voltage (PWM) position control at 12 V
+        (Parameters: `abduction <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_abd>`__,
+        `hip <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_hip>`__,
+        `knee <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_knee>`__;
+        `model <https://github.com/Rhoban/bam/blob/main/bam/mangdang/actuator.py>`__,
+        `notes <https://github.com/Rhoban/bam/blob/main/bam/mangdang/README.md>`__)
+      - .. raw:: html
+
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_abd">MuJoCo: abduction</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_hip">MuJoCo: hip</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_knee">MuJoCo: knee</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=mangdang_md300_abd">mjlab: abduction</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=mangdang_md300_hip">mjlab: hip</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=mangdang_md300_knee">mjlab: knee</a>
