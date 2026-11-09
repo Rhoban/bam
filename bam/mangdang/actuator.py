@@ -85,7 +85,7 @@ class MD300Actuator(VoltageControlledActuator):
         # Back-EMF constant [V.s/rad]
         self.model.kt_emf = Parameter(0.6, 0.25, 1.2)
         # Winding resistance [Ohm]
-        self.model.R = Parameter(11.0, 8.0, 16.0)
+        self.model.R = Parameter(11.0, 8.0, 24.0)
         # Apparent inertia at the output [kg m^2]
         self.model.armature = Parameter(3e-4, 1e-5, 5e-3)
         # Scales on the firmware P and D gains

@@ -113,7 +113,8 @@ that motor.
         `hip <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_hip>`__,
         `knee <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_knee>`__;
         `model <https://github.com/Rhoban/bam/blob/main/bam/mangdang/actuator.py>`__,
-        `notes <https://github.com/Rhoban/bam/blob/main/bam/mangdang/README.md>`__)
+        `notes <https://github.com/Rhoban/bam/blob/main/bam/mangdang/README.md>`__,
+        `raw data <https://github.com/mangdangroboticsclub/bam/releases/download/md300-data-v1/md300_logs.zip>`__)
       - .. raw:: html
 
            <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_abd">MuJoCo: abduction</a>

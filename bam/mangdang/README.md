@@ -75,21 +75,32 @@ is saved to flash) and logs what the AT32 reads back (`at32_*` keys).
 - Pendulum: the payload's centre is 2 cm beyond the arm's end. Its own inertia
   is folded into `mass`, `arm_mass` and `length`, so the logged pendulum has
   exactly the inertia and gravity torque of the arm and payload.
-- Setups: {{arm length x payload per output}}.
+- Setups (arm length x payload): none; 10 cm bare; 10 cm x 61 g; 10 cm x 120 g;
+  12.5 cm x 161 g; 15 cm x 80 g; 15 cm x 239 g; 15 cm x 257 g. The 239 g and
+  257 g setups are recorded at `kp` <= 120, except the abduction's 239 g.
+- Abduction: all eight setups, one module, 163 logs. Knee: all eight, one
+  module, 158 logs. Hip: seven (no 257 g), two modules (15 cm x 80 g recorded on
+  both), 168 logs.
+- Raw data: https://github.com/mangdangroboticsclub/bam/releases/download/md300-data-v1/md300_logs.zip
+  (raw and processed, per output).
 
 ## Results
 
-Mean absolute position error on the held-out `kp` 120 logs (reference
-simulator, `bam.fit` scoring):
+Mean absolute position error in mrad, training logs / held-out `kp` 120 logs
+(`bam.mae`: reference simulator, all samples, mean over logs):
 
 | Model | Abduction | Hip | Knee |
 |---|---|---|---|
-| m1 | 22.80 mrad | 31.70 mrad | 20.07 mrad |
-| m2 | {{...}} | {{...}} | {{...}} |
-| m3 | {{...}} | {{...}} | {{...}} |
-| m4 | {{...}} | {{...}} | {{...}} |
-| m5 | {{...}} | {{...}} | {{...}} |
-| m6 | 17.13 mrad | 20.63 mrad | 15.70 mrad |
+| m1 | 25.0 / 22.8 | 18.1 / 17.2 | 15.6 / 20.1 |
+| m2 | 25.0 / 22.8 | 18.1 / 17.2 | 15.6 / 20.1 |
+| m3 | 14.6 / 17.0 | 12.1 / 11.2 | 10.8 / 14.9 |
+| m4 | 13.7 / 16.6 | 11.5 / 12.3 | 10.6 / 15.9 |
+| m5 | 13.1 / 16.3 | 11.8 / 11.1 | 10.5 / 15.9 |
+| m6 | 13.1 / 17.1 | 11.5 / 12.1 | 10.5 / 15.7 |
+
+m1 and m2 fit the D term at zero, a delay under 1 ms and a back-EMF constant
+of 0.25 to 0.40 V.s/rad, against about 3 ms and 0.73 to 0.88 V.s/rad for m3 to
+m6; use m3 to m6.
 
 ## Limits
 
