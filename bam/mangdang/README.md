@@ -116,21 +116,3 @@ Mean absolute position error in mrad, training logs / held-out `kp` 120 logs
 m1 and m2 fit the D term at zero, a delay under 1 ms and a back-EMF constant
 of 0.25 to 0.40 V.s/rad, against about 3 ms and 0.73 to 0.88 V.s/rad for m3 to
 m6.
-
-Position data constrain only combinations of the plant constants (the stiffness
-`kt * error_gain_ratio / R`, the damping `kt * kt_emf / R` and the D term at the
-single `kd` recorded), so the individual `kt`, `R`, `kt_emf` and `kd_ratio` vary
-between models and are effective values. m1 and m2 rest partly on their
-parameter bounds; use m3 to m6.
-
-## Limits
-
-- At stall the current falls by about a third (1.28 A to 0.87 A) over 30 s as
-  the winding heats. The models do not depend on temperature, so sustained
-  near-stall loads are over-estimated.
-- Setups below 0.3 N.m static load are tracked to 2.3 to 13.5 mrad (m6,
-  `kp` 120, per setup); the heaviest setups, near the torque limit, fit worse.
-- `error_gain_ratio` and `kt_emf` are effective values: they also absorb loop
-  lag and viscous damping.
-- `bam.mujoco` and `bam.mjlab` apply no torque while torque is off, so the
-  H-bridge braking is only simulated by `bam.simulate` (`bam.fit`, `bam.mae`).
