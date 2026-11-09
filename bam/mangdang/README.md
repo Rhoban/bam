@@ -94,9 +94,8 @@ is saved to flash) and logs what the AT32 reads back (`at32_*` keys).
 - Setups (arm length x payload): none; 10 cm bare; 10 cm x 61 g; 10 cm x 120 g;
   12.5 cm x 161 g; 15 cm x 80 g; 15 cm x 239 g; 15 cm x 257 g. No `kp` 160
   logs for id_1's 257 g setup and id_3's 239 g and 257 g setups.
-- id_1: all eight setups, one module, 163 logs. id_2: seven (no 257 g), two
-  modules (15 cm x 80 g recorded on both), 168 logs. id_3: all eight, one
-  module, 158 logs.
+- id_1: all eight setups, 163 logs. id_2: seven (no 257 g), 168 logs. id_3:
+  all eight, 158 logs.
 - Raw data: https://github.com/mangdangroboticsclub/bam/releases/download/md300-data-v1/md300_logs.zip
   (raw and processed, per output).
 
