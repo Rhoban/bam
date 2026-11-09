@@ -18,7 +18,7 @@ the module. The identified parameters are in `bam/params/mangdang_md300_id_1`,
 
 - AT32 firmware 0.0.9, voltage (PWM) position control (`control_mode` 1).
 - Rig (printed parts, BOM) and the ESP32-S3 SPI bridge firmware:
-  https://github.com/mangdang-bam/md300-bam-rig
+  https://github.com/mangdangroboticsclub/md300-bam-rig
 - Bus ids 1 to 12: the module in slot `k` (0 to 3) answers as `3k + 1` (id_1),
   `3k + 2` (id_2) and `3k + 3` (id_3).
 - The AT32 answers each frame with the state it had at the previous frame; the
