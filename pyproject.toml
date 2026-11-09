@@ -45,7 +45,6 @@ identification = [
     "zmq",
     "protobuf>=3.20,<4.0",
     "dynamixel_sdk",
-    "pyserial",
     "rustypot>=1.5.0",
     "optuna",
     "cmaes",
@@ -66,7 +65,7 @@ Repository = "https://github.com/Rhoban/bam"
 include = ["bam*"]
 
 [tool.setuptools.package-data]
-bam = ["params/**/*.json", "mangdang/streams/*.csv"]
+bam = ["params/**/*.json"]
 
 [tool.ruff]
 line-length = 88

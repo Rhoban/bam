@@ -61,7 +61,7 @@ from bam.mangdang.spi import (
     motor_current_ma,
     pick_port,
 )
-from bam.mangdang.trajectories import trajectories  # BAM's set plus the module's own
+from bam.trajectory import trajectories
 
 #: Current cap [mA] sent in every position frame, as on the robot.
 ROBOT_CUR_MA = 1500

@@ -51,7 +51,7 @@ id_2 of the module in slot 2, bus id 8):
 python -m bam.mangdang.all_record --id 8 --mass 0.16078 --arm-mass 0.01872 --length 0.145 \
     --arm-length 0.125 --payload-offset 0.02 --payload-inertia 7.68e-05 \
     --kps 40,80,120,160 --kd 400 --shuffle --logdir raw \
-    --trajectories lift_and_drop,sin_sin,sin_time_square,up_and_down,gait_hip \
+    --trajectories lift_and_drop,sin_sin,sin_time_square,up_and_down \
     --extra "--zero-dd 1556 --control-mode 1 --pwm-scale 0.001 --max-pwm-duty-cycle 0.99 \
              --ki-position 0 --supply-v 12"
 python -m bam.process --raw raw --logdir processed --dt 0.005
@@ -74,18 +74,15 @@ The recorder writes the firmware configuration to RAM before each run (nothing
 is saved to flash) and logs what the AT32 reads back (`at32_*` keys).
 `--dry-run` exercises the tools without hardware.
 
-`trajectories.py` adds to BAM's set: `abd_steps`, `abd_sts`, `abd_sweep` and
-`abd_drop`, small-signal trajectories within +/-0.35 rad for id_1; and
-`gait_hip` and `gait_knee`, the hip and knee setpoints of a walking gait
-(`streams/`, 50 Hz), played about +0.5 rad.
-
 ## Identification conditions
 
 - 12 V bench supply.
 - Firmware gains: `kp` 40 / 80 / 120 / 160, `kd` 400, `pwm_scale` 0.001,
   `max_pwm` 0.99. `kp` 120 is held out for validation.
 - Trajectories: `lift_and_drop`, `sin_sin`, `sin_time_square`, `up_and_down`,
-  plus `abd_sweep` (id_1), `gait_hip` (id_2) or `gait_knee` (id_3).
+  plus a fifth per output, recorded in the logs with its goal positions: a
+  small-amplitude sweep on id_1 (`abd_sweep`) and a walking-gait setpoint stream
+  on id_2 (`gait_hip`) and id_3 (`gait_knee`).
 - Logs of 6 s (7 s for the gait streams), processed at 5 ms.
 - Pendulum: the payload's centre is 2 cm beyond the arm's end. The processed
   logs' `mass`, `arm_mass` and `length` come from `bam.mangdang.pendulum`, so
