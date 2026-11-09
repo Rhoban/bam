@@ -21,8 +21,8 @@ the module. The identified parameters are in `bam/params/mangdang_md300_id_1`,
 - Bus ids 1 to 12: the module in slot `k` (0 to 3) answers as `3k + 1` (id_1),
   `3k + 2` (id_2) and `3k + 3` (id_3).
 - The AT32 answers each frame with the state it had at the previous frame; the
-  recorder stamps each sample accordingly. It reports the supply-side current
-  (`I_motor * |duty|`) and does not measure the supply voltage.
+  recorder stamps each sample accordingly. It does not measure the supply
+  voltage; the current it reports is logged as `load` and is not used by the model.
 
 ## Model
 
