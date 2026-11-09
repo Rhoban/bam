@@ -9,8 +9,8 @@
 """Host driver for the MangDang MD-300-150 through an ESP32-S3 SPI bridge.
 
 Each MD-300-150 module has an AT32 microcontroller that drives its three
-outputs and speaks SPI. An ESP32-S3 running the bridge firmware
-({{bridge firmware link}}) exposes up to four modules on a
+outputs and speaks SPI. An ESP32-S3 running the bridge firmware (to be
+published) exposes up to four modules on a
 USB serial port. This module implements the host half of the bridge protocol::
 
     request   10 bytes: 42 cmd servo 00 arg1:u16 arg2:u16 crc:u16

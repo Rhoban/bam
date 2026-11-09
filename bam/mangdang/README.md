@@ -15,7 +15,7 @@ the module. The identified parameters are in `bam/params/mangdang_md300_abd`,
     host (spi.py) --USB serial--> ESP32-S3 bridge --SPI--> AT32 (one per module) --> motors + potentiometers
 
 - AT32 firmware 0.0.9, voltage (PWM) position control (`control_mode` 1).
-- Bridge firmware: {{bridge firmware link}}
+- Bridge firmware: an ESP32-S3 SPI bridge (to be published).
 - Bus ids 1 to 12: the module in slot `k` (0 to 3) answers as `3k + 1` (abduction),
   `3k + 2` (hip) and `3k + 3` (knee).
 - The AT32 answers each frame with the state it had at the previous frame; the
