@@ -120,7 +120,7 @@ parameter bounds; use m3 to m6.
 
 ## Limits
 
-- At stall the current falls by about a third (1.3 A to 0.87 A) over 30 s as
+- At stall the current falls by about a third (1.28 A to 0.87 A) over 30 s as
   the winding heats. The models do not depend on temperature, so sustained
   near-stall loads are over-estimated.
 - Setups below 0.3 N.m static load are tracked to 2.3 to 13.5 mrad (m6,
