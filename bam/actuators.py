@@ -34,10 +34,10 @@ actuators = {
     "sts3215": lambda: STS3215Actuator(Pendulum),
     # Waveshare ST3025
     "waveshare_st3025": lambda: ST3025Actuator(Pendulum),
-    # MangDang MD-300-150 (abduction, hip and knee outputs)
-    "mangdang_md300_abd": lambda: MD300Actuator(Pendulum),
-    "mangdang_md300_hip": lambda: MD300Actuator(Pendulum),
-    "mangdang_md300_knee": lambda: MD300Actuator(Pendulum),
+    # MangDang MD-300-150 (outputs id_1, id_2 and id_3)
+    "mangdang_md300_id_1": lambda: MD300Actuator(Pendulum),
+    "mangdang_md300_id_2": lambda: MD300Actuator(Pendulum),
+    "mangdang_md300_id_3": lambda: MD300Actuator(Pendulum),
     # Unitree Go1
     "unitree_go1": lambda: UnitreeGo1Actuator(Pendulum),
 }

@@ -104,22 +104,24 @@ that motor.
       - .. image:: ../_static/actuator_mangdang_md300.jpg
             :width: 120px
 
-      - | ``mangdang_md300_abd``
-        | ``mangdang_md300_hip``
-        | ``mangdang_md300_knee``
-      - MangDang MD-300-150 three-output leg module (abduction, hip, knee),
-        voltage (PWM) position control at 12 V
-        (Parameters: `abduction <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_abd>`__,
-        `hip <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_hip>`__,
-        `knee <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_knee>`__;
+      - | ``mangdang_md300_id_1``
+        | ``mangdang_md300_id_2``
+        | ``mangdang_md300_id_3``
+      - MangDang MD-300-150 three-output leg module,
+        voltage (PWM) position control at 12 V.
+        id_1: side output (abduction on Mini Pupper v4); id_2: outer coaxial
+        output (hip); id_3: inner coaxial output, through a rod (knee).
+        (Parameters: `id_1 <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_id_1>`__,
+        `id_2 <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_id_2>`__,
+        `id_3 <https://github.com/Rhoban/bam/tree/main/bam/params/mangdang_md300_id_3>`__;
         `model <https://github.com/Rhoban/bam/blob/main/bam/mangdang/actuator.py>`__,
         `notes <https://github.com/Rhoban/bam/blob/main/bam/mangdang/README.md>`__,
         `raw data <https://github.com/mangdangroboticsclub/bam/releases/download/md300-data-v1/md300_logs.zip>`__)
       - .. raw:: html
 
-           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_abd">MuJoCo: abduction</a>
-           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_hip">MuJoCo: hip</a>
-           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_knee">MuJoCo: knee</a>
-           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=mangdang_md300_abd">mjlab: abduction</a>
-           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=mangdang_md300_hip">mjlab: hip</a>
-           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=mangdang_md300_knee">mjlab: knee</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_id_1">MuJoCo: id_1</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_id_2">MuJoCo: id_2</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mujoco_cpu.html?motor=mangdang_md300_id_3">MuJoCo: id_3</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=mangdang_md300_id_1">mjlab: id_1</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=mangdang_md300_id_2">mjlab: id_2</a>
+           <a class="sd-btn sd-btn-outline-primary motor-btn" href="mjlab_gpu.html?motor=mangdang_md300_id_3">mjlab: id_3</a>

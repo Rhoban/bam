@@ -8,7 +8,7 @@
 
 """MD-300-150 trajectories beyond BAM's generic set.
 
-Small-signal trajectories for the abduction output. The generic BAM
+Small-signal trajectories for the id_1 output. The generic BAM
 trajectories swing the pendulum up to about +/-1.8 rad; on the robot the
 abduction joint mostly holds the leg with small, fast corrections and at most
 about +/-0.35 rad of range. These trajectories stay within +/-0.35 rad of the

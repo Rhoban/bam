@@ -1,13 +1,15 @@
 # MangDang MD-300-150
 
 The MD-300-150 is MangDang's three-output leg module for the Mini Pupper v4:
-three coreless brushed DC motors with gearboxes in one housing (abduction, hip,
-and a coaxial knee driven through a rod). An AT32 microcontroller runs a
-position loop for each output.
+three coreless brushed DC motors with gearboxes in one housing. An AT32
+microcontroller runs a position loop for each output.
+
+id_1: side output (abduction on Mini Pupper v4); id_2: outer coaxial output
+(hip); id_3: inner coaxial output, through a rod (knee).
 
 This package holds the actuator model and the tools that record BAM logs from
-the module. The identified parameters are in `bam/params/mangdang_md300_abd`,
-`mangdang_md300_hip` and `mangdang_md300_knee` (M1 to M6), all for
+the module. The identified parameters are in `bam/params/mangdang_md300_id_1`,
+`mangdang_md300_id_2` and `mangdang_md300_id_3` (M1 to M6), all for
 `MD300Actuator`.
 
 ## Hardware
@@ -16,8 +18,8 @@ the module. The identified parameters are in `bam/params/mangdang_md300_abd`,
 
 - AT32 firmware 0.0.9, voltage (PWM) position control (`control_mode` 1).
 - Bridge firmware: an ESP32-S3 SPI bridge (to be published).
-- Bus ids 1 to 12: the module in slot `k` (0 to 3) answers as `3k + 1` (abduction),
-  `3k + 2` (hip) and `3k + 3` (knee).
+- Bus ids 1 to 12: the module in slot `k` (0 to 3) answers as `3k + 1` (id_1),
+  `3k + 2` (id_2) and `3k + 3` (id_3).
 - The AT32 answers each frame with the state it had at the previous frame; the
   recorder stamps each sample accordingly. It reports the supply-side current
   (`I_motor * |duty|`) and does not measure the supply voltage.
@@ -42,7 +44,7 @@ and `max_pwm` 0.99.
 ## Recording
 
 With the module held fixed and a pendulum arm on the output under test (here
-the hip of the module in slot 2, bus id 8):
+id_2 of the module in slot 2, bus id 8):
 
 ```bash
 python -m bam.mangdang.all_record --id 8 --mass 0.16078 --arm-mass 0.01872 --length 0.145 \
@@ -53,7 +55,7 @@ python -m bam.mangdang.all_record --id 8 --mass 0.16078 --arm-mass 0.01872 --len
              --ki-position 0 --supply-v 12"
 python -m bam.process --raw raw --logdir processed --dt 0.005
 python -m bam.mangdang.pendulum --logdir processed
-python -m bam.fit --actuator mangdang_md300_hip --model m6 --logdir processed --validation_kp 120
+python -m bam.fit --actuator mangdang_md300_id_2 --model m6 --logdir processed --validation_kp 120
 ```
 
 `--mass` and `--arm-mass` are the payload and arm masses. `--payload-offset`
@@ -69,7 +71,7 @@ is saved to flash) and logs what the AT32 reads back (`at32_*` keys).
 `--dry-run` exercises the tools without hardware.
 
 `trajectories.py` adds to BAM's set: `abd_steps`, `abd_sts`, `abd_sweep` and
-`abd_drop`, small-signal trajectories within +/-0.35 rad for the abduction; and
+`abd_drop`, small-signal trajectories within +/-0.35 rad for id_1; and
 `gait_hip` and `gait_knee`, the hip and knee setpoints of a walking gait
 (`streams/`, 50 Hz), played about +0.5 rad.
 
@@ -79,7 +81,7 @@ is saved to flash) and logs what the AT32 reads back (`at32_*` keys).
 - Firmware gains: `kp` 40 / 80 / 120 / 160, `kd` 400, `pwm_scale` 0.001,
   `max_pwm` 0.99. `kp` 120 is held out for validation.
 - Trajectories: `lift_and_drop`, `sin_sin`, `sin_time_square`, `up_and_down`,
-  plus `abd_sweep` (abduction) or `gait_hip` / `gait_knee`.
+  plus `abd_sweep` (id_1), `gait_hip` (id_2) or `gait_knee` (id_3).
 - Logs of 6 s (7 s for the gait streams), processed at 5 ms.
 - Pendulum: the payload's centre is 2 cm beyond the arm's end. The processed
   logs' `mass`, `arm_mass` and `length` come from `bam.mangdang.pendulum`, so
@@ -87,10 +89,10 @@ is saved to flash) and logs what the AT32 reads back (`at32_*` keys).
   and payload.
 - Setups (arm length x payload): none; 10 cm bare; 10 cm x 61 g; 10 cm x 120 g;
   12.5 cm x 161 g; 15 cm x 80 g; 15 cm x 239 g; 15 cm x 257 g. No `kp` 160
-  logs for the abduction's 257 g setup and the knee's 239 g and 257 g setups.
-- Abduction: all eight setups, one module, 163 logs. Knee: all eight, one
-  module, 158 logs. Hip: seven (no 257 g), two modules (15 cm x 80 g recorded on
-  both), 168 logs.
+  logs for id_1's 257 g setup and id_3's 239 g and 257 g setups.
+- id_1: all eight setups, one module, 163 logs. id_2: seven (no 257 g), two
+  modules (15 cm x 80 g recorded on both), 168 logs. id_3: all eight, one
+  module, 158 logs.
 - Raw data: https://github.com/mangdangroboticsclub/bam/releases/download/md300-data-v1/md300_logs.zip
   (raw and processed, per output).
 
@@ -99,7 +101,7 @@ is saved to flash) and logs what the AT32 reads back (`at32_*` keys).
 Mean absolute position error in mrad, training logs / held-out `kp` 120 logs
 (`bam.mae`: reference simulator, all samples, mean over logs):
 
-| Model | Abduction | Hip | Knee |
+| Model | id_1 | id_2 | id_3 |
 |---|---|---|---|
 | m1 | 25.0 / 22.8 | 18.1 / 17.2 | 15.6 / 20.1 |
 | m2 | 25.0 / 22.8 | 18.1 / 17.2 | 15.6 / 20.1 |

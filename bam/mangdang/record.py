@@ -139,7 +139,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--id",
         type=int,
         required=True,
-        help="bus id 1..12; in module slot k, 3k+1 abduction, 3k+2 hip, 3k+3 knee",
+        help="bus id 1..12; in module slot k, 3k+1 id_1, 3k+2 id_2, 3k+3 id_3",
     )
     parser.add_argument("--baud", type=int, default=921600)
     parser.add_argument(
