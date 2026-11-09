@@ -19,8 +19,7 @@ class MD300Actuator(VoltageControlledActuator):
     """One output of the MangDang MD-300-150 in voltage (PWM) position control.
 
     Each output is a coreless brushed DC motor with a gearbox, driven by a
-    position PD loop on an AT32 microcontroller (firmware 0.0.9,
-    ``control_mode`` 1)::
+    position PD loop on an AT32 microcontroller (``control_mode`` 1)::
 
         duty = clip(pwm_scale * kp * (error - dead band) - D, +/-max_pwm)
 

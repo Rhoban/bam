@@ -16,7 +16,7 @@ the module. The identified parameters are in `bam/params/mangdang_md300_id_1`,
 
     host (spi.py) --USB serial--> ESP32-S3 bridge --SPI--> AT32 (one per module) --> motors + potentiometers
 
-- AT32 firmware 0.0.9, voltage (PWM) position control (`control_mode` 1).
+- Voltage (PWM) position control (`control_mode` 1), with `pwm_scale` (parameter 12).
 - Rig (printed parts, BOM) and the ESP32-S3 SPI bridge firmware:
   https://github.com/mangdangroboticsclub/md300-bam-rig
 - Bus ids 1 to 12: the module in slot `k` (0 to 3) answers as `3k + 1` (id_1),

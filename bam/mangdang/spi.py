@@ -26,7 +26,7 @@ on the AT32 (default ``3100`` = 310.0 deg) and its centre is the middle of the
 potentiometer travel. :class:`SpiMD300IO` exposes that raw world, while its
 BAM-shaped methods convert to radians with ``0.0`` at the centre of travel.
 
-Firmware: the AT32 is expected to run firmware 0.0.9. There, control_mode 1 turns the PID output into duty with ``pwm_scale``
+Firmware: the AT32 firmware must provide control_mode 1 and pwm_scale. Then control_mode 1 turns the PID output into duty with ``pwm_scale``
 (param 12), the live ids are 0..12, and the reported current is the
 supply-side current (see :func:`motor_current_ma`).
 
