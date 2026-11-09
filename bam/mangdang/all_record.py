@@ -36,6 +36,19 @@ arg_parser.add_argument(
     default=0.0,
     help="arm mass [kg]",
 )
+arg_parser.add_argument("--arm-length", type=float, default=None, help="arm length [m]")
+arg_parser.add_argument(
+    "--payload-offset",
+    type=float,
+    default=0.0,
+    help="distance from the arm's end to the payload's centre [m]",
+)
+arg_parser.add_argument(
+    "--payload-inertia",
+    type=float,
+    default=0.0,
+    help="payload inertia about its centre [kg m^2]",
+)
 arg_parser.add_argument("--motor", type=str, default="md300")
 arg_parser.add_argument("--port", type=str, default=None)
 arg_parser.add_argument("--id", type=int, default=1, help="bus id 1..12")
@@ -119,6 +132,10 @@ def run_all() -> None:
         str(args.arm_mass),
         "--length",
         str(args.length),
+        "--payload-offset",
+        str(args.payload_offset),
+        "--payload-inertia",
+        str(args.payload_inertia),
         "--id",
         str(args.id),
         "--motor",
@@ -130,6 +147,8 @@ def run_all() -> None:
         "--kd",
         str(args.kd),
     ]
+    if args.arm_length is not None:
+        command_base += ["--arm-length", str(args.arm_length)]
     if args.port:
         command_base += ["--port", args.port]
     if args.dry_run:

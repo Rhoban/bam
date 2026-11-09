@@ -110,6 +110,24 @@ def build_parser() -> argparse.ArgumentParser:
         default=0.0,
         help="arm mass [kg] (the recorder writes the arm_mass key)",
     )
+    parser.add_argument(
+        "--arm-length",
+        type=float,
+        default=None,
+        help="arm length [m] (default: --length)",
+    )
+    parser.add_argument(
+        "--payload-offset",
+        type=float,
+        default=0.0,
+        help="distance from the arm's end to the payload's centre [m]",
+    )
+    parser.add_argument(
+        "--payload-inertia",
+        type=float,
+        default=0.0,
+        help="payload inertia about its centre [kg m^2]",
+    )
     parser.add_argument("--port", type=str, default=None)
     parser.add_argument("--logdir", type=str, required=True)
     parser.add_argument("--trajectory", type=str, default="lift_and_drop")
@@ -651,6 +669,14 @@ def main() -> None:
             "mass": args.mass,
             "arm_mass": args.arm_mass,
             "length": args.length,
+            # Measured pendulum geometry, the input of bam.mangdang.pendulum.
+            "geometry_payload_mass": args.mass,
+            "geometry_arm_mass": args.arm_mass,
+            "geometry_arm_length": (
+                args.length if args.arm_length is None else args.arm_length
+            ),
+            "geometry_payload_offset": args.payload_offset,
+            "geometry_payload_inertia": args.payload_inertia,
             "kp": args.kp,
             "kd": args.kd,
             "vin": args.vin,
