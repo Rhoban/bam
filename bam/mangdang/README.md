@@ -66,6 +66,9 @@ each processed log's `mass`, `arm_mass` and `length` from those keys into BAM's
 single-length pendulum with the same inertia and gravity torque.
 
 `--zero-dd` is the raw reading (deci-degrees) of the pendulum's downward pose.
+Measure it with the payload mounted: `python -m bam.mangdang.zero --id 8
+--logdir raw` lifts the arm to each side, releases it and takes the midpoint
+of the rest positions, which cancels static friction.
 The recorder writes the firmware configuration to RAM before each run (nothing
 is saved to flash) and logs what the AT32 reads back (`at32_*` keys).
 `--dry-run` exercises the tools without hardware.
