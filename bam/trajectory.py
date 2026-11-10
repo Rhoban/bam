@@ -132,6 +132,22 @@ class Steps(Trajectory):
             if stages[i][0] <= t <= stages[i + 1][0]:
                 return stages[i][1], True
 
+class BigSteps(Trajectory):
+    """Large position steps in both directions, 0.5 s each.
+
+    Drives the servo into its current limit at every step onset (when the
+    firmware enforces one) and reaches high velocities, which the smoother
+    trajectories never do.
+    """
+
+    duration = 6.0
+    stages = [0.0, 1.0, -1.0, 0.4, -0.4, 1.4, -1.4, 0.0, 1.2, 0.0, -1.2, 0.0]
+
+    def __call__(self, t: float) -> tuple[float, bool]:
+        k = min(int(t / 0.5), len(self.stages) - 1)
+        return self.stages[k], True
+
+
 class SinSin(Trajectory):
     """Multi-frequency trajectory: :math:`\\sin(t)\\cdot\\pi/2 + \\sin(5t)\\cdot 0.5\\cdot\\sin(2t)`.
 
@@ -166,6 +182,7 @@ trajectories: dict[str, Trajectory] = {
     "sin_sin": SinSin(),
     "half_sine": HalfSine(),
     "steps": Steps(),
+    "big_steps": BigSteps(),
     "nothing": Nothing(),
 }
 

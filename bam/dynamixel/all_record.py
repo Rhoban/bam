@@ -28,13 +28,21 @@ KPS = {
     "xl320": [4, 8, 16, 32],
     "xl330": [50, 100, 200, 300, 400],
     "xl330i": [50, 100, 200, 300, 400],
+    "xl330m288t-MG": [50, 100, 200, 300, 400],
 }
 
 if args.motor not in KPS:
     raise ValueError(f"Unknown motor '{args.motor}'. Known motors: {list(KPS.keys())}")
 
+# Extra trajectories for motors whose firmware enforces a current limit in
+# position control: steps drive it into the limit, which the others barely do
+EXTRA_TRAJECTORIES = {
+    "xl330m288t-MG": ["steps", "big_steps"],
+}
+
 kps = KPS[args.motor]
 trajectories = ["sin_sin", "lift_and_drop", "up_and_down", "sin_time_square"]
+trajectories += EXTRA_TRAJECTORIES.get(args.motor, [])
 
 command_base = f"uv run -m bam.dynamixel.record --mass {args.mass} --arm-mass {args.arm_mass} --length {args.length}"
 command_base += (

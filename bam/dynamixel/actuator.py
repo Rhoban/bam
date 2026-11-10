@@ -106,6 +106,54 @@ class XL330Actuator(VoltageControlledActuator):
         return self.model.armature.value
 
 
+class XL330SupplyCurrentLimitedActuator(XL330Actuator):
+    """
+    Dynamixel XL330 in position control with a firmware limit on the **supply**
+    current, as enforced by ROBOTIS's custom "impact guard" firmware V4 (the
+    factory firmware only enforces Current Limit in the current-based modes).
+
+    The XL330 senses current on the supply side of the H-bridge. By power balance
+    the reported current is ``|duty| * I_phase``, so holding it under the limit
+    bounds the duty cycle to the roots of
+
+    .. math::
+
+        v_\\text{in}\\,\\text{duty}^2 - k_t \\dot q\\,\\text{duty} - R\\,I_\\text{lim} \\le 0
+
+    i.e. ``duty`` in ``[(k_t dq - S) / (2 v_in), (k_t dq + S) / (2 v_in)]`` with
+    ``S = sqrt((k_t dq)^2 + 4 v_in R I_lim)``. Unlike a phase-current limit, the
+    allowed duty grows with the square root of the limit and does not vanish
+    at stall.
+
+    ``current_limit`` is identified as an *effective* limit: ``kt`` and ``R`` are
+    themselves effective values fitted on the mechanical response, so the limit
+    that reproduces the firmware's duty clamp needs not be exactly the register
+    value (1000 mA on the robot).
+    """
+
+    def initialize(self):
+        super().initialize()
+        self.model.current_limit = Parameter(1.0, 0.5, 3.0)
+
+    def compute_control(self, q_target, q, dq, dt):
+        duty_cycle = (q_target - q) * self.kp * self.error_gain
+
+        kt = self.model.kt.value
+        R = self.model.R.value
+        back_emf = kt * dq
+        span = (back_emf**2 + 4.0 * self.vin * R * self.model.current_limit.value) ** 0.5
+        duty_cycle = self.backend.clamp(
+            duty_cycle,
+            (back_emf - span) / (2.0 * self.vin),
+            (back_emf + span) / (2.0 * self.vin),
+        )
+
+        duty_cycle = self.backend.clamp(duty_cycle, -self.max_pwm, self.max_pwm)
+        self.duty_cycle = duty_cycle
+
+        return self.vin * duty_cycle
+
+
 class XL330CurrentActuator(CurrentControlledActuator):
     """
     Represents a Dynamixel XL330 actuator controlled in current position mode.

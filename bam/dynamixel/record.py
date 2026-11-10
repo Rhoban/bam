@@ -12,6 +12,7 @@ import os
 import numpy as np
 import argparse
 import time
+import struct
 from .dynamixel import DynamixelActuatorV1, DynamixelXL320
 from bam.trajectory import *
 
@@ -30,7 +31,31 @@ args = arg_parser.parse_args()
 if args.trajectory not in trajectories:
     raise ValueError(f"Unknown trajectory: {args.trajectory}")
 
-_XL330_MOTORS = {"xl330", "xl330i"}
+_XL330_MOTORS = {"xl330", "xl330i", "xl330m288t-MG"}
+
+# Registers forced before recording so the bench matches the robot's servo config
+# (microduck writes I = D = 0 at startup and asserts pwm_slope = 255 and
+# current_limit = 1000 mA). The factory pwm_slope (140) rate-limits the output
+# voltage, which BAM does not model.
+_XL330_ROBOT_REGISTERS = {
+    "xl330m288t-MG": {
+        "position_i_gain": 0,
+        "position_d_gain": 0,
+        "pwm_slope": 255,
+        "current_limit": 1000,
+        # Input-voltage bit cleared: a 2S supply sits above the default 7.0 V
+        # Max Voltage Limit, which would otherwise latch torque off (a firmware
+        # update can restore the factory 53). A fault already latched needs a reboot.
+        "shutdown": 52,
+    },
+}
+
+# The metal-gear servos run ROBOTIS's custom "impact guard" firmware V4, the one that
+# enforces current_limit in position control mode (the factory firmware only does so
+# in current-based modes). Its guard is switched by Impact Guard Enable (register 67,
+# RAM, off at power-up); it is kept off here, as on the robot (bus.impact_guard = false).
+_XL330_REQUIRED_FIRMWARE = {"xl330m288t-MG": 4}
+_IMPACT_GUARD_ENABLE_ADDR = 67
 
 # XL330-specific conversion helpers
 _XL330_RADS_PER_SEC_PER_COUNT = 0.229 * (2.0 * np.pi / 60.0)
@@ -48,6 +73,26 @@ def convert_xl330_pwm_to_duty(raw: float) -> float:
     return np.clip(x / _XL330_PWM_LIMIT, -1.0, 1.0)
 
 
+# Present PWM (124, int16), Present Current (126, int16, mA), Present Velocity
+# (128, int32, 0.229 rpm) and Present Position (132, int32, 4096 counts/rev, 2048
+# at 0 rad) are contiguous: one 12-byte read instead of one transaction each.
+_XL330_STATE_ADDR = 124
+_XL330_STATE_FORMAT = "<hhii"
+_XL330_SLOW_READ_PERIOD = 20
+
+
+def read_xl330_state(c, ID) -> dict:
+    raw = bytes(c.read_raw_data(ID, _XL330_STATE_ADDR, 12))
+    pwm, current_ma, velocity, position = struct.unpack(_XL330_STATE_FORMAT, raw)
+    return {
+        "position": (position - 2048) * 2.0 * np.pi / 4096,
+        "speed": convert_xl330_velocity(velocity),
+        "load": float(np.clip(pwm / _XL330_PWM_LIMIT, -1.0, 1.0)),
+        # Supply-side (bus) current [A]: the XL330 senses it before the H-bridge
+        "current": current_ma / 1000.0,
+    }
+
+
 trajectory = trajectories[args.trajectory]
 
 # ── Controller initialisation ────────────────────────────────────────────────
@@ -56,6 +101,28 @@ if args.motor in _XL330_MOTORS:
 
     c = Xl330PyController(args.port, baudrate=1000000, timeout=0.01)
     ID = 1
+
+    if args.motor in _XL330_REQUIRED_FIRMWARE:
+        firmware = c.read_firmware_version(ID)[0]
+        if firmware != _XL330_REQUIRED_FIRMWARE[args.motor]:
+            raise RuntimeError(
+                f"{args.motor} expects firmware_version "
+                f"{_XL330_REQUIRED_FIRMWARE[args.motor]}, the servo reports {firmware}"
+            )
+
+    if args.motor in _XL330_ROBOT_REGISTERS:
+        # pwm_slope and current_limit live in EEPROM, only writable with torque off
+        c.write_torque_enable(ID, False)
+        if args.motor in _XL330_REQUIRED_FIRMWARE:
+            c.write_raw_data(ID, _IMPACT_GUARD_ENABLE_ADDR, [0])
+            guard = c.read_raw_data(ID, _IMPACT_GUARD_ENABLE_ADDR, 1)
+            if list(guard) != [0]:
+                raise RuntimeError(f"Impact Guard Enable reads {guard}, expected [0]")
+        for register, value in _XL330_ROBOT_REGISTERS[args.motor].items():
+            getattr(c, f"write_{register}")(ID, value)
+            read = getattr(c, f"read_{register}")(ID)[0]
+            if read != value:
+                raise RuntimeError(f"{register}: wrote {value}, read back {read}")
 
     start = time.time()
     while time.time() - start < 1.0:
@@ -108,12 +175,14 @@ while time.time() - start < trajectory.duration:
     t0 = time.time() - start
 
     if args.motor in _XL330_MOTORS:
-        entry = {}
-        entry["position"] = c.read_present_position(ID)[0]
-        entry["speed"] = convert_xl330_velocity(c.read_present_velocity(ID)[0])
-        entry["load"] = convert_xl330_pwm_to_duty(c.read_present_pwm(ID)[0])
-        entry["input_volts"] = c.read_present_input_voltage(ID)[0] / 10.0
-        entry["temp"] = c.read_present_temperature(ID)[0]
+        entry = read_xl330_state(c, ID)
+        # Supply voltage and temperature change slowly: refreshed every few samples
+        if len(data["entries"]) % _XL330_SLOW_READ_PERIOD == 0:
+            slow = {
+                "input_volts": c.read_present_input_voltage(ID)[0] / 10.0,
+                "temp": c.read_present_temperature(ID)[0],
+            }
+        entry.update(slow)
     else:
         entry = dxl.read_data()
 
