@@ -56,6 +56,11 @@ Each trajectory runs for 6 seconds.
 
        |traj_sin_sin|
 
+Two step trajectories are also available: ``steps`` (0 → 0.75 → 1.55 → 0.75 →
+0 rad) and ``big_steps`` (±0.4 to ±1.4 rad steps, 0.5 s each). They drive the
+servo into a firmware current limit and to high velocities; ``all_record`` adds
+them for motors that have one (see :doc:`current_limit`).
+
 .. |traj_sin_time_square| image:: /_static/traj_sin_time_square.png
    :width: 100%
    :alt: sin_time_square trajectory

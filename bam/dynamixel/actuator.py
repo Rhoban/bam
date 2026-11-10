@@ -128,7 +128,11 @@ class XL330SupplyCurrentLimitedActuator(XL330Actuator):
     ``current_limit`` is identified as an *effective* limit: ``kt`` and ``R`` are
     themselves effective values fitted on the mechanical response, so the limit
     that reproduces the firmware's duty clamp needs not be exactly the register
-    value (1000 mA on the robot).
+    value (1000 mA on the robot). The bundled ``xl330m288t-MG`` parameters were
+    fitted with it fixed at 1.0 A, which gave the best held-out error.
+
+    Only the m6 model is identified for ``xl330m288t-MG``. Recording, validation
+    and fitting are described in ``docs/identification/current_limit.rst``.
     """
 
     def initialize(self):

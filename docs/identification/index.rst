@@ -52,6 +52,17 @@ the test bench, recording trajectories, and fitting a friction model.
         +++
         :doc:`Fitting → <fitting>`
 
+    .. grid-item-card:: ⚡ Firmware current limit
+        :link: current_limit
+        :link-type: doc
+        :class-card: bam-card
+
+        Record, check and fit a servo whose firmware limits the current in
+        position control (XL330-M288-T metal gears).
+
+        +++
+        :doc:`Current limit → <current_limit>`
+
     .. grid-item-card:: 🤝 Contributing a model
         :link: contributing
         :link-type: doc
@@ -70,4 +81,5 @@ the test bench, recording trajectories, and fitting a friction model.
    actuator_modeling
    acquisition
    fitting
+   current_limit
    contributing
