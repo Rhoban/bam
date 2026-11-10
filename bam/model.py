@@ -149,7 +149,9 @@ class Model:
             )
 
         # Static friction
-        frictionloss = self.friction_base.value
+        # "+ 0.0" makes a new value: the in-place += below would otherwise
+        # modify friction_base itself when it is an array (per-joint parameters).
+        frictionloss = self.friction_base.value + 0.0
         if self.load_dependent:
             if self.directional:
                 frictionloss += gearbox_torque
