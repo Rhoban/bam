@@ -8,7 +8,13 @@
 
 from .testbench import Pendulum
 from .erob.actuator import ErobActuator
-from .dynamixel.actuator import MXActuator, XL320Actuator, XL330Actuator, XL330CurrentActuator
+from .dynamixel.actuator import (
+    MXActuator,
+    XL320Actuator,
+    XL330Actuator,
+    XL330CurrentActuator,
+    XL330SupplyCurrentLimitedActuator,
+)
 from .feetech.actuator import STS3215Actuator
 from .unitree.actuator import UnitreeGo1Actuator
 
@@ -21,6 +27,9 @@ actuators = {
     "xl320": lambda: XL320Actuator(Pendulum),
     "xl330": lambda: XL330Actuator(Pendulum),
     "xl330i": lambda: XL330CurrentActuator(Pendulum),
+    # Metal gears, ROBOTIS V4 firmware enforcing Current Limit (supply side) in
+    # position control, as configured on microduck (1000 mA, pwm_slope 255)
+    "xl330m288t-MG": lambda: XL330SupplyCurrentLimitedActuator(Pendulum),
     
     # eRob actuators with custom PD controller
     "erob80_100": lambda: ErobActuator(Pendulum, damping=2.0),
