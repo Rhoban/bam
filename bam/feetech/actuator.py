@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 class STS3215Actuator(VoltageControlledActuator):
     """
-    Feetech STS3215 7.4v
+    Feetech STS3215 (7.4V and 12V versions)
 
     The firmware rate-limits the target position it feeds to its P controller,
     which makes :meth:`compute_control` stateful (see :attr:`q_target_smooth`).
@@ -29,10 +29,10 @@ class STS3215Actuator(VoltageControlledActuator):
 
     stateful = True
 
-    def __init__(self, testbench_class: Testbench):
+    def __init__(self, testbench_class: Testbench, vin: float = 7.4):
         super().__init__(
             testbench_class,
-            vin=7.4,
+            vin=vin,
             kp=32,
             # This gain, if multiplied by a position error and firmware KP, gives duty cycle
             # It was determined using an oscilloscope and STS3215 actuators
