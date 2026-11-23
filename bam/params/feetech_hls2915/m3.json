@@ -1,0 +1,1 @@
+{"kt": 0.5551470726454322, "R": 4.1789813943726974, "error_gain_ratio": 0.7875692469753921, "armature": 0.0018312175897657577, "q_offset": 0.08680545106185347, "command_delay": 0.0007974716874367135, "friction_base": 0.07941805067555786, "load_friction_base": 0.11917643117083673, "friction_viscous": 0.10457987009721628, "model": "m3", "actuator": "feetech_hls2915"}
