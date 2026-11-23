@@ -15,7 +15,7 @@ from .dynamixel.actuator import (
     XL330CurrentActuator,
 )
 from .feetech.actuator import STS3215Actuator
-from .unitree.actuator import UnitreeGo1Actuator
+from .unitree.actuator import J288Actuator, J288Pendulum, UnitreeGo1Actuator
 from .waveshare.actuator import ST3025Actuator
 
 actuators = {
@@ -35,4 +35,6 @@ actuators = {
     "waveshare_st3025": lambda: ST3025Actuator(Pendulum),
     # Unitree Go1
     "unitree_go1": lambda: UnitreeGo1Actuator(Pendulum),
+    # Unitree J288 digital servo
+    "unitree_j288": lambda: J288Actuator(J288Pendulum),
 }

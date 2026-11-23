@@ -1,0 +1,19 @@
+{
+    "armature": 0.0006970268016983874,
+    "q_offset": 0.039951982426544186,
+    "command_delay": 0.002006762305646905,
+    "friction_base": 0.018341789985940975,
+    "friction_stribeck": 0.017352560707025944,
+    "load_friction_base": 0.19408654231222794,
+    "load_friction_stribeck": 0.025931156619380096,
+    "dtheta_stribeck": 0.5694603690819569,
+    "alpha": 4.6913307421080175,
+    "friction_viscous": 0.002672912676601989,
+    "kt": 0.554,
+    "R": 2.809017979556792,
+    "ke": 0.72,
+    "torque_limit": 1.0019035865982293,
+    "speed_filter_tau": 0.015297988886194542,
+    "model": "m4",
+    "actuator": "unitree_j288"
+}

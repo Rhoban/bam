@@ -1,0 +1,17 @@
+{
+    "armature": 0.0006902831551814926,
+    "q_offset": 0.04531502019106198,
+    "command_delay": 3.2254656865339085e-05,
+    "friction_base": 0.043590711977898544,
+    "friction_stribeck": 0.012107593920209967,
+    "dtheta_stribeck": 0.6113001193732618,
+    "alpha": 3.8196286579263656,
+    "friction_viscous": 0.005424701365223836,
+    "kt": 0.554,
+    "R": 2.809017979556792,
+    "ke": 0.72,
+    "torque_limit": 1.0019035865982293,
+    "speed_filter_tau": 0.015297988886194542,
+    "model": "m2",
+    "actuator": "unitree_j288"
+}
