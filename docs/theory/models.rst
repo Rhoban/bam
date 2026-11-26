@@ -41,15 +41,35 @@ Here:
 
 - Below the blue line, the motor is driving the system
 - Above the red line, the system is backdriving the motor
-- On the black dashed line, motor torque and external torque exacttly cancel out
+- On the black dashed line, motor torque and external torque exactly cancel out
 - In the middle, the friction budget is preventing motion in the system
-- The lines with less opacity depicts what happens when the system is moving (1 rad/s per step). As you can notice, the faster the system is moving, the less friction appears here.
+- The lines with less opacity depict what happens when the system is moving (1 rad/s per step). As you can notice, the faster the system is moving, the less friction appears here.
 
-They can be obtained using ``bam.drive_backdrive`` command from the repository:
+They can be obtained using the ``bam.drive_backdrive`` command from the repository:
 
 .. code-block:: bash
 
-    uv run -m bam.drive_backdrive --params bam/params/erob80_100/m1.json  --max_torque 100
+    uv run -m bam.drive_backdrive --params bam/params/erob80_100/m1.json --max_torque 100
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 60
+
+   * - Argument
+     - Default
+     - Description
+   * - ``--params``
+     - ``params.json``
+     - Identified parameters file to plot, as written by ``bam.fit``. The files shipped with BAM are in
+       ``bam/params/<actuator>/<model>.json``.
+   * - ``--max_torque``
+     - required
+     - Upper bound of both axes, in N.m. Both the motor torque :math:`\tau_m` and the external torque
+       :math:`-\tau_e` are swept from 0 to this value, so it should be of the order of the actuator's maximum torque.
+
+The script draws one pair of curves for each joint velocity from 0 to 9 rad/s; the opacity decreases as the
+velocity increases. The plot title is the model name (:math:`\mathcal{M}_1` to :math:`\mathcal{M}_6`), read from
+the parameters file.
 
 Model :math:`\mathcal{M}_1`: Coulomb-Viscous
 --------------------------------------------
